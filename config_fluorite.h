@@ -11,13 +11,13 @@
 #define BOTTOMBAR_GAPS	0
 #define METAKEY			Mod4Mask
 
-// Helpers for configuration
-#define FOCUS_TOP			1
-#define FOCUS_BOTTOM		-1
-#define SLAVES_UP			4
-#define SLAVES_DOWN			5
-#define BIGGER_MASTER		6
-#define SMALLER_MASTER		7
+// Helpers for configuration (don't change values)
+#define FOCUS_TOP			10
+#define FOCUS_BOTTOM		11
+#define SLAVES_UP			12
+#define SLAVES_DOWN			13
+#define BIGGER_MASTER		14
+#define SMALLER_MASTER		15
 
 typedef struct {
 	unsigned int	mod;

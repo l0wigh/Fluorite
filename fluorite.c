@@ -12,8 +12,6 @@
 #define STACK_DEL		1
 #define STACK_UP		2
 #define STACK_DOWN		3
-#define SLAVES_UP		4
-#define SLAVES_DOWN		5
 
 // Thanks suckless for these
 static unsigned int numlockmask = 0;
@@ -292,27 +290,6 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 {
 	if (fluorite.frames_count == MAX_WINDOWS)
 		return ;
-
-	// Another DWM ripoff
-	long msize;
-	XSizeHints size_hints;
-	int maxw, maxh, minw, minh;
-	XGetWMNormalHints(fluorite.display, e.window, &size_hints, &msize);
-	if (size_hints.flags & PMinSize)
-	{
-		minw = size_hints.min_width;
-		minh = size_hints.min_height;
-	}
-	if (size_hints.flags & PMaxSize)
-	{
-		maxw = size_hints.max_width;
-		maxh = size_hints.max_height;
-	}
-	if (minw == maxw && minh == maxh)
-	{
-		fluorite.running = 0;
-		return ;
-	}
 
 	if (fluorite.frames_count > 0)
 	{

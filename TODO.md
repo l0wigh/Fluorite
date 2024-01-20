@@ -1,6 +1,9 @@
 # TODO !
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
     - [ ] Fix dmenu issues. This might be cause by the fact that it works as a popup and that I don't have to manage it
+- [ ] Seems like firefox making the master layout die (and cause real issues)
+    - [ ] Again, probably an issues with how lighly windows are managed
+        - Maybe try to first test if the mapping event isn't done by an already opened window
 - [ ] Clean the code
 - [ ] Add transparent windows (XCreateWindows and not XCreateSimpleWindows)
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
@@ -15,9 +18,6 @@
     - [ ] Look for hints/atoms/attributes
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
-- [-] Seems like firefox making the master layout die (and cause real issues)
-    - [ ] Again, probably an issues with how lighly windows are managed
-    - Might be fixed, it doesn't seems to happen anymore, needs more testing
 
 # DONE !
 - [x] Fixing the multi closing issue
