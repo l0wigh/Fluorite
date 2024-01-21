@@ -4,7 +4,9 @@
 #include <stdlib.h>
 
 #define BORDER_WIDTH	3
-#define BORDER_COLORS	0x35e5dc
+/* #define BORDER_COLORS	0x35e5dc */
+/* #define BORDER_COLORS	0x9c082d */
+#define BORDER_COLORS	0xde4a2c
 #define GAPS			10
 #define STACK_OFFSET	20
 #define TOPBAR_GAPS		0

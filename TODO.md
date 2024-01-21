@@ -1,14 +1,8 @@
 # TODO !
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
-    - [ ] Fix dmenu issues. This might be cause by the fact that it works as a popup and that I don't have to manage it
-- [ ] Seems like firefox making the master layout die (and cause real issues)
-    - [ ] Again, probably an issues with how lighly windows are managed
-        - Maybe try to first test if the mapping event isn't done by an already opened window
+    - dmenu, firefox, rofi, polybar issues are all linked to this. FIX IT !!!
 - [ ] Clean the code
-- [ ] Add transparent windows (XCreateWindows and not XCreateSimpleWindows)
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
-- [ ] Polybar is crashing, FUCK !
-    - Clearly because I'm not opening "floating" windows properly (maybe DWM have a solution for this)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -29,3 +23,7 @@
     - Needs to define the keyboard inside xinitrc with `setxkbmap -layout fr`
 - [x] Fixing the not full focus issue. Probably something to do with atoms, hints, or window config
     - Might be a partial fix: XSetInputFocus on `master_winframe->window`
+- [x] Add transparent windows (XCreateWindows and not XCreateSimpleWindows)
+    - Seems to be working, Might be wrong in some cases
+    - Seems like picom can't affect it and should be done inside program config
+    - Maybe try to find a way to do it inside config file

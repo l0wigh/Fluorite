@@ -4,6 +4,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/Xcursor/Xcursor.h>
+#include <X11/extensions/Xcomposite.h>
 #include <err.h>
 #include <stdlib.h>
 #include <string.h>
@@ -61,6 +62,7 @@ static void fluorite_handle_configuration(XConfigureRequestEvent e);
 static void fluorite_handle_mapping(XMapRequestEvent e);
 static void fluorite_handle_unmapping(Window e);
 static void fluorite_handle_keys(XKeyPressedEvent e);
+static WinFrames *fluorite_create_simple_winframe();
 static WinFrames *fluorite_create_winframe();
 static void fluorite_organise_stack(int mode);
 static void fluorite_redraw_windows();
@@ -262,7 +264,6 @@ void dwm_grabkeys()
 			return;
 		for (k = start; k <= end; k++)
 			for (i = 0; i < LENGTH(bind); i++)
-				/* skip modifier codes, we do that ourselves */
 				if (bind[i].key == syms[(k - start) * skip])
 					for (j = 0; j < LENGTH(modifiers); j++)
 						XGrabKey(fluorite.display, k,
@@ -286,26 +287,6 @@ void fluorite_handle_configuration(XConfigureRequestEvent e)
 	XConfigureWindow(fluorite.display, e.window, e.value_mask, &changes);
 }
 
-// TODO: Maybe remove this or make it different. The point was to make polybar, dmenu, rofi, works as intended
-int fluorite_check_type(Window e)
-{
-	Atom type, hint;
-	int format, ret_get;
-	unsigned long num_items, bytes;
-	unsigned char *prop_value = NULL;
-	
-	ret_get = XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0, 1, False, XA_ATOM, &type, &format, &num_items, &bytes, &prop_value);
-	if (ret_get == 0)
-	{
-		if (num_items)
-			hint = ((Atom *)prop_value)[0];
-
-		if (hint == XInternAtom(fluorite.display, "_NET_WN_WINDOW_TYPE_NORMAL", False))
-			return True;
-	}
-	return False;
-}
-
 void fluorite_handle_mapping(XMapRequestEvent e)
 {
 	if (fluorite.frames_count == MAX_WINDOWS)
@@ -318,10 +299,6 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		free(fluorite.master_winframe);
 		fluorite.slaves_count++;
 	}
-
-	// TODO: Maybe remove this or make it different. The point was to make polybar, dmenu, rofi, works as intended
-	if (fluorite_check_type(e.window))
-		return ;
 
 	fluorite.master_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 	fluorite.frames_count++;
@@ -337,7 +314,6 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		XFree(source_hints);
 	}
 	XReparentWindow(fluorite.display, e.window, fluorite.master_winframe->frame, 0, 0);
-	/* XResizeWindow(fluorite.display, e.window, fluorite.master_winframe->width, fluorite.master_winframe->height); */
 	XMoveResizeWindow(fluorite.display, fluorite.master_winframe->window, 0, 0, fluorite.master_winframe->width, fluorite.master_winframe->height);
 	XMapWindow(fluorite.display, fluorite.master_winframe->frame);
 	XRaiseWindow(fluorite.display, fluorite.master_winframe->frame);
@@ -371,7 +347,8 @@ void fluorite_handle_keys(XKeyPressedEvent e)
 	}
 }
 
-WinFrames *fluorite_create_winframe()
+// TODO: Might be deleted later if it's not used anymore
+WinFrames *fluorite_create_simple_winframe()
 {
 	WinFrames *new_frame;
 	
@@ -390,6 +367,41 @@ WinFrames *fluorite_create_winframe()
 		new_frame->border_color,
 		0x1e1e1e
 	);
+
+	return new_frame;
+}
+
+WinFrames *fluorite_create_winframe()
+{
+	WinFrames *new_frame;
+	XVisualInfo vinfo;
+	XSetWindowAttributes attribs_set;
+	XMatchVisualInfo(fluorite.display, fluorite.screen, 32, TrueColor, &vinfo);
+	attribs_set.background_pixel = 0;
+	attribs_set.border_pixel = BORDER_COLORS;
+	attribs_set.colormap = XCreateColormap(fluorite.display, fluorite.root, vinfo.visual, AllocNone);
+	attribs_set.event_mask = StructureNotifyMask | ExposureMask;
+
+	new_frame = malloc(sizeof(WinFrames));
+	new_frame->pos_x = 0;
+	new_frame->pos_y = 0;
+	new_frame->width = fluorite.screen_width - (BORDER_WIDTH * 2);
+	new_frame->height = fluorite.screen_height - (BORDER_WIDTH * 2);
+	new_frame->border_color = BORDER_COLORS;
+	new_frame->border_width = BORDER_WIDTH;
+	new_frame->frame = XCreateWindow(fluorite.display, fluorite.root, 
+			0, 
+			0,
+			fluorite.screen_width - (BORDER_WIDTH * 2),
+			fluorite.screen_height - (BORDER_WIDTH * 2),
+			BORDER_WIDTH,
+			vinfo.depth,
+			InputOutput,
+			vinfo.visual,
+			CWBackPixel | CWBorderPixel | CWColormap | CWEventMask,
+			&attribs_set
+	);
+	XCompositeRedirectWindow(fluorite.display, new_frame->frame, CompositeRedirectAutomatic);
 
 	return new_frame;
 }

@@ -20,7 +20,7 @@ OBJECTS_PREFIXED = $(addprefix $(OBJS_DIR), $(OBJS))
 CC			= gcc
 # CC_FLAGS	= -Wall -Werror -Wextra -O0
 CC_FLAGS	= -O0
-LIBS		= -lX11 -lXcursor
+LIBS		= -lX11 -lXcursor -lXcomposite
 
 $(OBJS_DIR)%.o : %.c $(PROJECT_H)
 	@mkdir -p $(OBJS_DIR)
