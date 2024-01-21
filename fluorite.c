@@ -286,6 +286,26 @@ void fluorite_handle_configuration(XConfigureRequestEvent e)
 	XConfigureWindow(fluorite.display, e.window, e.value_mask, &changes);
 }
 
+// TODO: Maybe remove this or make it different. The point was to make polybar, dmenu, rofi, works as intended
+int fluorite_check_type(Window e)
+{
+	Atom type, hint;
+	int format, ret_get;
+	unsigned long num_items, bytes;
+	unsigned char *prop_value = NULL;
+	
+	ret_get = XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0, 1, False, XA_ATOM, &type, &format, &num_items, &bytes, &prop_value);
+	if (ret_get == 0)
+	{
+		if (num_items)
+			hint = ((Atom *)prop_value)[0];
+
+		if (hint == XInternAtom(fluorite.display, "_NET_WN_WINDOW_TYPE_NORMAL", False))
+			return True;
+	}
+	return False;
+}
+
 void fluorite_handle_mapping(XMapRequestEvent e)
 {
 	if (fluorite.frames_count == MAX_WINDOWS)
@@ -298,6 +318,10 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		free(fluorite.master_winframe);
 		fluorite.slaves_count++;
 	}
+
+	// TODO: Maybe remove this or make it different. The point was to make polybar, dmenu, rofi, works as intended
+	if (fluorite_check_type(e.window))
+		return ;
 
 	fluorite.master_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 	fluorite.frames_count++;
@@ -313,12 +337,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		XFree(source_hints);
 	}
 	XReparentWindow(fluorite.display, e.window, fluorite.master_winframe->frame, 0, 0);
-	XResizeWindow(
-			fluorite.display,
-			e.window,
-			fluorite.master_winframe->width,
-			fluorite.master_winframe->height
-	);
+	/* XResizeWindow(fluorite.display, e.window, fluorite.master_winframe->width, fluorite.master_winframe->height); */
 	XMoveResizeWindow(fluorite.display, fluorite.master_winframe->window, 0, 0, fluorite.master_winframe->width, fluorite.master_winframe->height);
 	XMapWindow(fluorite.display, fluorite.master_winframe->frame);
 	XRaiseWindow(fluorite.display, fluorite.master_winframe->frame);

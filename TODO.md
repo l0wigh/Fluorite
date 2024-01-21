@@ -8,6 +8,7 @@
 - [ ] Add transparent windows (XCreateWindows and not XCreateSimpleWindows)
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
 - [ ] Polybar is crashing, FUCK !
+    - Clearly because I'm not opening "floating" windows properly (maybe DWM have a solution for this)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
