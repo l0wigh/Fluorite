@@ -1,8 +1,8 @@
 # TODO !
-- [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
-    - dmenu, firefox, rofi, polybar issues are all linked to this. FIX IT !!!
 - [ ] Clean the code
+- [ ] Add Workspaces
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
+- [ ] killall command can sometimes break stuff (need more testing)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -13,9 +13,14 @@
     - [ ] Look for hints/atoms/attributes
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
+- [-] Resize Window go to negative value
+    - [x] Partial fix, need a redraw somewhere that isn't done (2 windows, spam meta-j)
+    - [ ] Add Transient management and it should works as intended (or almost)
+    - [ ] rofi, firefox, and polybar still buggy
 
 # DONE !
 - [x] Fixing the multi closing issue
+    - Fixed with XSync(fluorite.display, True) and X(Un)GrabServer
 - [x] Add and manage the config file
 - [x] Add rotations to slaves stack
 - [x] Add master window resize
@@ -27,3 +32,9 @@
     - Seems to be working, Might be wrong in some cases
     - Seems like picom can't affect it and should be done inside program config
     - Maybe try to find a way to do it inside config file
+- [x] Fixed issues with dmenu, rofi, firefox
+    - Was just a bad variable management inside the unmap function
+    - Added a closed variable and moving `fluorite.frames_count` inside the if statement fixed it
+
+# Not Really Important
+- [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)

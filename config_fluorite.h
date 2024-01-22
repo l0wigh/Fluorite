@@ -35,7 +35,7 @@ void fluorite_layout_change(int mode);
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog); }
-static void fluorite_dmenu() { char prog[255] = "dmenu_run -m 0"; fluorite_execute(prog); }
+static void fluorite_dmenu() { char prog[255] = "dmenu_run"; fluorite_execute(prog); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog); }
 static void fluorite_exit() { char prog[255] = "killall Fluorite"; fluorite_execute(prog); }
 static void fluorite_next_focus() { fluorite_layout_change(FOCUS_TOP); }

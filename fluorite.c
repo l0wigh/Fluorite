@@ -107,12 +107,18 @@ void fluorite_layout_change(int mode)
 			fluorite_redraw_windows();
 			break;
 		case BIGGER_MASTER:
-			fluorite.master_offset += 25;
-			fluorite_redraw_windows();
+			if (fluorite.slaves_count > 0)
+			{
+				fluorite.master_offset += 25;
+				fluorite_redraw_windows();
+			}
 			break;
 		case SMALLER_MASTER:
-			fluorite.master_offset -= 25;
-			fluorite_redraw_windows();
+			if (fluorite.slaves_count > 0)
+			{
+				fluorite.master_offset -= 25;
+				fluorite_redraw_windows();
+			}
 			break;
 	}
 }
@@ -479,7 +485,10 @@ void fluorite_redraw_windows()
 	{
 		fluorite.master_winframe->width = fluorite.screen_width / 2 - (BORDER_WIDTH * 2) - (GAPS * 2) + fluorite.master_offset;
 		if (fluorite.master_winframe->width < 0)
+		{
+			fluorite.master_offset += 25;
 			return ;
+		}
 		XResizeWindow(
 				fluorite.display, fluorite.master_winframe->frame,
 				fluorite.master_winframe->width, fluorite.master_winframe->height
@@ -496,7 +505,10 @@ void fluorite_redraw_windows()
 			fluorite.slaves_winframes[i]->width = fluorite.screen_width / 2 - (BORDER_WIDTH * 2) - (GAPS * 4) - (size_offset / fluorite.slaves_count) - fluorite.master_offset;
 			fluorite.slaves_winframes[i]->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - (size_offset / fluorite.slaves_count);
 			if (fluorite.slaves_winframes[i]->width < 0 || fluorite.slaves_winframes[i]->height < 0)
-				return ;
+			{
+				fluorite.master_offset -= 25;
+				break;
+			}
 			XResizeWindow(
 					fluorite.display, fluorite.slaves_winframes[i]->frame,
 					fluorite.slaves_winframes[i]->width, fluorite.slaves_winframes[i]->height
@@ -515,6 +527,7 @@ void fluorite_redraw_windows()
 	XUngrabServer(fluorite.display);
 	XSync(fluorite.display, True);
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (unsigned char *) &(fluorite.master_winframe->window), 1);
+	XSetInputFocus(fluorite.display, fluorite.master_winframe->window, RevertToPointerRoot, CurrentTime);
 }
 
 void fluorite_handle_unmapping(Window e)
@@ -523,9 +536,9 @@ void fluorite_handle_unmapping(Window e)
 		return;
 
 	XGrabServer(fluorite.display);
-	fluorite.frames_count--;
 	if (fluorite.master_winframe->window == e)
 	{
+		fluorite.frames_count--;
 		XReparentWindow(fluorite.display, fluorite.master_winframe->frame, fluorite.root, 0, 0);
 		XUnmapWindow(fluorite.display, fluorite.master_winframe->frame);
 		XDestroyWindow(fluorite.display, fluorite.master_winframe->frame);
@@ -544,8 +557,10 @@ void fluorite_handle_unmapping(Window e)
 	else
 	{
 		int i;
+		int closed;
 
 		i = 0;
+		closed = False;
 		while (i <= fluorite.slaves_count)
 		{
 			if (fluorite.slaves_winframes[i]->window == e)
@@ -556,16 +571,18 @@ void fluorite_handle_unmapping(Window e)
 				XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 				free(fluorite.slaves_winframes[i]);
 				fluorite.slaves_winframes[i] = (WinFrames *) malloc(sizeof(WinFrames));
+				closed = True;
 				break;
 			}
 			i++;
 		}
-		while (i <= fluorite.slaves_count)
+		while (i <= fluorite.slaves_count && closed)
 		{
 			memcpy(fluorite.slaves_winframes[i], fluorite.slaves_winframes[i + 1], sizeof(WinFrames));
 			i++;
 		}
-		fluorite.slaves_count--;
+		if (closed)
+			fluorite.slaves_count--;
 	}
 	XUngrabServer(fluorite.display);
 	XSync(fluorite.display, True);
