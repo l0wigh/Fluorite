@@ -1,6 +1,8 @@
 # TODO !
-- [ ] Clean the code
-- [ ] Add Workspaces
+- [-] Add Workspaces
+    - [x] Switching workspaces
+    - Fix the app-to-workspace function
+- [ ] Add Fullscreen mode
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
 - [ ] killall command can sometimes break stuff (need more testing)
 
@@ -13,10 +15,13 @@
     - [ ] Look for hints/atoms/attributes
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
+        - Firefox still stuggle sometimes (mainly at the opening)
 - [-] Resize Window go to negative value
     - [x] Partial fix, need a redraw somewhere that isn't done (2 windows, spam meta-j)
     - [ ] Add Transient management and it should works as intended (or almost)
     - [ ] rofi, firefox, and polybar still buggy
+- [-] Clean the code
+    - Seems clean for now (adding Workspaces now !)
 
 # DONE !
 - [x] Fixing the multi closing issue
@@ -38,3 +43,4 @@
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
+- [ ] Some very precise apps, make Fluorite Crash
