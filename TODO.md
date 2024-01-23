@@ -1,5 +1,4 @@
 # TODO !
-- [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
 - [ ] killall command can sometimes break stuff (need more testing)
     - Keep in mind that you have workspaces now and that the handle unmapping is now wrong and needs to be fixed.
 - [ ] Opening two thunar and closing one, makes the window manager dies
@@ -20,6 +19,8 @@
     - [ ] rofi, firefox, and polybar still buggy
 - [-] Clean the code
     - Seems clean for now (adding Workspaces now !)
+- [-] Fix the gaps and position, the master window is slightly too big and not centered by default
+    - Should be fixed, might cause some issues with some GAPS config
 
 # DONE !
 - [x] Fixing the multi closing issue
