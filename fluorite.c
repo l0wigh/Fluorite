@@ -121,14 +121,14 @@ void fluorite_layout_change(int mode)
 			fluorite_redraw_windows();
 			break;
 		case BIGGER_MASTER:
-			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
+			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 			{
 				fluorite.workspaces[fluorite.current_workspace].master_offset += 25;
 				fluorite_redraw_windows();
 			}
 			break;
 		case SMALLER_MASTER:
-			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
+			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 			{
 				fluorite.workspaces[fluorite.current_workspace].master_offset -= 25;
 				fluorite_redraw_windows();
