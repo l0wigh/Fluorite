@@ -1,5 +1,4 @@
 # TODO !
-- [ ] Add Fullscreen mode
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
 - [ ] killall command can sometimes break stuff (need more testing)
     - Keep in mind that you have workspaces now and that the handle unmapping is now wrong and needs to be fixed.
@@ -40,6 +39,7 @@
     - Was just a bad variable management inside the unmap function
     - Added a closed variable and moving `fluorite.frames_count` inside the if statement fixed it
 - [x] Add Workspaces
+- [x] Add Fullscreen mode
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
