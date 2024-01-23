@@ -1,10 +1,9 @@
 # TODO !
-- [-] Add Workspaces
-    - [x] Switching workspaces
-    - Fix the app-to-workspace function
 - [ ] Add Fullscreen mode
 - [ ] Fix the gaps and position, the master window is slightly too big and not centered by default
 - [ ] killall command can sometimes break stuff (need more testing)
+    - Keep in mind that you have workspaces now and that the handle unmapping is now wrong and needs to be fixed.
+- [ ] Opening two thunar and closing one, makes the window manager dies
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -40,7 +39,10 @@
 - [x] Fixed issues with dmenu, rofi, firefox
     - Was just a bad variable management inside the unmap function
     - Added a closed variable and moving `fluorite.frames_count` inside the if statement fixed it
+- [x] Add Workspaces
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
 - [ ] Some very precise apps, make Fluorite Crash
+- [ ] Check the binding for the "à" in XK_, it seems to not be working
+    - When done, check if the tenth workspace works;

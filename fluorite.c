@@ -65,15 +65,15 @@ static void fluorite_run();
 static void fluorite_clean();
 
 // Core utilities
-static void fluorite_handle_configuration(XConfigureRequestEvent e);
-static void fluorite_handle_mapping(XMapRequestEvent e);
-static void fluorite_handle_unmapping(Window e);
-static void fluorite_handle_keys(XKeyPressedEvent e);
-static WinFrames *fluorite_create_simple_winframe();
-static WinFrames *fluorite_create_winframe();
-static void fluorite_organise_stack(int mode);
-static void fluorite_redraw_windows();
-void dwm_grabkeys();
+static void			fluorite_handle_configuration(XConfigureRequestEvent e);
+static void			fluorite_handle_mapping(XMapRequestEvent e);
+static void			fluorite_handle_unmapping(Window e);
+static void			fluorite_handle_keys(XKeyPressedEvent e);
+static WinFrames	*fluorite_create_simple_winframe();
+static WinFrames	*fluorite_create_winframe();
+static void			fluorite_organise_stack(int mode);
+static void			fluorite_redraw_windows();
+static void			dwm_grabkeys();
 
 // Bindings functions (defined in config_fluorite.h)
 void fluorite_execute(char *argument)
@@ -163,30 +163,41 @@ void fluorite_change_workspace(int new_workspace, int mode)
 	}
 	else
 	{
-		int keep_workspace;
+		int keep_workspace = fluorite.current_workspace;
 
-		if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
-			return;
-		XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
-		if (fluorite.workspaces[new_workspace].master_winframe)
+		// Manage the new workspace
+		if (fluorite.workspaces[new_workspace].frames_count > 0)
 		{
 			fluorite.workspaces[new_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 			memcpy(fluorite.workspaces[new_workspace].tmp_winframe, fluorite.workspaces[new_workspace].master_winframe, sizeof(WinFrames));
-			memcpy(fluorite.workspaces[new_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
-			keep_workspace = fluorite.current_workspace;
+			free(fluorite.workspaces[new_workspace].master_winframe);
+			fluorite.workspaces[new_workspace].slaves_count++;
+		}
+		fluorite.workspaces[new_workspace].master_winframe = (WinFrames *) malloc(sizeof(WinFrames));
+		fluorite.workspaces[new_workspace].frames_count++;
+		memcpy(fluorite.workspaces[new_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
+		if (fluorite.workspaces[new_workspace].slaves_count > 0)
+		{
 			fluorite.current_workspace = new_workspace;
 			fluorite_organise_stack(STACK_NEW);
+			free(fluorite.workspaces[new_workspace].tmp_winframe);
 			fluorite.current_workspace = keep_workspace;
-			memcpy(fluorite.workspaces[fluorite.current_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
-			fluorite_organise_stack(STACK_DEL);
-			fluorite.workspaces[fluorite.current_workspace].frames_count--;
-			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
-				fluorite.workspaces[fluorite.current_workspace].slaves_count--;
-			fluorite.workspaces[new_workspace].frames_count++;
-			if (fluorite.workspaces[new_workspace].frames_count > 1)
-				fluorite.workspaces[new_workspace].slaves_count++;
 		}
+		
+		// Manage the current workspace
+		fluorite.workspaces[fluorite.current_workspace].frames_count--;
+		XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+		XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 		free(fluorite.workspaces[fluorite.current_workspace].master_winframe);
+		if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
+		{
+			fluorite.workspaces[fluorite.current_workspace].master_winframe = (WinFrames *) malloc(sizeof(WinFrames));
+			memcpy(fluorite.workspaces[fluorite.current_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
+			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, RevertToPointerRoot, CurrentTime);
+			XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+			fluorite_organise_stack(STACK_DEL);
+			fluorite.workspaces[fluorite.current_workspace].slaves_count--;
+		}
 	}
 	fluorite_redraw_windows();
 }
