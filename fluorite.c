@@ -723,7 +723,10 @@ void fluorite_handle_unmapping(Window e)
 			i++;
 		}
 		if (closed)
+		{
+			fluorite.workspaces[fluorite.current_workspace].frames_count--;
 			fluorite.workspaces[fluorite.current_workspace].slaves_count--;
+		}
 	}
 	XUngrabServer(fluorite.display);
 	XSync(fluorite.display, True);
