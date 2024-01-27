@@ -4,14 +4,15 @@
 #include <stdlib.h>
 
 #define BORDER_WIDTH	3
-/* #define BORDER_COLORS	0x35e5dc */
+#define BORDER_COLORS	0x35e5dc
 /* #define BORDER_COLORS	0x9c082d */
-#define BORDER_COLORS	0xde4a2c
+/* #define BORDER_COLORS	0xde4a2c */
 #define GAPS			10
 #define STACK_OFFSET	20
 #define TOPBAR_GAPS		0
 #define BOTTOMBAR_GAPS	0
 #define METAKEY			Mod4Mask
+#define FOLLOW_WINDOWS	False
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
@@ -38,7 +39,7 @@ void fluorite_change_workspace(int new_workspace, int mode);
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog); }
-static void fluorite_dmenu() { char prog[255] = "dmenu_run"; fluorite_execute(prog); }
+static void fluorite_dmenu() { char prog[255] = "rofi -show run"; fluorite_execute(prog); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog); }
 static void fluorite_exit() { fluorite_user_close(); }
 static void fluorite_next_focus() { fluorite_layout_change(FOCUS_TOP); }

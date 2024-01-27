@@ -41,6 +41,8 @@
     - Added a closed variable and moving `fluorite.frames_count` inside the if statement fixed it
 - [x] Add Workspaces
 - [x] Add Fullscreen mode
+- [x] Fix the closing windows outside the current workspaces
+    - Should be fixed, stay vigilent for potential bugs after the whole rewrite of unmapping and changes made to organise stack
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
