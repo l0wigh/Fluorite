@@ -314,6 +314,12 @@ void fluorite_run()
 				break;
 			case ButtonPress:
 				break;
+			case EnterNotify:
+				if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame)
+					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+				else
+					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+				break;
 			case KeyPress:
 				fluorite_handle_keys(ev.xkey);
 				break;
@@ -412,7 +418,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->window = e.window;
 
 	XGrabServer(fluorite.display);
-	XSelectInput(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, SubstructureNotifyMask | SubstructureRedirectMask);
+	XSelectInput(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, SubstructureNotifyMask | SubstructureRedirectMask | EnterWindowMask);
 	XWMHints *source_hints = XGetWMHints(fluorite.display, e.window);
 	if (source_hints)
 	{

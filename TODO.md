@@ -1,7 +1,4 @@
 # TODO !
-- [ ] Keyboard focus on first slaves if mouse enter
-    - Still apply Fluorite bindings based on the master window
-    - Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
 - [ ] Opening two thunar and closing one, makes the window manager dies
 
 # PARTIALLY DONE
@@ -28,6 +25,7 @@
 - [ ] Some very precise apps, make Fluorite Crash
 - [ ] Killing a firefox instance, kills all Firefox instances
 - [ ] killall command can sometimes break stuff (need more testing)
+- [ ] Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
 
 # DONE !
 - [x] Fixing the multi closing issue
@@ -52,3 +50,5 @@
     - Should be fixed, stay vigilent for potential bugs after the whole rewrite of unmapping and changes made to organise stack
 - [x] Check the binding for the "à" in XK_, it seems to not be working
 - [x] Better closing function, avoid issues with Firefox for example
+- [x] Keyboard focus on first slaves if mouse enter
+    - Still apply Fluorite bindings based on the master window
