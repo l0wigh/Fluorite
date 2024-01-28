@@ -89,7 +89,16 @@ void fluorite_close_window()
 		return ;
 
 	if (fluorite.workspaces[fluorite.current_workspace].master_winframe->window)
-		XKillClient(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window);
+	{
+		XEvent closing;
+		memset(&closing, 0, sizeof(closing));
+		closing.xclient.type = ClientMessage;
+		closing.xclient.message_type = XInternAtom(fluorite.display, "WM_PROTOCOLS", False);
+		closing.xclient.window = fluorite.workspaces[fluorite.current_workspace].master_winframe->window;
+		closing.xclient.format = 32;
+		closing.xclient.data.l[0] = XInternAtom(fluorite.display, "WM_DELETE_WINDOW", False);
+		XSendEvent(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, False, 0, &closing);
+	}
 	else
 		XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 }
@@ -411,12 +420,12 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		XFree(source_hints);
 	}
 	XReparentWindow(fluorite.display, e.window, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0, 0);
-	XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 0, 0, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
 	XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 	XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 	XMapWindow(fluorite.display, e.window);
 	XUngrabServer(fluorite.display);
 	XSync(fluorite.display, True);
+	XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 0, 0, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
 
 	if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 	{

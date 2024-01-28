@@ -1,6 +1,7 @@
 # TODO !
-- [ ] killall command can sometimes break stuff (need more testing)
-    - Keep in mind that you have workspaces now and that the handle unmapping is now wrong and needs to be fixed.
+- [ ] Keyboard focus on first slaves if mouse enter
+    - Still apply Fluorite bindings based on the master window
+    - Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
 - [ ] Opening two thunar and closing one, makes the window manager dies
 
 # PARTIALLY DONE
@@ -21,6 +22,12 @@
     - Seems clean for now (adding Workspaces now !)
 - [-] Fix the gaps and position, the master window is slightly too big and not centered by default
     - Should be fixed, might cause some issues with some GAPS config
+
+# Not Really Important
+- [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
+- [ ] Some very precise apps, make Fluorite Crash
+- [ ] Killing a firefox instance, kills all Firefox instances
+- [ ] killall command can sometimes break stuff (need more testing)
 
 # DONE !
 - [x] Fixing the multi closing issue
@@ -43,9 +50,5 @@
 - [x] Add Fullscreen mode
 - [x] Fix the closing windows outside the current workspaces
     - Should be fixed, stay vigilent for potential bugs after the whole rewrite of unmapping and changes made to organise stack
-
-# Not Really Important
-- [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
-- [ ] Some very precise apps, make Fluorite Crash
-- [ ] Check the binding for the "à" in XK_, it seems to not be working
-    - When done, check if the tenth workspace works;
+- [x] Check the binding for the "à" in XK_, it seems to not be working
+- [x] Better closing function, avoid issues with Firefox for example

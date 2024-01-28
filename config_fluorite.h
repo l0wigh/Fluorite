@@ -62,6 +62,7 @@ static void	fluorite_goto_workspace_six() { fluorite_change_workspace(5, 0); }
 static void	fluorite_goto_workspace_seven() { fluorite_change_workspace(6, 0); }
 static void	fluorite_goto_workspace_eight() { fluorite_change_workspace(7, 0); }
 static void	fluorite_goto_workspace_nine() { fluorite_change_workspace(8, 0); }
+static void	fluorite_goto_workspace_ten() { fluorite_change_workspace(9, 0); }
 
 // App workspaces switch function
 static void	fluorite_appto_workspace_one() { fluorite_change_workspace(0, 1); }
@@ -96,6 +97,7 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_egrave,    				fluorite_goto_workspace_seven},
 	{METAKEY,				XK_underscore,				fluorite_goto_workspace_eight},
 	{METAKEY,				XK_ccedilla,  				fluorite_goto_workspace_nine},
+	{METAKEY,				XK_agrave,  				fluorite_goto_workspace_ten},
 
 	// App Workspaces switching
 	{METAKEY|ShiftMask,				XK_ampersand, 				fluorite_appto_workspace_one},
