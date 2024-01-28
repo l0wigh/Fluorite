@@ -315,10 +315,12 @@ void fluorite_run()
 			case ButtonPress:
 				break;
 			case EnterNotify:
-				if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame)
+				if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame && fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
-				else
+				else if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+				else
+					XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 				break;
 			case KeyPress:
 				fluorite_handle_keys(ev.xkey);
