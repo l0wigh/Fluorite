@@ -4,15 +4,15 @@
 #include <stdlib.h>
 
 #define BORDER_WIDTH	3
-#define BORDER_COLORS	0x35e5dc
+/* #define BORDER_COLORS	0x35e5dc */
 /* #define BORDER_COLORS	0x9c082d */
-/* #define BORDER_COLORS	0xde4a2c */
+#define BORDER_COLORS	0xde4a2c
 #define GAPS			10
 #define STACK_OFFSET	20
 #define TOPBAR_GAPS		0
 #define BOTTOMBAR_GAPS	0
 #define METAKEY			Mod4Mask
-#define FOLLOW_WINDOWS	False
+#define FOLLOW_WINDOWS	True
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
@@ -23,7 +23,8 @@
 #define SMALLER_MASTER		15
 #define FULLSCREEN_TOGGLE	16
  
-typedef struct {
+typedef struct
+{
 	unsigned int	mod;
 	KeySym			key;
 	void			(*func)();

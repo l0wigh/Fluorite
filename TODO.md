@@ -1,5 +1,12 @@
 # TODO !
-- [ ] Opening two thunar and closing one, makes the window manager dies
+- [-] Create the FluoriteBar
+    - [x] Config file only for the bar
+    - [x] Custom module that you create inside the config file
+    - [x] Default Workspaces module
+    - [ ] Change the way the bar is handle so that you can use custom colors for each modules
+    - [ ] Find why the bar is cleaned without redraw at the start (will avoid needing to swap workspace or use a very low sleep timing)
+    - [ ] Do some cleanup
+    - Default Window name module (?????)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -52,3 +59,5 @@
 - [x] Better closing function, avoid issues with Firefox for example
 - [x] Keyboard focus on first slaves if mouse enter
     - Still apply Fluorite bindings based on the master window
+- [x] Opening two thunar and closing one, makes the window manager dies
+    - Fixed itself for some reason
