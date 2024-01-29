@@ -789,7 +789,7 @@ Window fluorite_bar_create()
 				InputOutput, vinfo.visual,
 				CWBackPixel | CWBorderPixel | CWColormap | CWEventMask,
 				&attribs_set
-				);
+		);
 		XCompositeRedirectWindow(fluorite.display, new_bar, CompositeRedirectAutomatic);
 	}
 	else
@@ -863,8 +863,7 @@ void fluorite_bar_title_module()
 {
 	int pos_x;
 
-	pos_x = bar.width / 2;
-	pos_x -= (strlen(BAR_TITLE) * 8);
+	pos_x = bar.width / 2.0f - (2.2f * ((strlen(BAR_TITLE)) * (BAR_FONT_SIZE / 6.0f)));
 	fluorite_bar_write(pos_x, BAR_TITLE, bar.default_color);
 }
 

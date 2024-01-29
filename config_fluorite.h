@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #define BORDER_WIDTH	3
-/* #define BORDER_COLORS	0x35e5dc */
+#define BORDER_COLORS	0x35e5dc
 /* #define BORDER_COLORS	0x9c082d */
-#define BORDER_COLORS	0xde4a2c
+/* #define BORDER_COLORS	0xde4a2c */
 #define GAPS			10
 #define STACK_OFFSET	20
 #define TOPBAR_GAPS		0
@@ -52,6 +52,9 @@ static void fluorite_smaller_master() { fluorite_layout_change(SMALLER_MASTER); 
 static void fluorite_fullscreen_toggle() { fluorite_layout_change(FULLSCREEN_TOGGLE); }
 static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog); }
 static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog); }
+static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog); }
+static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog); }
+static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -119,4 +122,7 @@ static const Bindings bind[] = {
 
 	{METAKEY,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
 	{METAKEY,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
+	{METAKEY,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
+	{METAKEY,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
+	{METAKEY,				XF86XK_AudioMute,			fluorite_volume_mute},
 };

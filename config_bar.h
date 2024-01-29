@@ -4,22 +4,22 @@
 #define	BAR_ENABLED				True
 // TOP | BOTTOM
 #define POSITION				TOP
-#define BAR_HEIGHT				50
+#define BAR_HEIGHT				35
 // GAPS is applied on left and right
-#define BAR_GAPS				10
+#define BAR_GAPS				0
 // POS_GAP is based on the position. If on top, the bar will be lower
-#define	BAR_POS_GAP				10
+#define	BAR_POS_GAP				0
 #define BAR_BACKGROUND			0x1e1e1e
 #define BAR_DEFAULT_FOREGROUND	"#ffffff"
-#define BAR_ACCENT_FOREGROUND	"#de4a2c"
+#define BAR_ACCENT_FOREGROUND	"#35e5dc"
 #define BAR_TRANSPARENT			False
 #define BAR_REFRESH				1
 #define BAR_TITLE				"Fluorite 0.2"
 #define BAR_TEXT_GAP			10
 
 // The size should be the same
-static const char bar_font[] = "VictorMono NF:size=20";
-#define BAR_FONT_SIZE	20
+static const char bar_font[] = "VictorMono NF:size=18";
+#define BAR_FONT_SIZE	18
 
 typedef struct
 {
@@ -30,14 +30,15 @@ typedef struct
 } basic_module;
 
 static const basic_module clock_module = {
-	.name =  " ",
+	/* .name =  "  ", */
+	.name =  "",
 	.command = "date | cut -d ' ' -f 5 | tr -d \\\\n",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
 
 static const basic_module monbrightness_module = {
-	.name =  "󰖚 ",
+	.name =  "󰖚  ",
 	.command = "brightnessctl | grep Current | cut -d ' ' -f 4 | sed 's/(//' | sed 's/)//' | tr -d \\\\n",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
@@ -45,18 +46,26 @@ static const basic_module monbrightness_module = {
 
 static const basic_module battery_module = {
 	.name =  "",
-	.command = "/home/thomas/projects/x11windows/Fluorite/bat_fluorite.sh",
+	.command = "/home/thomas/projects/x11windows/Fluorite/scripts/bat_fluorite.sh",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
 
-#define BAR_MODULE_COUNT		3
-#define BAR_MODULE_SEPARATOR	" ┇ "
+static const basic_module volume_module = {
+	.name =  "  ",
+	.command = "/home/thomas/projects/x11windows/Fluorite/scripts/vol_fluorite.sh",
+	/* .foreground = 0xffffff, */
+	/* .background = 0x1e1e1e, */
+};
+
+#define BAR_MODULE_COUNT		4
+#define BAR_MODULE_SEPARATOR	"  "
 // Use this to fix margin issues that can happen with nerdfont or just to add right margin
-#define BAR_MODULE_OFFSET		175
+#define BAR_MODULE_OFFSET		205
 
 static const basic_module user_modules[] = {
 	monbrightness_module,
+	volume_module,
 	battery_module,
 	clock_module,
 };

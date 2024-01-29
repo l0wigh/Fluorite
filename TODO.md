@@ -4,7 +4,7 @@
     - [x] Custom module that you create inside the config file
     - [x] Default Workspaces module
     - [x] Fix the color on layout mode with the tenth workspace
-    - [ ] Change the way the bar is handle so that you can use custom colors for each modules
+    - [ ] Change the way the bar handle the modules so that you can use custom colors for each of these
     - [ ] Find why the bar is cleaned without redraw at the start (will avoid needing to swap workspace or use a very low sleep timing)
     - [ ] Do some cleanup
     - Default Window name module (?????)
@@ -29,11 +29,13 @@
     - Should be fixed, might cause some issues with some GAPS config
 
 # Not Really Important
+- [ ] Add a real fullscreen mode
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
 - [ ] Some very precise apps, make Fluorite Crash
 - [ ] Killing a firefox instance, kills all Firefox instances
 - [ ] killall command can sometimes break stuff (need more testing)
 - [ ] Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
+- [ ] Add clickable workspaces to the bar
 
 # DONE !
 - [x] Fixing the multi closing issue
