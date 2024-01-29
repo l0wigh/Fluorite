@@ -851,12 +851,12 @@ void fluorite_bar_workspaces_module()
 			color = bar.accent_color;
 		else
 			color = bar.default_color;
-		fluorite_bar_write(i * 10 * (BAR_FONT_SIZE / 6.0f) + 5, workspaces[i], color);
+		fluorite_bar_write(i * 10 * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, workspaces[i], color);
 	}
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5, "[F]", bar.default_color);
+		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, "[F]", bar.default_color);
 	else
-		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5, "[T]", bar.default_color);
+		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, "[T]", bar.default_color);
 }
 
 void fluorite_bar_title_module()
@@ -886,7 +886,7 @@ void fluorite_bar_user_module()
 			strcat(printing, cmd_result);
 		pclose(stdout_cmd);
 	}
-	fluorite_bar_write(bar.width - (strlen(printing) * (BAR_FONT_SIZE / 1.3f)) + BAR_MODULE_OFFSET, printing, bar.default_color);
+	fluorite_bar_write(bar.width - (strlen(printing) * (BAR_FONT_SIZE / 1.3f)) + BAR_MODULE_OFFSET - BAR_TEXT_GAP, printing, bar.default_color);
 	free(printing);
 }
 

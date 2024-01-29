@@ -15,6 +15,7 @@
 #define BAR_TRANSPARENT			False
 #define BAR_REFRESH				1
 #define BAR_TITLE				"Fluorite 0.2"
+#define BAR_TEXT_GAP			10
 
 // The size should be the same
 static const char bar_font[] = "VictorMono NF:size=20";
