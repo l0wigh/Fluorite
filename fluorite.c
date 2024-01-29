@@ -72,11 +72,11 @@ typedef struct
 	int				pos_y;
 	int				width;
 	int				height;
-	basic_module	*modules;
 	Window			win;
 	XftFont			*font;
 	XftDraw			*draw;
-	XftColor		font_color;
+	XftColor		default_color;
+	XftColor		accent_color;
 } Bar;
 
 static Fluorite fluorite;
@@ -594,10 +594,10 @@ void fluorite_redraw_windows()
 	{
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = 0 + (GAPS * 2);
 		if (POSITION == TOP)
-			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2) + bar.height;
+			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2) + (bar.height + bar.pos_gap);
 		else
 			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2);
-		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - bar.height;
+		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - (bar.height + bar.pos_gap);
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->width = fluorite.screen_width - (BORDER_WIDTH * 2) - (GAPS * 4);
 		XResizeWindow(
 				fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame,
@@ -613,11 +613,11 @@ void fluorite_redraw_windows()
 			{
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = 0 + (GAPS * 2);
 				if (POSITION == TOP)
-					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = 0 + (GAPS * 2) + bar.height;
+					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = 0 + (GAPS * 2) + (bar.height + bar.pos_gap);
 				else
 					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = 0 + (GAPS * 2);
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width = fluorite.screen_width - (BORDER_WIDTH * 2) - (GAPS * 4);
-				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - bar.height;
+				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - (bar.height + bar.pos_gap);
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width < 0 || fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height < 0)
 				{
 					fluorite.workspaces[fluorite.current_workspace].master_offset -= 25;
@@ -641,11 +641,11 @@ void fluorite_redraw_windows()
 	{
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = 0 + (GAPS * 2);
 		if (POSITION == TOP)
-			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2) + bar.height;
+			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2) + (bar.height + bar.pos_gap);
 		else
 			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2);
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->width = fluorite.screen_width - (BORDER_WIDTH * 2) - (GAPS * 4);
-		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - bar.height;
+		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - (bar.height + bar.pos_gap);
 		XResizeWindow(
 				fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame,
 				fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height
@@ -675,11 +675,11 @@ void fluorite_redraw_windows()
 			{
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = fluorite.screen_width / 2 + (GAPS) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + fluorite.workspaces[fluorite.current_workspace].master_offset;
 				if (POSITION == TOP)
-					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = 0 + (GAPS * 2) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + bar.height;
+					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = 0 + (GAPS * 2) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + (bar.height + bar.pos_gap);
 				else
 					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = 0 + (GAPS * 2) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count);
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width = fluorite.screen_width / 2 - (BORDER_WIDTH * 2) - (GAPS * 3) - (size_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) - fluorite.workspaces[fluorite.current_workspace].master_offset;
-				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - (size_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) - bar.height;
+				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.screen_height - (BORDER_WIDTH * 2) - (GAPS * 4) - (size_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) - (bar.height + bar.pos_gap);
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width < 0 || fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height < 0)
 				{
 					fluorite.workspaces[fluorite.current_workspace].master_offset -= 25;
@@ -816,27 +816,22 @@ void fluorite_bar_init()
 		bar.pos_gap = 0;
 		return ;
 	}
+	bar.pos_gap = BAR_POS_GAP * 2;
 	if (POSITION == TOP)
-	{
-		bar.pos_gap = BAR_POS_GAP;
 		bar.pos_y = 0 + bar.pos_gap;
-	}
 	else
-	{
-		bar.pos_gap = -BAR_POS_GAP;
-		bar.pos_y = fluorite.screen_height + bar.pos_gap - BAR_HEIGHT;
-	}
+		bar.pos_y = fluorite.screen_height - bar.pos_gap - BAR_HEIGHT;
 	bar.pos_x = 0 + (BAR_GAPS * 2);
 	bar.width = fluorite.screen_width - (BAR_GAPS * 4);
 	bar.height = BAR_HEIGHT;
-	bar.modules = (basic_module *) malloc(LENGTH(user_modules));
-	memcpy(bar.modules, user_modules, LENGTH(user_modules));
 	bar.win = fluorite_bar_create();
 	XMapWindow(fluorite.display, bar.win);
 
 	bar.font = XftFontOpenName(fluorite.display, fluorite.screen, bar_font);
 	bar.draw = XftDrawCreate(fluorite.display, bar.win, DefaultVisual(fluorite.display, fluorite.screen), DefaultColormap(fluorite.display, fluorite.screen));
-	XftColorAllocName(fluorite.display, DefaultVisual(fluorite.display, 0), DefaultColormap(fluorite.display, 0), "#ffffff", &bar.font_color);
+	XftColorAllocName(fluorite.display, DefaultVisual(fluorite.display, 0), DefaultColormap(fluorite.display, 0), BAR_DEFAULT_FOREGROUND, &bar.default_color);
+	XftColorAllocName(fluorite.display, DefaultVisual(fluorite.display, 0), DefaultColormap(fluorite.display, 0), BAR_ACCENT_FOREGROUND, &bar.accent_color);
+
 	fluorite_bar_draw();
 }
 
@@ -853,39 +848,45 @@ void fluorite_bar_workspaces_module()
 	for (int i = 0; i <= 9; i++)
 	{
 		if (i == fluorite.current_workspace)
-			XftColorAllocName(fluorite.display, DefaultVisual(fluorite.display, 0), DefaultColormap(fluorite.display, 0), BAR_FOREGROUND, &color);
+			color = bar.accent_color;
 		else
-			XftColorAllocName(fluorite.display, DefaultVisual(fluorite.display, 0), DefaultColormap(fluorite.display, 0), "#ffffff", &color);
+			color = bar.default_color;
 		fluorite_bar_write(i * 10 * (BAR_FONT_SIZE / 6.0f) + 5, workspaces[i], color);
 	}
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5, "[F]", color);
+		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5, "[F]", bar.default_color);
 	else
-		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5, "[T]", color);
+		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5, "[T]", bar.default_color);
+}
+
+void fluorite_bar_title_module()
+{
+	int pos_x;
+
+	pos_x = bar.width / 2;
+	pos_x -= (strlen(BAR_TITLE) * 8);
+	fluorite_bar_write(pos_x, BAR_TITLE, bar.default_color);
 }
 
 void fluorite_bar_user_module()
 {
 	FILE *stdout_cmd;
-	char cmd_result[PATH_MAX];
-	char *cmd;
 	char *printing;
 
-	printing = (char *) calloc(1145, sizeof(char));
+	printing = (char *) malloc(sizeof(char) * 1145);
+	memset(printing, 0, 1145);
 	for (int i = 0; i < BAR_MODULE_COUNT; i++)
 	{
-		cmd = (char *) calloc(1145, sizeof(char));
+		char cmd_result[PATH_MAX];
 		if (i != 0 && BAR_MODULE_SEPARATOR)
 			strcat(printing, BAR_MODULE_SEPARATOR);
 		strcat(printing, user_modules[i].name);
-		strcat(cmd, user_modules[i].command);
-		strcat(cmd, " | tr -d \\\\n");
-		stdout_cmd = popen(cmd, "r");
-		fgets(cmd_result, PATH_MAX, stdout_cmd);
-		strcat(printing, cmd_result);
-		free(cmd);
+		stdout_cmd = popen(user_modules[i].command, "r");
+		while (fgets(cmd_result, PATH_MAX, stdout_cmd) != NULL)
+			strcat(printing, cmd_result);
+		pclose(stdout_cmd);
 	}
-	fluorite_bar_write(bar.width - (strlen(printing) * (BAR_FONT_SIZE / 1.3f)) + BAR_MODULE_OFFSET, printing, bar.font_color);
+	fluorite_bar_write(bar.width - (strlen(printing) * (BAR_FONT_SIZE / 1.3f)) + BAR_MODULE_OFFSET, printing, bar.default_color);
 	free(printing);
 }
 
@@ -896,6 +897,7 @@ void fluorite_bar_draw()
 	XGrabServer(fluorite.display);
 	XClearWindow(fluorite.display, bar.win);
 	fluorite_bar_workspaces_module();
+	fluorite_bar_title_module();
 	fluorite_bar_user_module();
 	XUngrabServer(fluorite.display);
 }

@@ -12,7 +12,7 @@
 #define TOPBAR_GAPS		0
 #define BOTTOMBAR_GAPS	0
 #define METAKEY			Mod4Mask
-#define FOLLOW_WINDOWS	True
+#define FOLLOW_WINDOWS	False
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
