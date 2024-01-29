@@ -29,25 +29,33 @@ typedef struct
 } basic_module;
 
 static const basic_module clock_module = {
-	.name =  "  ",
+	.name =  " ",
 	.command = "date | cut -d ' ' -f 5 | tr -d \\\\n",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
 
 static const basic_module monbrightness_module = {
-	.name =  "󰖚  ",
+	.name =  "󰖚 ",
 	.command = "brightnessctl | grep Current | cut -d ' ' -f 4 | sed 's/(//' | sed 's/)//' | tr -d \\\\n",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
 
-#define BAR_MODULE_COUNT		2
+static const basic_module battery_module = {
+	.name =  "",
+	.command = "/home/thomas/projects/x11windows/Fluorite/bat_fluorite.sh",
+	/* .foreground = 0xffffff, */
+	/* .background = 0x1e1e1e, */
+};
+
+#define BAR_MODULE_COUNT		3
 #define BAR_MODULE_SEPARATOR	" ┇ "
 // Use this to fix margin issues that can happen with nerdfont or just to add right margin
-#define BAR_MODULE_OFFSET		100
+#define BAR_MODULE_OFFSET		175
 
 static const basic_module user_modules[] = {
 	monbrightness_module,
+	battery_module,
 	clock_module,
 };
