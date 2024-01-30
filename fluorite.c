@@ -844,19 +844,18 @@ void fluorite_bar_write(int x, char *string, XftColor color)
 void fluorite_bar_workspaces_module()
 {
 	XftColor color;
-	char *workspaces[10] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
 	for (int i = 0; i <= 9; i++)
 	{
 		if (i == fluorite.current_workspace)
 			color = bar.accent_color;
 		else
 			color = bar.default_color;
-		fluorite_bar_write(i * 10 * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, workspaces[i], color);
+		fluorite_bar_write(i * BAR_WORKSPACE_GAP * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, (char *)custom_workspaces[i], color);
 	}
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, "[F]", bar.default_color);
+		fluorite_bar_write(10 * BAR_WORKSPACE_GAP * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, "[F]", bar.default_color);
 	else
-		fluorite_bar_write(10 * 10 * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, "[T]", bar.default_color);
+		fluorite_bar_write(10 * BAR_WORKSPACE_GAP * (BAR_FONT_SIZE / 6.0f) + 5 + BAR_TEXT_GAP, "[T]", bar.default_color);
 }
 
 void fluorite_bar_title_module()
@@ -893,12 +892,12 @@ void fluorite_bar_draw()
 {
 	if (!BAR_ENABLED)
 		return;
-	XGrabServer(fluorite.display);
+	/* XGrabServer(fluorite.display); */
 	XClearWindow(fluorite.display, bar.win);
 	fluorite_bar_workspaces_module();
 	fluorite_bar_title_module();
 	fluorite_bar_user_module();
-	XUngrabServer(fluorite.display);
+	/* XUngrabServer(fluorite.display); */
 }
 
 void *fluorite_bar_update()

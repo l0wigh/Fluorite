@@ -13,13 +13,16 @@
 #define BAR_DEFAULT_FOREGROUND	"#ffffff"
 #define BAR_ACCENT_FOREGROUND	"#35e5dc"
 #define BAR_TRANSPARENT			False
-#define BAR_REFRESH				1
+#define BAR_REFRESH				30
 #define BAR_TITLE				"Fluorite 0.2"
 #define BAR_TEXT_GAP			10
 
 // The size should be the same
 static const char bar_font[] = "VictorMono NF:size=18";
 #define BAR_FONT_SIZE	18
+
+static const char *custom_workspaces[10] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+#define BAR_WORKSPACE_GAP	10
 
 typedef struct
 {
@@ -32,7 +35,7 @@ typedef struct
 static const basic_module clock_module = {
 	/* .name =  "  ", */
 	.name =  "",
-	.command = "date | cut -d ' ' -f 5 | tr -d \\\\n",
+	.command = "date | cut -d ' ' -f 5 | rev | sed 's/:/-/' | rev | cut -d '-' -f 1 | tr -d \\\\n",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };

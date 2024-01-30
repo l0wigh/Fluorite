@@ -4,6 +4,7 @@
     - [x] Custom module that you create inside the config file
     - [x] Default Workspaces module
     - [x] Fix the color on layout mode with the tenth workspace
+    - [x] Custom Workspaces names
     - [ ] Change the way the bar handle the modules so that you can use custom colors for each of these
     - [ ] Find why the bar is cleaned without redraw at the start (will avoid needing to swap workspace or use a very low sleep timing)
     - [ ] Do some cleanup
