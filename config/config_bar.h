@@ -13,7 +13,7 @@
 #define BAR_DEFAULT_FOREGROUND	"#ffffff"
 #define BAR_ACCENT_FOREGROUND	"#35e5dc"
 #define BAR_TRANSPARENT			False
-#define BAR_REFRESH				30
+#define BAR_REFRESH				10
 #define BAR_TITLE				"Fluorite 0.2"
 #define BAR_TEXT_GAP			10
 

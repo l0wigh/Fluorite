@@ -1,5 +1,5 @@
-#include "config_fluorite.h"
-#include "config_bar.h"
+#include "config/config_fluorite.h"
+#include "config/config_bar.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
