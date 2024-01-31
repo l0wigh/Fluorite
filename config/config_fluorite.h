@@ -38,7 +38,7 @@ void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog); }
+static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show run"; fluorite_execute(prog); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog); }
@@ -55,6 +55,7 @@ static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog); }
+static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -119,6 +120,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
 	{METAKEY|ShiftMask,		XK_k,						fluorite_stack_rotate_up},
 	{METAKEY|ShiftMask,		XK_l,						fluorite_stack_rotate_down},
+	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 
 	{METAKEY,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
 	{METAKEY,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},

@@ -884,6 +884,7 @@ void fluorite_bar_user_module()
 			strcat(printing, cmd_result);
 		pclose(stdout_cmd);
 	}
+	XClearWindow(fluorite.display, bar.win);
 	fluorite_bar_write(bar.width - (strlen(printing) * (BAR_FONT_SIZE / 1.3f)) + BAR_MODULE_OFFSET - BAR_TEXT_GAP, printing, bar.default_color);
 	free(printing);
 }
@@ -892,12 +893,10 @@ void fluorite_bar_draw()
 {
 	if (!BAR_ENABLED)
 		return;
-	/* XGrabServer(fluorite.display); */
-	XClearWindow(fluorite.display, bar.win);
+	fluorite_bar_user_module();
 	fluorite_bar_workspaces_module();
 	fluorite_bar_title_module();
-	fluorite_bar_user_module();
-	/* XUngrabServer(fluorite.display); */
+	XFlush(fluorite.display);
 }
 
 void *fluorite_bar_update()
@@ -906,7 +905,6 @@ void *fluorite_bar_update()
 	{
 		sleep(BAR_REFRESH);
 		fluorite_bar_draw();
-		XFlush(fluorite.display);
 	}
 }
 

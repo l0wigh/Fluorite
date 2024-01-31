@@ -13,7 +13,7 @@
 #define BAR_DEFAULT_FOREGROUND	"#ffffff"
 #define BAR_ACCENT_FOREGROUND	"#35e5dc"
 #define BAR_TRANSPARENT			False
-#define BAR_REFRESH				10
+#define BAR_REFRESH				3
 #define BAR_TITLE				"Fluorite 0.2"
 #define BAR_TEXT_GAP			10
 
@@ -61,12 +61,20 @@ static const basic_module volume_module = {
 	/* .background = 0x1e1e1e, */
 };
 
-#define BAR_MODULE_COUNT		4
+static const basic_module wifi_module = {
+	.name =  "",
+	.command = "/home/thomas/projects/x11windows/Fluorite/scripts/wifi_fluorite.sh",
+	/* .foreground = 0xffffff, */
+	/* .background = 0x1e1e1e, */
+};
+
+#define BAR_MODULE_COUNT		5
 #define BAR_MODULE_SEPARATOR	"  "
 // Use this to fix margin issues that can happen with nerdfont or just to add right margin
-#define BAR_MODULE_OFFSET		205
+#define BAR_MODULE_OFFSET		290
 
 static const basic_module user_modules[] = {
+	wifi_module,
 	monbrightness_module,
 	volume_module,
 	battery_module,

@@ -5,10 +5,14 @@
     - [x] Default Workspaces module
     - [x] Fix the color on layout mode with the tenth workspace
     - [x] Custom Workspaces names
-    - [ ] Change the way the bar handle the modules so that you can use custom colors for each of these
-    - [ ] Find why the bar is cleaned without redraw at the start (will avoid needing to swap workspace or use a very low sleep timing)
+    - [x] Find why the bar is cleaned without redraw at the start (will avoid needing to swap workspace or use a very low sleep timing)
+        - Seems like a bug coming from the order I was using to draw stuff. Might be fixed
+        - [x] Still have a little lag at the start of the window manager
+    - [ ] Test if in real condition the bar is blocking anything or not
+        - Seems like the infos in the bar just vanish for some reason
     - [ ] Do some cleanup
-    - Default Window name module (?????)
+- [ ] FluoriteBar 0.2
+    - [ ] Change the way the bar handle the modules so that you can use custom colors for each of these
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
