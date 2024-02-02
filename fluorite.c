@@ -72,6 +72,7 @@ typedef struct
 	int				pos_y;
 	int				width;
 	int				height;
+	int				updating;
 	Window			win;
 	XftFont			*font;
 	XftDraw			*draw;
@@ -332,10 +333,48 @@ void fluorite_run()
 				fluorite_bar_draw();
 				break;
 			case EnterNotify:
+				if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
+				{
+					if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame)
+					{
+						if (!SAME_BORDER)
+						{
+							XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_FOCUSED);
+							XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
+						}
+						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+					}
+					else
+					{
+						if (!SAME_BORDER)
+						{
+							XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+							XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
+						}
+						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+					}
+				}
+				else
+				{
+					if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
+					{
+						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+					}
+					else
+						XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+				}
+				break;
+			case LeaveNotify:
 				if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame && fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
-					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
-				else if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
+				{
+					if (!SAME_BORDER)
+					{
+						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
+					}
 					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+				}
 				else
 					XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 				break;
@@ -488,7 +527,7 @@ WinFrames *fluorite_create_simple_winframe()
 	new_frame->pos_y = 0;
 	new_frame->width = fluorite.screen_width - (BORDER_WIDTH * 2);
 	new_frame->height = fluorite.screen_height - (BORDER_WIDTH * 2);
-	new_frame->border_color = BORDER_COLORS;
+	new_frame->border_color = BORDER_FOCUSED;
 	new_frame->border_width = BORDER_WIDTH;
 	new_frame->frame = XCreateSimpleWindow(
 		fluorite.display, fluorite.root,
@@ -509,7 +548,7 @@ WinFrames *fluorite_create_winframe()
 	XSetWindowAttributes attribs_set;
 	XMatchVisualInfo(fluorite.display, fluorite.screen, 32, TrueColor, &vinfo);
 	attribs_set.background_pixel = 0;
-	attribs_set.border_pixel = BORDER_COLORS;
+	attribs_set.border_pixel = BORDER_FOCUSED;
 	attribs_set.colormap = XCreateColormap(fluorite.display, fluorite.root, vinfo.visual, AllocNone);
 	attribs_set.event_mask = StructureNotifyMask | ExposureMask;
 
@@ -518,7 +557,7 @@ WinFrames *fluorite_create_winframe()
 	new_frame->pos_y = 0;
 	new_frame->width = fluorite.screen_width - (BORDER_WIDTH * 2);
 	new_frame->height = fluorite.screen_height - (BORDER_WIDTH * 2);
-	new_frame->border_color = BORDER_COLORS;
+	new_frame->border_color = BORDER_FOCUSED;
 	new_frame->border_width = BORDER_WIDTH;
 	new_frame->frame = XCreateWindow(fluorite.display, fluorite.root, 
 			0, 
@@ -696,12 +735,20 @@ void fluorite_redraw_windows()
 				XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame);
 				XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window, 0, 0, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height);
 				position_offset += STACK_OFFSET * 10;
+				if (!SAME_BORDER)
+				{
+					if (i == 0)
+						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_UNFOCUSED);
+					else
+						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_INACTIVE);
+				}
 			}
 		}
 	}
 	XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 	XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
 	XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
 }
 
 void fluorite_handle_unmapping(Window e)
@@ -871,6 +918,9 @@ void fluorite_bar_user_module()
 	FILE *stdout_cmd;
 	char *printing;
 
+	if (bar.updating == 1)
+		return ;
+	bar.updating = 1;
 	printing = (char *) malloc(sizeof(char) * 1145);
 	memset(printing, 0, 1145);
 	for (int i = 0; i < BAR_MODULE_COUNT; i++)
@@ -887,11 +937,12 @@ void fluorite_bar_user_module()
 	XClearWindow(fluorite.display, bar.win);
 	fluorite_bar_write(bar.width - (strlen(printing) * (BAR_FONT_SIZE / 1.3f)) + BAR_MODULE_OFFSET - BAR_TEXT_GAP, printing, bar.default_color);
 	free(printing);
+	bar.updating = 0;
 }
 
 void fluorite_bar_draw()
 {
-	if (!BAR_ENABLED)
+	if (!BAR_ENABLED || bar.updating)
 		return;
 	fluorite_bar_user_module();
 	fluorite_bar_workspaces_module();

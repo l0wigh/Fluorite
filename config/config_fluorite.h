@@ -3,16 +3,22 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-#define BORDER_WIDTH	3
-#define BORDER_COLORS	0x35e5dc
 /* #define BORDER_COLORS	0x9c082d */
 /* #define BORDER_COLORS	0xde4a2c */
-#define GAPS			10
-#define STACK_OFFSET	20
-#define TOPBAR_GAPS		0
-#define BOTTOMBAR_GAPS	0
-#define METAKEY			Mod4Mask
-#define FOLLOW_WINDOWS	False
+/* #define BORDER_INACTIVE		0xbf4a02 */
+
+#define BORDER_WIDTH		3
+#define BORDER_FOCUSED		0x35e5dc
+#define BORDER_UNFOCUSED	0x9c082d
+#define BORDER_INACTIVE		0x3d0363
+// Will put the ACTIVE color everywhere
+#define SAME_BORDER			False
+#define GAPS				10
+#define STACK_OFFSET		20
+#define TOPBAR_GAPS			0
+#define BOTTOMBAR_GAPS		0
+#define METAKEY				Mod4Mask
+#define FOLLOW_WINDOWS		False
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
