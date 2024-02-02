@@ -13,6 +13,10 @@
     - [ ] Do some cleanup
 - [ ] FluoriteBar 0.2
     - [ ] Change the way the bar handle the modules so that you can use custom colors for each of these
+        - [ ] Every modules should have a result
+        - [ ] After every command as been executed, change a global flag to tell the update is ready
+        - [ ] Calculate the position better. Maybe use % + FONT SIZE
+        - [ ] Adding colors
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

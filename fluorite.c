@@ -947,7 +947,6 @@ void fluorite_bar_draw()
 	fluorite_bar_user_module();
 	fluorite_bar_workspaces_module();
 	fluorite_bar_title_module();
-	XFlush(fluorite.display);
 }
 
 void *fluorite_bar_update()
@@ -956,6 +955,7 @@ void *fluorite_bar_update()
 	{
 		sleep(BAR_REFRESH);
 		fluorite_bar_draw();
+		XFlush(fluorite.display);
 	}
 }
 
