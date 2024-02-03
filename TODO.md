@@ -17,6 +17,7 @@
         - [ ] After every command as been executed, change a global flag to tell the update is ready
         - [ ] Calculate the position better. Maybe use % + FONT SIZE
         - [ ] Adding colors
+- [ ] Find a way to only have one border when fullscreen
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -41,7 +42,6 @@
 - [ ] Add a real fullscreen mode
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
 - [ ] Some very precise apps, make Fluorite Crash
-- [ ] Killing a firefox instance, kills all Firefox instances
 - [ ] killall command can sometimes break stuff (need more testing)
 - [ ] Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
 - [ ] Add clickable workspaces to the bar
@@ -73,3 +73,5 @@
     - Still apply Fluorite bindings based on the master window
 - [x] Opening two thunar and closing one, makes the window manager dies
     - Fixed itself for some reason
+- [x] Killing a firefox instance, kills all Firefox instances
+    - Fixed by itself ?
