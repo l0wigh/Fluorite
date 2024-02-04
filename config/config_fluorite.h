@@ -6,13 +6,12 @@
 /* #define BORDER_COLORS	0x9c082d */
 /* #define BORDER_COLORS	0xde4a2c */
 /* #define BORDER_INACTIVE		0xbf4a02 */
+/* 3d0363 */
 
 #define BORDER_WIDTH		3
 #define BORDER_FOCUSED		0x35e5dc
-#define BORDER_UNFOCUSED	0x9c082d
-#define BORDER_INACTIVE		0x3d0363
-// Will put the ACTIVE color everywhere
-#define SAME_BORDER			False
+#define BORDER_UNFOCUSED	0xf576e4
+#define BORDER_INACTIVE		0x9c082d
 #define GAPS				10
 #define STACK_OFFSET		20
 #define TOPBAR_GAPS			0

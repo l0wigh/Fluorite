@@ -75,3 +75,4 @@
     - Fixed itself for some reason
 - [x] Killing a firefox instance, kills all Firefox instances
     - Fixed by itself ?
+- [x] Clean the SAME_BORDER code, it's now useless
