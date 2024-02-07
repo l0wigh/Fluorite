@@ -49,21 +49,21 @@ static const basic_module monbrightness_module = {
 
 static const basic_module battery_module = {
 	.name =  "",
-	.command = "/home/thomas/projects/x11windows/Fluorite/scripts/bat_fluorite.sh",
+	.command = "~/Fluorite/scripts/bat_fluorite.sh",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
 
 static const basic_module volume_module = {
 	.name =  "  ",
-	.command = "/home/thomas/projects/x11windows/Fluorite/scripts/vol_fluorite.sh",
+	.command = "~/Fluorite/scripts/vol_fluorite.sh",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
 
 static const basic_module wifi_module = {
 	.name =  "",
-	.command = "/home/thomas/projects/x11windows/Fluorite/scripts/wifi_fluorite.sh",
+	.command = "~/Fluorite/scripts/wifi_fluorite.sh",
 	/* .foreground = 0xffffff, */
 	/* .background = 0x1e1e1e, */
 };
