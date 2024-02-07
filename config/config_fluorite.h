@@ -12,8 +12,8 @@
 #define BORDER_FOCUSED		0x35e5dc
 #define BORDER_UNFOCUSED	0xf576e4
 #define BORDER_INACTIVE		0x9c082d
-#define GAPS				10
-#define STACK_OFFSET		20
+#define GAPS				5
+#define STACK_OFFSET		10
 #define TOPBAR_GAPS			0
 #define BOTTOMBAR_GAPS		0
 #define METAKEY				Mod4Mask
@@ -27,6 +27,8 @@
 #define BIGGER_MASTER		14
 #define SMALLER_MASTER		15
 #define FULLSCREEN_TOGGLE	16
+
+static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
  
 typedef struct
 {
