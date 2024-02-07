@@ -14,10 +14,10 @@
 #define BORDER_INACTIVE		0x9c082d
 #define GAPS				5
 #define STACK_OFFSET		10
-#define TOPBAR_GAPS			0
+#define TOPBAR_GAPS			35
 #define BOTTOMBAR_GAPS		0
 #define METAKEY				Mod4Mask
-#define FOLLOW_WINDOWS		False
+#define FOLLOW_WINDOWS		True
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10

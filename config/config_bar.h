@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define	BAR_ENABLED				True
+#define	BAR_ENABLED				False
 // TOP | BOTTOM
 #define POSITION				TOP
 #define BAR_HEIGHT				35

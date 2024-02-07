@@ -10,6 +10,7 @@
 #include <err.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string.h>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -294,7 +295,7 @@ void fluorite_init()
 	XChangeProperty(
 		fluorite.display,
 		fluorite.root,
-		XInternAtom(fluorite.display, "_NET_NUMBER_OF_DESKTOP", False),
+		XInternAtom(fluorite.display, "_NET_NUMBER_OF_DESKTOPS", False),
 		XA_CARDINAL,
 		32,
 		PropModeReplace,
@@ -309,8 +310,8 @@ void fluorite_init()
 			XInternAtom(fluorite.display, "UTF8_STRING", False),
 			8,
 			PropModeReplace,
-			(const unsigned char *) &"1",
-			LENGTH(workspace_names) * 2
+			(const unsigned char *) "1",
+			10
 	);
 	XChangeProperty(
 		fluorite.display,
@@ -1024,7 +1025,7 @@ void *fluorite_bar_update()
 	{
 		sleep(BAR_REFRESH);
 		fluorite_bar_draw();
-		/* XFlush(fluorite.display); */
+		XFlush(fluorite.display);
 	}
 }
 

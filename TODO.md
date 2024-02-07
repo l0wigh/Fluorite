@@ -1,4 +1,6 @@
 # TODO !
+- [ ] Add a force new master focus to the EnterNotify (REALLY NEEDED)
+- [ ] Fix the custom workspace names
 - [-] Create the FluoriteBar
     - [x] Config file only for the bar
     - [x] Custom module that you create inside the config file
