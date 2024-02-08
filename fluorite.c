@@ -63,6 +63,7 @@ typedef struct
 	int			running;
 	Workspaces	*workspaces;
 	int			current_workspace;
+	int			avoid_focus;
 } Fluorite;
 
 typedef struct
@@ -295,27 +296,32 @@ void fluorite_init()
 		(const unsigned char *)&num_work_atom,
 		1
 	);
-	/* This doesn't makes any sense */
+	char *workspaces;
+	for (int i = 0; i <= MAX_WORKSPACES; i++)
+	{
+		workspaces = strdup(workspace_names[i]);
+		XChangeProperty(
+				fluorite.display,
+				fluorite.root,
+				XInternAtom(fluorite.display, "_NET_DESKTOP_NAMES", False),
+				XInternAtom(fluorite.display, "UTF8_STRING", False),
+				8,
+				PropModeAppend,
+				(const unsigned char *)workspaces,
+				2
+		);
+		free(workspaces);
+	}
 	XChangeProperty(
 			fluorite.display,
 			fluorite.root,
-			XInternAtom(fluorite.display, "_NET_DESKTOP_NAMES", False),
-			XInternAtom(fluorite.display, "UTF8_STRING", False),
-			8,
+			XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False),
+			XA_CARDINAL,
+			32,
 			PropModeReplace,
-			(const unsigned char *) "1",
-			10
-	);
-	XChangeProperty(
-		fluorite.display,
-		fluorite.root,
-		XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False),
-		XA_CARDINAL,
-		32,
-		PropModeReplace,
-		(unsigned char *)&fluorite.current_workspace,
-		1
-	);
+			(unsigned char *)&fluorite.current_workspace,
+			1
+			);
 	XFlush(fluorite.display);
 	XSelectInput(fluorite.display, fluorite.root, SubstructureNotifyMask | SubstructureRedirectMask);
 	XSync(fluorite.display, False);
@@ -333,7 +339,7 @@ void fluorite_init()
 			fluorite.display,
 			fluorite.root,
 			XcursorLibraryLoadCursor(fluorite.display, "arrow")
-	);
+			);
 	XSync(fluorite.display, False);
 	for (int j = 0; j <= MAX_WORKSPACES; j++)
 	{
@@ -367,6 +373,11 @@ void fluorite_run()
 			case ButtonPress:
 				break;
 			case EnterNotify:
+				if (fluorite.avoid_focus)
+				{
+					fluorite.avoid_focus = False;
+					break ;
+				}
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 				{
 					if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame)
@@ -554,6 +565,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		free(fluorite.workspaces[fluorite.current_workspace].tmp_winframe);
 	}
 
+	fluorite.avoid_focus = True;
 	fluorite_redraw_windows();
 }
 

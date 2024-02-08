@@ -1,9 +1,9 @@
 # TODO !
 - [x] Remove FluoriteBar code since it's not usefull any more (just use polybar !)
-- [ ] Add a force new master focus to the EnterNotify (REALLY NEEDED)
-- [ ] Fix the custom workspace names
-- [ ] Do a clickable wifi module so it hide/show the wifi name and the ip
-- [ ] Fix writing of wifi module when not connected
+- [x] Add a force new master focus to the EnterNotify (REALLY NEEDED)
+    - Might need some more testing
+- [x] Fix writing of wifi module when not connected
+- [x] Create a make install
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -23,6 +23,8 @@
     - Seems clean for now (adding Workspaces now !)
 - [-] Fix the gaps and position, the master window is slightly too big and not centered by default
     - Should be fixed, might cause some issues with some GAPS config
+- [-] Fix the custom workspace names
+    - Works but doesn't support nerdfont properly
 
 # Not Really Important
 - [ ] Add a real fullscreen mode
@@ -32,6 +34,8 @@
 - [ ] Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
 - [ ] Add clickable workspaces to the bar
 - [ ] Find a way to only have one border when fullscreen
+- [ ] Do a clickable wifi module so it hide/show the wifi name and the ip
+    - Seems like polybar doesn't support it right now
 
 # DONE !
 - [x] Fixing the multi closing issue

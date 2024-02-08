@@ -13,7 +13,7 @@
 #define BORDER_UNFOCUSED	0xf576e4
 #define BORDER_INACTIVE		0x9c082d
 #define GAPS				5
-#define STACK_OFFSET		10
+#define STACK_OFFSET		5
 #define TOPBAR_GAPS			40
 #define BOTTOMBAR_GAPS		0
 #define METAKEY				Mod4Mask
@@ -28,6 +28,8 @@
 #define SMALLER_MASTER		15
 #define FULLSCREEN_TOGGLE	16
 
+// For now only single character names are working
+// You might be able to change polybar config to handle nerdfont and other custom names
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
  
 typedef struct
