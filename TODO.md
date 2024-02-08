@@ -1,25 +1,9 @@
 # TODO !
+- [x] Remove FluoriteBar code since it's not usefull any more (just use polybar !)
 - [ ] Add a force new master focus to the EnterNotify (REALLY NEEDED)
 - [ ] Fix the custom workspace names
-- [-] Create the FluoriteBar
-    - [x] Config file only for the bar
-    - [x] Custom module that you create inside the config file
-    - [x] Default Workspaces module
-    - [x] Fix the color on layout mode with the tenth workspace
-    - [x] Custom Workspaces names
-    - [x] Find why the bar is cleaned without redraw at the start (will avoid needing to swap workspace or use a very low sleep timing)
-        - Seems like a bug coming from the order I was using to draw stuff. Might be fixed
-        - [x] Still have a little lag at the start of the window manager
-    - [ ] Test if in real condition the bar is blocking anything or not
-        - Seems like the infos in the bar just vanish for some reason
-    - [ ] Do some cleanup
-- [ ] FluoriteBar 0.2
-    - [ ] Change the way the bar handle the modules so that you can use custom colors for each of these
-        - [ ] Every modules should have a result
-        - [ ] After every command as been executed, change a global flag to tell the update is ready
-        - [ ] Calculate the position better. Maybe use % + FONT SIZE
-        - [ ] Adding colors
-- [ ] Find a way to only have one border when fullscreen
+- [ ] Do a clickable wifi module so it hide/show the wifi name and the ip
+- [ ] Fix writing of wifi module when not connected
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -47,6 +31,7 @@
 - [ ] killall command can sometimes break stuff (need more testing)
 - [ ] Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
 - [ ] Add clickable workspaces to the bar
+- [ ] Find a way to only have one border when fullscreen
 
 # DONE !
 - [x] Fixing the multi closing issue
