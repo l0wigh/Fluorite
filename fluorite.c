@@ -63,22 +63,8 @@ typedef struct
 	Workspaces	*workspaces;
 	int			current_workspace;
 	int			avoid_focus;
+	int			current_focus;
 } Fluorite;
-
-typedef struct
-{
-	int				pos_gap;
-	int				pos_x;
-	int				pos_y;
-	int				width;
-	int				height;
-	int				updating;
-	Window			win;
-	XftFont			*font;
-	XftDraw			*draw;
-	XftColor		default_color;
-	XftColor		accent_color;
-} Bar;
 
 static Fluorite fluorite;
 
@@ -110,7 +96,7 @@ void fluorite_close_window()
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
 		return ;
 
-	if (fluorite.workspaces[fluorite.current_workspace].master_winframe->window)
+	if (fluorite.current_focus == 1 && fluorite.workspaces[fluorite.current_workspace].master_winframe->window)
 	{
 		XEvent closing;
 		memset(&closing, 0, sizeof(closing));
@@ -120,6 +106,17 @@ void fluorite_close_window()
 		closing.xclient.format = 32;
 		closing.xclient.data.l[0] = XInternAtom(fluorite.display, "WM_DELETE_WINDOW", False);
 		XSendEvent(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, False, 0, &closing);
+	}
+	else if (fluorite.current_focus == 2 && fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window)
+	{
+		XEvent closing;
+		memset(&closing, 0, sizeof(closing));
+		closing.xclient.type = ClientMessage;
+		closing.xclient.message_type = XInternAtom(fluorite.display, "WM_PROTOCOLS", False);
+		closing.xclient.window = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window;
+		closing.xclient.format = 32;
+		closing.xclient.data.l[0] = XInternAtom(fluorite.display, "WM_DELETE_WINDOW", False);
+		XSendEvent(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, False, 0, &closing);
 	}
 	else
 		XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
@@ -256,6 +253,7 @@ void fluorite_init()
 	fluorite.screen_width = DisplayWidth(fluorite.display, fluorite.screen);
 	fluorite.screen_height = DisplayHeight(fluorite.display, fluorite.screen);
 	fluorite.current_workspace = 0;
+	fluorite.current_focus = 0;
 	fluorite.workspaces = malloc(sizeof(Workspaces) * MAX_WORKSPACES);
 	for (int i = 0; i <= MAX_WORKSPACES; i++)
 	{
@@ -381,12 +379,14 @@ void fluorite_run()
 				{
 					if (ev.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame)
 					{
+						fluorite.current_focus = 2;
 						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_FOCUSED);
 						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
 						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
 					}
 					else
 					{
+						fluorite.current_focus = 1;
 						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
 						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
 						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
@@ -396,11 +396,15 @@ void fluorite_run()
 				{
 					if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 					{
+						fluorite.current_focus = 1;
 						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
 						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
 					}
 					else
+					{
+						fluorite.current_focus = 0;
 						XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+					}
 				}
 				break;
 			case LeaveNotify:
@@ -426,7 +430,6 @@ void fluorite_clean()
 	XCloseDisplay(fluorite.display);
 	return ;
 }
-
 
 // Core utilities
 void dwm_updatenumlockmask()

@@ -67,3 +67,5 @@
 - [x] Killing a firefox instance, kills all Firefox instances
     - Fixed by itself ?
 - [x] Clean the SAME_BORDER code, it's now useless
+- [x] Closing binding now have effect on the focused window
+    - Might cause some issues
