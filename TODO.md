@@ -1,9 +1,4 @@
 # TODO !
-- [x] Remove FluoriteBar code since it's not usefull any more (just use polybar !)
-- [x] Add a force new master focus to the EnterNotify (REALLY NEEDED)
-    - Might need some more testing
-- [x] Fix writing of wifi module when not connected
-- [x] Create a make install
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -67,5 +62,10 @@
 - [x] Killing a firefox instance, kills all Firefox instances
     - Fixed by itself ?
 - [x] Clean the SAME_BORDER code, it's now useless
+- [x] Remove FluoriteBar code since it's not usefull any more (just use polybar !)
+- [x] Add a force new master focus to the EnterNotify (REALLY NEEDED)
+    - Might need some more testing
+- [x] Fix writing of wifi module when not connected
+- [x] Create a make install
 - [x] Closing binding now have effect on the focused window
     - Might cause some issues
