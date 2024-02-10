@@ -92,10 +92,10 @@ static const Bindings bind[] = {
 	{METAKEY,						XK_Return,					fluorite_terminal},
 	{METAKEY,						XK_a,						fluorite_filemanager},
 	{METAKEY,						XK_d,						fluorite_dmenu},
-	{METAKEY,						XK_j,						fluorite_smaller_master},
-	{METAKEY,						XK_k,						fluorite_next_focus},
-	{METAKEY,						XK_l,						fluorite_prev_focus},
-	{METAKEY,						XK_m,						fluorite_bigger_master},
+	{METAKEY,						XK_h,						fluorite_smaller_master},
+	{METAKEY,						XK_j,						fluorite_next_focus},
+	{METAKEY,						XK_k,						fluorite_prev_focus},
+	{METAKEY,						XK_l,						fluorite_bigger_master},
 	{METAKEY,						XK_w,						fluorite_webbrowser},
 	{METAKEY,						XK_f,						fluorite_fullscreen_toggle},
 
@@ -107,8 +107,8 @@ static const Bindings bind[] = {
 
 	{METAKEY|ShiftMask,				XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,				XK_q,						fluorite_close_window},
-	{METAKEY|ShiftMask,				XK_k,						fluorite_stack_rotate_up},
-	{METAKEY|ShiftMask,				XK_l,						fluorite_stack_rotate_down},
+	{METAKEY|ShiftMask,				XK_j,						fluorite_stack_rotate_up},
+	{METAKEY|ShiftMask,				XK_k,						fluorite_stack_rotate_down},
 	{METAKEY|ShiftMask,				XK_e,						fluorite_locking},
 
 	// Workspaces switching
