@@ -164,7 +164,7 @@ font: "VictorMono NF 20";
     lightbg:                     @foreground;
     selected-active-foreground:  @lightfg;
     alternate-active-background: @blue;
-    background:                  rgba ( 33, 33, 33, 100 % );
+    background:                  rgba ( 30, 30, 30, 100 % );
     alternate-normal-foreground: @foreground;
     normal-background:           @background;
     lightfg:                     rgba ( 249, 249, 249, 100 % );
