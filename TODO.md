@@ -69,3 +69,5 @@
 - [x] Create a make install
 - [x] Closing binding now have effect on the focused window
     - Might cause some issues
+- [x] Moving window to another workspace now have effect on the focused window
+    - Might cause some issues
