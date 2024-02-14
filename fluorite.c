@@ -46,7 +46,7 @@ typedef struct
 	int			frames_count;
 	int			slaves_count;
 	int			master_offset;
-	int			is_fullscreen;
+	int			is_stacked;
 } Workspaces;
 
 typedef struct
@@ -140,21 +140,21 @@ void fluorite_layout_change(int mode)
 			fluorite_redraw_windows();
 			break;
 		case BIGGER_MASTER:
-			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_stacked)
 			{
 				fluorite.workspaces[fluorite.current_workspace].master_offset += 25;
 				fluorite_redraw_windows();
 			}
 			break;
 		case SMALLER_MASTER:
-			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_stacked)
 			{
 				fluorite.workspaces[fluorite.current_workspace].master_offset -= 25;
 				fluorite_redraw_windows();
 			}
 			break;
 		case FULLSCREEN_TOGGLE:
-			fluorite.workspaces[fluorite.current_workspace].is_fullscreen = !fluorite.workspaces[fluorite.current_workspace].is_fullscreen;
+			fluorite.workspaces[fluorite.current_workspace].is_stacked = !fluorite.workspaces[fluorite.current_workspace].is_stacked;
 			fluorite_redraw_windows();
 			break;
 	}
@@ -329,7 +329,7 @@ void fluorite_init()
 		fluorite.workspaces[i].frames_count = 0;
 		fluorite.workspaces[i].slaves_count = 0;
 		fluorite.workspaces[i].master_offset = 0;
-		fluorite.workspaces[i].is_fullscreen = 0;
+		fluorite.workspaces[i].is_stacked = 0;
 	}
 
 	fluorite_apply_property();
@@ -802,7 +802,7 @@ void fluorite_redraw_windows()
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
 		return;
 
-	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen || fluorite.workspaces[fluorite.current_workspace].frames_count == 1)
+	if (fluorite.workspaces[fluorite.current_workspace].is_stacked || fluorite.workspaces[fluorite.current_workspace].frames_count == 1)
 		fluorite_redraw_fullscreen();
 	else
 		fluorite_redraw_tiling();
