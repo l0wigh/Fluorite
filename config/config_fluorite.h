@@ -26,7 +26,8 @@
 #define SLAVES_DOWN			13
 #define BIGGER_MASTER		14
 #define SMALLER_MASTER		15
-#define FULLSCREEN_TOGGLE	16
+#define STACKING_TOGGLE		16
+#define FULLSCREEN_TOGGLE	17
 
 // For now only single character names are working
 // You might be able to change polybar config to handle nerdfont and other custom names
@@ -58,7 +59,8 @@ static void fluorite_stack_rotate_up() { fluorite_layout_change(SLAVES_UP); }
 static void fluorite_stack_rotate_down() { fluorite_layout_change(SLAVES_DOWN); }
 static void fluorite_bigger_master() { fluorite_layout_change(BIGGER_MASTER); }
 static void fluorite_smaller_master() { fluorite_layout_change(SMALLER_MASTER); }
-static void fluorite_stacking_toggle() { fluorite_layout_change(FULLSCREEN_TOGGLE); }
+static void fluorite_stacking_toggle() { fluorite_layout_change(STACKING_TOGGLE); }
+static void fluorite_fullscreen_toggle() { fluorite_layout_change(FULLSCREEN_TOGGLE); }
 static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog); }
 static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog); }
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog); }
@@ -100,6 +102,7 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_m,						fluorite_bigger_master},
 	{METAKEY,				XK_w,						fluorite_webbrowser},
 	{METAKEY,				XK_s,						fluorite_stacking_toggle},
+	{METAKEY,				XK_f,						fluorite_fullscreen_toggle},
 
 	// Workspaces switching
 	{METAKEY,				XK_ampersand, 				fluorite_goto_workspace_one},

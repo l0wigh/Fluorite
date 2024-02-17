@@ -1,4 +1,8 @@
 # TODO !
+    - [ ] Fullscreen Mode 0.4
+        - [x] Toggle
+        - [ ] Blocking most of the bindings, might be really boring
+        - [ ] Handle real unmapping
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

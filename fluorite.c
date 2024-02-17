@@ -28,6 +28,7 @@ static unsigned int numlockmask = 0;
 typedef struct
 {
 	Window	frame;
+	Window	fullscreen_frame;
 	Window	window;
 	int		focused;
 	int		pos_x;
@@ -43,10 +44,12 @@ typedef struct
 	WinFrames	*master_winframe;
 	WinFrames	**slaves_winframes;
 	WinFrames	*tmp_winframe;
+	WinFrames	*fullscreen_winframe;
 	int			frames_count;
 	int			slaves_count;
 	int			master_offset;
 	int			is_stacked;
+	int			is_fullscreen;
 } Workspaces;
 
 typedef struct
@@ -121,6 +124,8 @@ void fluorite_user_close()
 
 void fluorite_layout_change(int mode)
 {
+	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode != FULLSCREEN_TOGGLE)
+		return ;
 	switch(mode)
 	{
 		case FOCUS_TOP:
@@ -153,9 +158,61 @@ void fluorite_layout_change(int mode)
 				fluorite_redraw_windows();
 			}
 			break;
-		case FULLSCREEN_TOGGLE:
+		case STACKING_TOGGLE:
 			fluorite.workspaces[fluorite.current_workspace].is_stacked = !fluorite.workspaces[fluorite.current_workspace].is_stacked;
 			fluorite_redraw_windows();
+			break;
+		case FULLSCREEN_TOGGLE:
+			if (fluorite.workspaces[fluorite.current_workspace].frames_count <= 0)
+			{
+				fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 0;
+				return ;
+			}
+			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen == 0)
+			{
+				Window tmp_window = XCreateSimpleWindow(fluorite.display, fluorite.root, 0, 0, fluorite.screen_width, fluorite.screen_height, 0, 0x0, 0x0);
+				fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe = (WinFrames *) malloc(sizeof(WinFrames));
+				if (fluorite.current_focus == 1)
+				{
+					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, tmp_window, RevertToPointerRoot, CurrentTime);
+					XMapWindow(fluorite.display, tmp_window);
+					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 0, 0, fluorite.screen_width, fluorite.screen_height);
+					XSync(fluorite.display, True);
+					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+					fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe->window = fluorite.workspaces[fluorite.current_workspace].master_winframe->window;
+				}
+				else
+				{
+					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, tmp_window, RevertToPointerRoot, CurrentTime);
+					XMapWindow(fluorite.display, tmp_window);
+					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
+					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 0, 0, fluorite.screen_width, fluorite.screen_height);
+					XSync(fluorite.display, True);
+					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+					fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe->window = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window;
+				}
+				fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe->frame = tmp_window;
+				fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 1;
+			}
+			else
+			{
+				if (fluorite.current_focus == 1)
+				{
+					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, RevertToPointerRoot, CurrentTime);
+					XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+				}
+				else
+				{
+					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, RevertToPointerRoot, CurrentTime);
+					XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
+				}
+				XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe->frame);
+				XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe->frame);
+				free(fluorite.workspaces[fluorite.current_workspace].fullscreen_winframe);
+				fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 0;
+				fluorite_redraw_windows();
+			}
 			break;
 	}
 }
@@ -330,6 +387,7 @@ void fluorite_init()
 		fluorite.workspaces[i].slaves_count = 0;
 		fluorite.workspaces[i].master_offset = 0;
 		fluorite.workspaces[i].is_stacked = 0;
+		fluorite.workspaces[i].is_fullscreen = 0;
 	}
 
 	fluorite_apply_property();
@@ -377,12 +435,12 @@ void fluorite_run()
 				fluorite_handle_enternotify(ev);
 				break;
 			case LeaveNotify:
-				if (fluorite.current_focus == 2 && fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
+				if (fluorite.current_focus == 2 && fluorite.workspaces[fluorite.current_workspace].frames_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 				{
 					fluorite.current_focus = 1;
 					XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
 					XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
-					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, RevertToPointerRoot, CurrentTime);
+					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
 				}
 				break;
 			case KeyPress:
@@ -579,6 +637,8 @@ void fluorite_handle_enternotify(XEvent e)
 		fluorite.avoid_focus = False;
 		return ;
 	}
+	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+		return ;
 	if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 	{
 		if (e.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame)
@@ -695,7 +755,7 @@ void fluorite_organise_stack(int mode, int offset)
 	}
 }
 
-void fluorite_redraw_fullscreen()
+void fluorite_redraw_stacking()
 {
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = 0 + (GAPS * 2);
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = 0 + (GAPS * 2) + TOPBAR_GAPS;
@@ -803,7 +863,7 @@ void fluorite_redraw_windows()
 		return;
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_stacked || fluorite.workspaces[fluorite.current_workspace].frames_count == 1)
-		fluorite_redraw_fullscreen();
+		fluorite_redraw_stacking();
 	else
 		fluorite_redraw_tiling();
 	XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
