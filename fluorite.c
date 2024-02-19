@@ -412,7 +412,6 @@ void fluorite_init()
 	}
 
 	dwm_grabkeys();
-	return ;
 }
 
 void fluorite_run()
@@ -471,7 +470,6 @@ void fluorite_clean()
 	}
 	XSync(fluorite.display, True);
 	XCloseDisplay(fluorite.display);
-	return ;
 }
 
 // Core utilities
