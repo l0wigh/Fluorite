@@ -18,8 +18,8 @@ OBJS_DIR	= objs/
 OBJS		= $(SRCS:.c=.o)
 OBJECTS_PREFIXED = $(addprefix $(OBJS_DIR), $(OBJS))
 CC			= gcc
-# CC_FLAGS	= -Wall -Werror -Wextra -O0
-CC_FLAGS	= -O3 -I/usr/include/freetype2
+CC_FLAGS	= -Wall -Werror -Wextra -O0 -I/usr/include/freetype2
+# CC_FLAGS	= -O3 -I/usr/include/freetype2
 LIBS		= -lX11 -lXcursor -lXcomposite -lXft
 
 $(OBJS_DIR)%.o : %.c $(PROJECT_H)
