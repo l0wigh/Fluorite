@@ -3,6 +3,7 @@
     - [x] Toggle
     - [x] Blocking most of the bindings, might be really boring
     - [x] Handle real unmapping
+    - [ ] Closing a window without bindings make Fluorite breaks
     - [ ] Test it more
 
 # PARTIALLY DONE
