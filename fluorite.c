@@ -864,9 +864,6 @@ void fluorite_handle_unmapping(Window e)
 {
 	int keep_workspace = fluorite.current_workspace;
 
-	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-		fluorite_layout_change(FULLSCREEN_TOGGLE);
-
 	for (int i = 0; i <= MAX_WORKSPACES; i++)
 	{
 		if (fluorite.workspaces[i].frames_count <= 0)
@@ -874,6 +871,9 @@ void fluorite_handle_unmapping(Window e)
 		fluorite.current_workspace = i;
 		if (fluorite.workspaces[fluorite.current_workspace].master_winframe->window == e)
 		{
+			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && keep_workspace == i)
+				fluorite_layout_change(FULLSCREEN_TOGGLE);
+
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.root, 0, 0);
 			if (keep_workspace == i)
 			{
@@ -908,6 +908,8 @@ void fluorite_handle_unmapping(Window e)
 			{
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window == e)
 				{
+					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && keep_workspace == i)
+						fluorite_layout_change(FULLSCREEN_TOGGLE);
 					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame, fluorite.root, 0, 0);
 					if (keep_workspace == i)
 					{
