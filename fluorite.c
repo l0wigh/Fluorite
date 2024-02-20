@@ -253,6 +253,9 @@ void fluorite_send_window(int new_workspace)
 {
 	int keep_workspace = fluorite.current_workspace;
 
+	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
+		return ;
+
 	if (fluorite.current_focus == 2)
 		fluorite_organise_stack(STACK_UP, -1);
 
