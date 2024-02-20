@@ -863,6 +863,7 @@ void fluorite_redraw_windows()
 void fluorite_handle_unmapping(Window e)
 {
 	int keep_workspace = fluorite.current_workspace;
+	int closed = False;
 
 	for (int i = 0; i <= MAX_WORKSPACES; i++)
 	{
@@ -902,7 +903,6 @@ void fluorite_handle_unmapping(Window e)
 			if (fluorite.workspaces[i].slaves_count <= 0)
 				continue;
 			int stack_offset = 0;
-			int closed = False;
 
 			while (stack_offset < fluorite.workspaces[fluorite.current_workspace].slaves_count)
 			{
@@ -925,7 +925,7 @@ void fluorite_handle_unmapping(Window e)
 			}
 			if (closed)
 				fluorite_organise_stack(STACK_DEL, stack_offset);
-			if (keep_workspace == i)
+			if (keep_workspace == i && closed)
 			{
 				fluorite.current_focus = 1;
 				fluorite_redraw_windows();
