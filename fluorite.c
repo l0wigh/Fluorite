@@ -88,7 +88,7 @@ static void			dwm_grabkeys();
 void fluorite_execute(char *argument, int mode)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode == GUI)
-		fluorite_layout_change(FULLSCREEN_TOGGLE);
+		fluorite_change_layout(FULLSCREEN_TOGGLE);
 	strcat(argument, " &");
 	system(argument);
 }
@@ -99,7 +99,7 @@ void fluorite_close_window()
 		return ;
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-		fluorite_layout_change(FULLSCREEN_TOGGLE);
+		fluorite_change_layout(FULLSCREEN_TOGGLE);
 
 	XEvent closing;
 	memset(&closing, 0, sizeof(closing));
@@ -127,7 +127,7 @@ void fluorite_user_close()
 	fluorite_clean();
 }
 
-void fluorite_layout_change(int mode)
+void fluorite_change_layout(int mode)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode != FULLSCREEN_TOGGLE)
 		return ;
@@ -302,7 +302,7 @@ void fluorite_change_workspace(int new_workspace, int mode)
 	if (fluorite.current_workspace == new_workspace)
 		return;
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-		fluorite_layout_change(FULLSCREEN_TOGGLE);
+		fluorite_change_layout(FULLSCREEN_TOGGLE);
 	if (mode == 0)
 		fluorite_show_new_workspace(new_workspace);
 	else
@@ -568,6 +568,9 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == MAX_WINDOWS)
 		return ;
+
+	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+		fluorite_change_layout(FULLSCREEN_TOGGLE);
 
 	if (fluorite_check_fixed(e.window))
 	{
@@ -876,7 +879,7 @@ void fluorite_handle_unmapping(Window e)
 		if (fluorite.workspaces[fluorite.current_workspace].master_winframe->window == e)
 		{
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && keep_workspace == i)
-				fluorite_layout_change(FULLSCREEN_TOGGLE);
+				fluorite_change_layout(FULLSCREEN_TOGGLE);
 
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.root, 0, 0);
 			if (keep_workspace == i)
@@ -912,7 +915,7 @@ void fluorite_handle_unmapping(Window e)
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window == e)
 				{
 					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && keep_workspace == i)
-						fluorite_layout_change(FULLSCREEN_TOGGLE);
+						fluorite_change_layout(FULLSCREEN_TOGGLE);
 					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame, fluorite.root, 0, 0);
 					if (keep_workspace == i)
 					{
