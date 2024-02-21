@@ -3,8 +3,8 @@
     - [x] Toggle
     - [x] Blocking most of the bindings, might be really boring
     - [x] Handle real unmapping
-    - [ ] Closing a window without bindings make Fluorite breaks
-    - [ ] Test it more
+    - [x] Fix the redrawing when a window is closed while being in fullscreen
+    - [ ] Will probably crash if there is many slaves windows, need testing
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

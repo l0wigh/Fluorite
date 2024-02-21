@@ -853,7 +853,7 @@ void fluorite_redraw_tiling()
 
 void fluorite_redraw_windows()
 {
-	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
+	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0 || fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 		return;
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_stacked || fluorite.workspaces[fluorite.current_workspace].frames_count == 1)
@@ -891,7 +891,7 @@ void fluorite_handle_unmapping(Window e)
 				{
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 					XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
-					XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+					/* XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime); */
 				}
 			}
 			free(fluorite.workspaces[fluorite.current_workspace].master_winframe);
@@ -923,7 +923,6 @@ void fluorite_handle_unmapping(Window e)
 					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && i == 0 && fluorite.current_focus == 2)
 					{
 						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame, fluorite.root, 0, 0);
-						fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 0;
 						was_fullscreen = True;
 					}
 					else
@@ -934,7 +933,6 @@ void fluorite_handle_unmapping(Window e)
 							XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 							XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 						}
-						was_fullscreen = False;
 					}
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
@@ -948,12 +946,13 @@ void fluorite_handle_unmapping(Window e)
 			if (keep_workspace == i && closed)
 			{
 				fluorite.current_focus = 1;
-				if (!was_fullscreen)
-					fluorite_redraw_windows();
+				fluorite_redraw_windows();
 			}
 		}
 	}
 	fluorite.current_workspace = keep_workspace;
+	if (was_fullscreen)
+		fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 0;
 }
 
 int main(void)
