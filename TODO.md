@@ -4,8 +4,8 @@
     - [x] Blocking most of the bindings, might be really boring
     - [x] Handle real unmapping
     - [x] Fix the redrawing when a window is closed while being in fullscreen
-        - [ ] New bug from this, now there is no more redrawing when closing a slaves in fullscreen
     - [ ] Will probably crash if there is many slaves windows, need testing
+        - [ ] Yep it does
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

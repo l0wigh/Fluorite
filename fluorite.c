@@ -920,10 +920,10 @@ void fluorite_handle_unmapping(Window e)
 			{
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window == e)
 				{
-					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && i == 0 && fluorite.current_focus == 2)
+					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && stack_offset == 0 && fluorite.current_focus == 2)
 					{
 						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame, fluorite.root, 0, 0);
-						was_fullscreen = True;
+						fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 0;
 					}
 					else
 					{
