@@ -7,6 +7,7 @@
         - [x] Fix the redrawing when a window is closed while being in fullscreen
         - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
         - [ ] Need More testing
+    - [ ] Clean the code
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -18,27 +19,16 @@
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
         - Firefox still stuggle sometimes (mainly at the opening)
-- [-] Resize Window go to negative value
     - [x] Partial fix, need a redraw somewhere that isn't done (2 windows, spam meta-j)
-    - [ ] Add Transient management and it should works as intended (or almost)
-    - [ ] rofi, firefox, and polybar still buggy
-- [-] Clean the code
     - Seems clean for now (adding Workspaces now !)
-- [-] Fix the gaps and position, the master window is slightly too big and not centered by default
-    - Should be fixed, might cause some issues with some GAPS config
 - [-] Fix the custom workspace names
-    - Works but doesn't support nerdfont properly
+    - Works but doesn't support nerdfont and longer names properly
 
 # Not Really Important
-- [ ] Add a real fullscreen mode
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
 - [ ] Some very precise apps, make Fluorite Crash
 - [ ] killall command can sometimes break stuff (need more testing)
-- [ ] Maybe remove borders on slaves from now on, or add a secondary color (focus and unfocused)
-- [ ] Add clickable workspaces to the bar
-- [ ] Find a way to only have one border when fullscreen
-- [ ] Do a clickable wifi module so it hide/show the wifi name and the ip
-    - Seems like polybar doesn't support it right now
+- [ ] Find a way to only have one border when stacked
 
 # DONE !
 - [x] Fixing the multi closing issue
@@ -79,3 +69,6 @@
     - Might cause some issues
 - [x] Moving window to another workspace now have effect on the focused window
     - Might cause some issues
+- [x] Resize Window go to negative value
+- [x] New binding to restore default master offset
+- [x] Adding a default master offset value in config file

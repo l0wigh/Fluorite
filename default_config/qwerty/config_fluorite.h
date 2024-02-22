@@ -3,20 +3,17 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-#define BORDER_WIDTH		3
-#define BORDER_FOCUSED		0x35e5dc
-#define BORDER_UNFOCUSED	0xf576e4
-#define BORDER_INACTIVE		0x9c082d
-#define GAPS				5
-#define STACK_OFFSET		5
-#define TOPBAR_GAPS			40
-#define BOTTOMBAR_GAPS		0
-#define METAKEY				Mod4Mask
-#define FOLLOW_WINDOWS		False
-
-// For now only single character names are working
-// You might be able to change polybar config to handle nerdfont and other custom names
-static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
+#define BORDER_WIDTH			3				/* Border width around windows */
+#define BORDER_FOCUSED			0x35e5dc		/* Selected window's border color */
+#define BORDER_UNFOCUSED		0xf576e4		/* Selectable window's border color */
+#define BORDER_INACTIVE			0x9c082d		/* Unselectable window's border color */
+#define GAPS					5				/* gaps around the window */
+#define STACK_OFFSET			5				/* how the stacked window are separated */
+#define TOPBAR_GAPS				40				/* gaps for the top bar */
+#define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
+#define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
+#define METAKEY					Mod4Mask		/* key that will be used for bindings */
+#define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
@@ -25,36 +22,56 @@ static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8
 #define SLAVES_DOWN			13
 #define BIGGER_MASTER		14
 #define SMALLER_MASTER		15
-#define FULLSCREEN_TOGGLE	16
+#define BASE_MASTER			16
+#define STACKING_TOGGLE		17
+#define FULLSCREEN_TOGGLE	18
+
+// For now only single character names are working
+// You might be able to change polybar config to handle nerdfont and other custom names
+static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
  
-// Functions that can be called from user functions or direct bindings
-void fluorite_execute(char *argument);
+typedef struct
+{
+	unsigned int	mod;
+	KeySym			key;
+	void			(*func)();
+} Bindings;
+
+/*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
+ *  Pass NOGUI if it's just a background script or app
+ *  Be carefull with this, it can create bugs and and crashes ! */
+
+#define GUI      30
+#define NOGUI    31
+
+// Functions that can be called from Keybinds
+void fluorite_execute(char *argument, int mode);
 void fluorite_close_window();
-void fluorite_layout_change(int mode);
+void fluorite_change_layout(int mode);
 void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog); }
-static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog); }
-static void fluorite_dmenu() { char prog[255] = "rofi -show run"; fluorite_execute(prog); }
-static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog); }
-static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog); }
-
+static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog, GUI); }
+static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
+static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
 static void fluorite_exit() { fluorite_user_close(); }
-static void fluorite_next_focus() { fluorite_layout_change(FOCUS_TOP); }
-static void fluorite_prev_focus() { fluorite_layout_change(FOCUS_BOTTOM); }
-static void fluorite_stack_rotate_up() { fluorite_layout_change(SLAVES_UP); }
-static void fluorite_stack_rotate_down() { fluorite_layout_change(SLAVES_DOWN); }
-static void fluorite_bigger_master() { fluorite_layout_change(BIGGER_MASTER); }
-static void fluorite_smaller_master() { fluorite_layout_change(SMALLER_MASTER); }
-static void fluorite_fullscreen_toggle() { fluorite_layout_change(FULLSCREEN_TOGGLE); }
-
-static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog); }
-static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog); }
-static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog); }
-static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog); }
-static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog); }
+static void fluorite_next_focus() { fluorite_change_layout(FOCUS_TOP); }
+static void fluorite_prev_focus() { fluorite_change_layout(FOCUS_BOTTOM); }
+static void fluorite_stack_rotate_up() { fluorite_change_layout(SLAVES_UP); }
+static void fluorite_stack_rotate_down() { fluorite_change_layout(SLAVES_DOWN); }
+static void fluorite_bigger_master() { fluorite_change_layout(BIGGER_MASTER); }
+static void fluorite_smaller_master() { fluorite_change_layout(SMALLER_MASTER); }
+static void fluorite_base_master() { fluorite_change_layout(BASE_MASTER); }
+static void fluorite_stacking_toggle() { fluorite_change_layout(STACKING_TOGGLE); }
+static void fluorite_fullscreen_toggle() { fluorite_change_layout(FULLSCREEN_TOGGLE); }
+static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog, NOGUI); }
+static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog, NOGUI); }
+static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
+static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
+static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
+static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog, NOGUI); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -79,14 +96,6 @@ static void	fluorite_appto_workspace_seven() { fluorite_change_workspace(6, 1); 
 static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); }
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
-
-// Bindings struct
-typedef struct
-{
-	unsigned int	mod;
-	KeySym			key;
-	void			(*func)();
-} Bindings;
 
 static const Bindings bind[] = {
 	{METAKEY,						XK_Return,					fluorite_terminal},
