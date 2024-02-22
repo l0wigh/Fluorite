@@ -28,7 +28,6 @@
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
 - [ ] Some very precise apps, make Fluorite Crash
 - [ ] killall command can sometimes break stuff (need more testing)
-- [ ] Find a way to only have one border when stacked
 
 # DONE !
 - [x] Fixing the multi closing issue
@@ -72,3 +71,4 @@
 - [x] Resize Window go to negative value
 - [x] New binding to restore default master offset
 - [x] Adding a default master offset value in config file
+- [x] Find a way to only have one border when stacked
