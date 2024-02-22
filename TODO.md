@@ -1,11 +1,12 @@
 # TODO !
-- [-] Fullscreen Mode 0.4
-    - [x] Toggle
-    - [x] Blocking most of the bindings, might be really boring
-    - [x] Handle real unmapping
-    - [x] Fix the redrawing when a window is closed while being in fullscreen
-    - [ ] Will probably crash if there is many slaves windows, need testing
-        - [ ] Yep it does
+- [ ] Fluorite 0.4
+    - [-] Fullscreen Mode
+        - [x] Toggle
+        - [x] Blocking most of the bindings, might be really boring
+        - [x] Handle real unmapping
+        - [x] Fix the redrawing when a window is closed while being in fullscreen
+        - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
+        - [ ] Need More testing
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

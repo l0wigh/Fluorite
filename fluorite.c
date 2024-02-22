@@ -870,7 +870,6 @@ void fluorite_handle_unmapping(Window e)
 {
 	int keep_workspace = fluorite.current_workspace;
 	int closed = False;
-	int was_fullscreen = False;
 
 	for (int i = 0; i <= MAX_WORKSPACES; i++)
 	{
@@ -945,14 +944,13 @@ void fluorite_handle_unmapping(Window e)
 				fluorite_organise_stack(STACK_DEL, stack_offset);
 			if (keep_workspace == i && closed)
 			{
-				fluorite.current_focus = 1;
+				if (!fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+					fluorite.current_focus = 1;
 				fluorite_redraw_windows();
 			}
 		}
 	}
 	fluorite.current_workspace = keep_workspace;
-	if (was_fullscreen)
-		fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 0;
 }
 
 int main(void)
