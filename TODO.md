@@ -19,8 +19,6 @@
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
         - Firefox still stuggle sometimes (mainly at the opening)
-    - [x] Partial fix, need a redraw somewhere that isn't done (2 windows, spam meta-j)
-    - Seems clean for now (adding Workspaces now !)
 - [-] Fix the custom workspace names
     - Works but doesn't support nerdfont and longer names properly
 
