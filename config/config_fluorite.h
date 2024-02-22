@@ -3,13 +3,13 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-#define BORDER_WIDTH			3				/* Border width around windows */
+#define BORDER_WIDTH			2				/* Border width around windows */
 #define BORDER_FOCUSED			0x35e5dc		/* Selected window's border color */
 #define BORDER_UNFOCUSED		0xf576e4		/* Selectable window's border color */
 #define BORDER_INACTIVE			0x9c082d		/* Unselectable window's border color */
 #define GAPS					5				/* gaps around the window */
 #define STACK_OFFSET			5				/* how the stacked window are separated */
-#define TOPBAR_GAPS				40				/* gaps for the top bar */
+#define TOPBAR_GAPS				30				/* gaps for the top bar */
 #define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
 #define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
@@ -52,7 +52,7 @@ void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
