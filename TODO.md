@@ -7,6 +7,7 @@
         - [x] Fix the redrawing when a window is closed while being in fullscreen
         - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
         - [ ] Need More testing
+    - [x] Adding a bindings to swap focus without mouse
     - [ ] Clean the code
 
 # PARTIALLY DONE

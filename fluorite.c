@@ -228,6 +228,24 @@ void fluorite_change_layout(int mode)
 				fluorite_redraw_windows();
 			}
 			break;
+		case SWAP_FOCUS:
+			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen || fluorite.workspaces[fluorite.current_workspace].frames_count <= 1)
+				return ;
+			if (fluorite.current_focus == 1)
+			{
+				fluorite.current_focus = 2;
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_FOCUSED);
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
+				XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+			}
+			else
+			{
+				fluorite.current_focus = 1;
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
+				XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+			}
+			break;
 	}
 }
 
