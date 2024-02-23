@@ -229,7 +229,7 @@ void fluorite_change_layout(int mode)
 			}
 			break;
 		case SWAP_FOCUS:
-			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen || fluorite.workspaces[fluorite.current_workspace].frames_count <= 1)
+			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen || fluorite.workspaces[fluorite.current_workspace].is_stacked || fluorite.workspaces[fluorite.current_workspace].frames_count <= 1)
 				return ;
 			if (fluorite.current_focus == 1)
 			{
