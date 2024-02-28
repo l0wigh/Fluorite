@@ -22,7 +22,6 @@ static unsigned int numlockmask = 0;
 #define MODMASK(mask)	(mask & ~(numlockmask | LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define LENGTH(X)		(sizeof X / sizeof X[0])
 
-#define MAX_WINDOWS		1145
 #define MAX_WORKSPACES	9
 
 typedef struct

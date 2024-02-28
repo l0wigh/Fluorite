@@ -8,6 +8,7 @@
         - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
         - [ ] Need More testing
     - [x] Adding a bindings to swap focus without mouse
+    - [ ] Better popup check, test if it's x-y are 0-0
     - [ ] Clean the code
 
 # PARTIALLY DONE
