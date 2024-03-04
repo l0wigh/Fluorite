@@ -643,10 +643,13 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		free(fluorite.workspaces[fluorite.current_workspace].tmp_winframe);
 	}
 
+	/* TODO: Seems uncessary and might be deleted in the future
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 2)
 		fluorite.avoid_focus = True;
 	else
 		fluorite.avoid_focus = False;
+	*/
+
 	fluorite_redraw_windows();
 }
 

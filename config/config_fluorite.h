@@ -4,9 +4,9 @@
 #include <stdlib.h>
 
 #define BORDER_WIDTH			2				/* Border width around windows */
-#define BORDER_FOCUSED			0x35e5dc		/* Selected window's border color */
-#define BORDER_UNFOCUSED		0xf576e4		/* Selectable window's border color */
-#define BORDER_INACTIVE			0x9c082d		/* Unselectable window's border color */
+#define BORDER_FOCUSED			0x7287fd		/* Selected window's border color */
+#define BORDER_UNFOCUSED		0x1e1e2e		/* Selectable window's border color */
+#define BORDER_INACTIVE			0x11111b		/* Unselectable window's border color */
 #define GAPS					5				/* gaps around the window */
 #define STACK_OFFSET			5				/* how the stacked window are separated */
 #define TOPBAR_GAPS				30				/* gaps for the top bar */
@@ -14,7 +14,7 @@
 #define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
-#define MAX_WINDOWS				30				/* number of windows per workspaces */
+#define MAX_WINDOWS				20				/* number of windows per workspaces */
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
