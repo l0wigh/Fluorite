@@ -961,6 +961,7 @@ void fluorite_handle_unmapping(Window e)
 int main(void)
 {
 	fluorite_init();
+	fluorite_init();
 	fluorite_run();
 	fluorite_clean();
 	return 0;
