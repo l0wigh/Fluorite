@@ -1,5 +1,5 @@
 # Fluorite Window Manager
-# Version 0.2
+# Version 0.4
 # Master Layout but better
 
 BLU			= \033[0;34m
@@ -11,15 +11,14 @@ TOTEM 		= 🦁
 
 FILES = fluorite
 
-# SRCS = $(FILES:%=srcs/%.c)
 SRCS = $(FILES:%=%.c)
 NAME		= Fluorite
 OBJS_DIR	= objs/
 OBJS		= $(SRCS:.c=.o)
 OBJECTS_PREFIXED = $(addprefix $(OBJS_DIR), $(OBJS))
 CC			= gcc
-# CC_FLAGS	= -Wall -Werror -Wextra -O0 -I/usr/include/freetype2
-CC_FLAGS	= -O3 -I/usr/include/freetype2 
+CC_FLAGS	= -Wall -Werror -Wextra -O0 -I/usr/include/freetype2
+# CC_FLAGS	= -Wall -Werror -Wextra -O3 -I/usr/include/freetype2 -fsanitize=address
 LIBS		= -lX11 -lXcursor -lXcomposite -lXft
 
 $(OBJS_DIR)%.o : %.c $(PROJECT_H)

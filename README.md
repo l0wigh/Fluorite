@@ -34,3 +34,7 @@ exec Fluorite
 ```
 
 Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so you can have all your bindings working.
+
+### Known issues
+
+    - Closing multiple windows in the same time on the current workspace make Fluorite crash (ex: killall st)

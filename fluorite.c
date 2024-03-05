@@ -895,7 +895,6 @@ void fluorite_handle_unmapping(Window e)
 				{
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 					XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
-					/* XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime); */
 				}
 			}
 			free(fluorite.workspaces[fluorite.current_workspace].master_winframe);
@@ -960,7 +959,6 @@ void fluorite_handle_unmapping(Window e)
 
 int main(void)
 {
-	fluorite_init();
 	fluorite_init();
 	fluorite_run();
 	fluorite_clean();

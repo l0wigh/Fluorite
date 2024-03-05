@@ -8,8 +8,12 @@
         - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
         - [ ] Need More testing
     - [x] Adding a bindings to swap focus without mouse
+    - [x] Clean the code
+    - [ ] Adding informations inside .md files
+    - [x] Changing version in Makefile
+
+- [ ] Fluorite 0.5
     - [ ] Better popup check, test if it's x-y are 0-0
-    - [ ] Clean the code
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
