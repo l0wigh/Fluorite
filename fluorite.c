@@ -77,6 +77,7 @@ static void			fluorite_handle_mapping(XMapRequestEvent e);
 static void			fluorite_handle_unmapping(Window e);
 static void			fluorite_handle_keys(XKeyPressedEvent e);
 static void			fluorite_handle_enternotify(XEvent e);
+static int			fluorite_handle_errors(Display *display, XErrorEvent *e);
 static WinFrames	*fluorite_create_winframe();
 static void			fluorite_organise_stack(int mode, int offset);
 static void			fluorite_redraw_windows();
@@ -421,7 +422,6 @@ void fluorite_init()
 	fluorite.current_workspace = 0;
 	fluorite.current_focus = 0;
 
-	XSetErrorHandler(fluorite_error_handle);
 
 	fluorite.workspaces = malloc(sizeof(Workspaces) * MAX_WORKSPACES);
 	for (int i = 0; i < MAX_WORKSPACES; i++)
@@ -441,6 +441,7 @@ void fluorite_init()
 	XChangeWindowAttributes(fluorite.display, fluorite.root, CWEventMask, &attributes);
 	XDefineCursor(fluorite.display, fluorite.root, XcursorLibraryLoadCursor(fluorite.display, "arrow"));
 	XSync(fluorite.display, False);
+	XSetErrorHandler(fluorite_handle_errors);
 
 	for (int j = 0; j < MAX_WORKSPACES; j++)
 	{
@@ -693,6 +694,16 @@ void fluorite_handle_enternotify(XEvent e)
 			XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 		}
 	}
+}
+
+int fluorite_handle_errors(Display *display, XErrorEvent *e)
+{
+	int fd = open("/var/log/fluorite.log", O_WRONLY | O_CREAT);
+	char error[1024];
+
+	XGetErrorText(display, e->error_code, error, sizeof(error));
+	dprintf(fd, "Err Code : %d\nRequest : %d, %s\n", e->error_code, e->request_code, error);
+	return e->error_code;
 }
 
 WinFrames *fluorite_create_winframe()
