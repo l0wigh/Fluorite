@@ -144,9 +144,9 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_l,						fluorite_stack_rotate_down},
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 
-	{METAKEY,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
-	{METAKEY,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
-	{METAKEY,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
-	{METAKEY,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
-	{METAKEY,				XF86XK_AudioMute,			fluorite_volume_mute},
+	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
+	{0,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
+	{0,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
+	{0,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
+	{0,				XF86XK_AudioMute,			fluorite_volume_mute},
 };

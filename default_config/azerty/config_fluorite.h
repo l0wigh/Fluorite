@@ -100,6 +100,7 @@ static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); 
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
 
+// 0 instead of METAKEY means pressing only the needed key
 static const Bindings bind[] = {
 	{METAKEY,				XK_Return,					fluorite_terminal},
 	{METAKEY,				XK_a,						fluorite_filemanager},
@@ -114,11 +115,11 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_f,						fluorite_fullscreen_toggle},
 	{METAKEY,				XK_n,						fluorite_swap_focus},
 
-	{METAKEY,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
-	{METAKEY,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
-	{METAKEY,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
-	{METAKEY,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
-	{METAKEY,				XF86XK_AudioMute,			fluorite_volume_mute},
+	{0,						XF86XK_MonBrightnessUp,		fluorite_brightness_up},
+	{0,						XF86XK_MonBrightnessDown,	fluorite_brightness_down},
+	{0,						XF86XK_AudioLowerVolume,	fluorite_volume_down},
+	{0,						XF86XK_AudioRaiseVolume,	fluorite_volume_up},
+	{0,						XF86XK_AudioMute,			fluorite_volume_mute},
 
 	{METAKEY|ShiftMask,		XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},

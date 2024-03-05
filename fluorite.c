@@ -17,12 +17,12 @@
 #define STACK_UP		2
 #define STACK_DOWN		3
 
+#define MAX_WORKSPACES	10
+
 // Thanks suckless for these
 static unsigned int numlockmask = 0;
 #define MODMASK(mask)	(mask & ~(numlockmask | LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define LENGTH(X)		(sizeof X / sizeof X[0])
-
-#define MAX_WORKSPACES	9
 
 typedef struct
 {
@@ -48,7 +48,6 @@ typedef struct
 	int			master_offset;
 	int			is_stacked;
 	int			is_fullscreen;
-	void		*v;
 } Workspaces;
 
 typedef struct
@@ -362,7 +361,7 @@ void fluorite_apply_property()
 		(const unsigned char *) &fluorite.root,
 		1
 	);
-	int num_work_atom = MAX_WORKSPACES + 1;
+	int num_work_atom = MAX_WORKSPACES;
 	XChangeProperty(
 		fluorite.display,
 		fluorite.root,
@@ -374,7 +373,7 @@ void fluorite_apply_property()
 		1
 	);
 	char *workspaces;
-	for (int i = 0; i <= MAX_WORKSPACES; i++)
+	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
 		workspaces = strdup(workspace_names[i]);
 		XChangeProperty(
@@ -417,7 +416,7 @@ void fluorite_init()
 	fluorite.current_focus = 0;
 
 	fluorite.workspaces = malloc(sizeof(Workspaces) * MAX_WORKSPACES);
-	for (int i = 0; i <= MAX_WORKSPACES; i++)
+	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
 		fluorite.workspaces[i].frames_count = 0;
 		fluorite.workspaces[i].slaves_count = 0;
@@ -435,9 +434,9 @@ void fluorite_init()
 	XDefineCursor(fluorite.display, fluorite.root, XcursorLibraryLoadCursor(fluorite.display, "arrow"));
 	XSync(fluorite.display, False);
 
-	for (int j = 0; j <= MAX_WORKSPACES; j++)
+	for (int j = 0; j < MAX_WORKSPACES; j++)
 	{
-		fluorite.workspaces[j].slaves_winframes = (WinFrames **) malloc(sizeof(WinFrames *) * MAX_WINDOWS);
+		fluorite.workspaces[j].slaves_winframes = (WinFrames **) malloc(sizeof(WinFrames *) * (MAX_WINDOWS + 1));
 		for (int i = 0; i <= MAX_WINDOWS; i++)
 			fluorite.workspaces[j].slaves_winframes[i] = (WinFrames *) malloc(sizeof(WinFrames));
 	}
@@ -487,10 +486,10 @@ void fluorite_run()
 
 void fluorite_clean()
 {
-	for (int i = 0; i <= MAX_WORKSPACES; i++)
+	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
 		fluorite.current_workspace = i;
-		if (fluorite.workspaces[fluorite.current_workspace].master_winframe)
+		if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 			free(fluorite.workspaces[fluorite.current_workspace].master_winframe);
 		if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 		{
@@ -499,7 +498,6 @@ void fluorite_clean()
 			free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes);
 		}
 	}
-	XSync(fluorite.display, True);
 	XCloseDisplay(fluorite.display);
 }
 
@@ -655,19 +653,9 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 
 void fluorite_handle_keys(XKeyPressedEvent e)
 {
-	int i;
-	unsigned int cleaned_mod;
-	unsigned int user_keycode;
-
-	i = 0;
-	while (bind[i].mod)
-	{
-		cleaned_mod = MODMASK(bind[i].mod);
-		user_keycode = XKeysymToKeycode(fluorite.display, bind[i].key);
-		if (cleaned_mod == MODMASK(e.state) && user_keycode == e.keycode)
+	for (long unsigned int i = 0; i < LENGTH(bind); i++)
+		if (e.keycode == XKeysymToKeycode(fluorite.display, bind[i].key) && MODMASK(bind[i].mod) == MODMASK(e.state) && bind[i].func)
 				bind[i].func();
-		i++;
-	}
 }
 
 void fluorite_handle_enternotify(XEvent e)
@@ -876,7 +864,7 @@ void fluorite_handle_unmapping(Window e)
 	int keep_workspace = fluorite.current_workspace;
 	int closed = False;
 
-	for (int i = 0; i <= MAX_WORKSPACES; i++)
+	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
 		if (fluorite.workspaces[i].frames_count <= 0)
 			continue;
