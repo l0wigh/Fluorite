@@ -281,7 +281,7 @@ void fluorite_send_window(int new_workspace)
 {
 	int keep_workspace = fluorite.current_workspace;
 
-	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
+	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0 || fluorite.workspaces[new_workspace].frames_count == MAX_WINDOWS)
 		return ;
 
 	if (fluorite.current_focus == 2)
@@ -289,18 +289,15 @@ void fluorite_send_window(int new_workspace)
 
 	if (fluorite.workspaces[new_workspace].frames_count > 0)
 	{
-		fluorite.workspaces[new_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 		memcpy(fluorite.workspaces[new_workspace].tmp_winframe, fluorite.workspaces[new_workspace].master_winframe, sizeof(WinFrames));
 		fluorite.workspaces[new_workspace].slaves_count++;
 	}
-	fluorite.workspaces[new_workspace].master_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 	fluorite.workspaces[new_workspace].frames_count++;
 	memcpy(fluorite.workspaces[new_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 	if (fluorite.workspaces[new_workspace].slaves_count > 0)
 	{
 		fluorite.current_workspace = new_workspace;
 		fluorite_organise_stack(STACK_NEW, -1);
-		free(fluorite.workspaces[new_workspace].tmp_winframe);
 		fluorite.current_workspace = keep_workspace;
 	}
 	fluorite.workspaces[fluorite.current_workspace].frames_count--;
@@ -446,6 +443,7 @@ void fluorite_init()
 	for (int j = 0; j < MAX_WORKSPACES; j++)
 	{
 		fluorite.workspaces[j].master_winframe = (WinFrames *) malloc(sizeof(WinFrames));
+		fluorite.workspaces[j].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 		fluorite.workspaces[j].slaves_winframes = (WinFrames **) malloc(sizeof(WinFrames *) * (MAX_WINDOWS + 1));
 		for (int i = 0; i < MAX_WINDOWS; i++)
 			fluorite.workspaces[j].slaves_winframes[i] = (WinFrames *) malloc(sizeof(WinFrames));
@@ -499,14 +497,11 @@ void fluorite_clean()
 	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
 		fluorite.current_workspace = i;
-		if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
-			free(fluorite.workspaces[fluorite.current_workspace].master_winframe);
-		if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
-		{
-			for (int i = 0; fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]; i++)
-				free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]);
-			free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes);
-		}
+		free(fluorite.workspaces[fluorite.current_workspace].master_winframe);
+		free(fluorite.workspaces[fluorite.current_workspace].tmp_winframe);
+		for (int i = 0; fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]; i++)
+			free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]);
+		free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes);
 	}
 	XCloseDisplay(fluorite.display);
 }
@@ -617,7 +612,6 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 	{
-		fluorite.workspaces[fluorite.current_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 		memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 		fluorite.workspaces[fluorite.current_workspace].slaves_count++;
 	}
@@ -644,10 +638,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 	XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 0, 0, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
 
 	if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
-	{
 		fluorite_organise_stack(STACK_NEW, -1);
-		free(fluorite.workspaces[fluorite.current_workspace].tmp_winframe);
-	}
 
 	fluorite_redraw_windows();
 }
@@ -757,32 +748,26 @@ void fluorite_organise_stack(int mode, int offset)
 				memcpy(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i - 1], fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i], sizeof(WinFrames));
 			break;
 		case STACK_UP:
-			fluorite.workspaces[fluorite.current_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
 			fluorite_organise_stack(STACK_DEL, 0);
 			memcpy(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[fluorite.workspaces[fluorite.current_workspace].slaves_count - 1], fluorite.workspaces[fluorite.current_workspace].tmp_winframe, sizeof(WinFrames));
 			break;
 		case STACK_DOWN:
-			fluorite.workspaces[fluorite.current_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[fluorite.workspaces[fluorite.current_workspace].slaves_count - 1], sizeof(WinFrames));
 			fluorite_organise_stack(STACK_NEW, -1);
 			memcpy(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], fluorite.workspaces[fluorite.current_workspace].tmp_winframe, sizeof(WinFrames));
 			break;
 		case SLAVES_UP:
-			fluorite.workspaces[fluorite.current_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
 			for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
 				memcpy(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i], fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i + 1], sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[fluorite.workspaces[fluorite.current_workspace].slaves_count - 1], fluorite.workspaces[fluorite.current_workspace].tmp_winframe, sizeof(WinFrames));
-			free(fluorite.workspaces[fluorite.current_workspace].tmp_winframe);
 			break;
 		case SLAVES_DOWN:
-			fluorite.workspaces[fluorite.current_workspace].tmp_winframe = (WinFrames *) malloc(sizeof(WinFrames));
 			memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[fluorite.workspaces[fluorite.current_workspace].slaves_count - 1], sizeof(WinFrames));
 			fluorite_organise_stack(STACK_NEW, -1);
-			free(fluorite.workspaces[fluorite.current_workspace].tmp_winframe);
 			break;
 	}
 }
@@ -883,7 +868,6 @@ void fluorite_handle_unmapping(Window e)
 				if (keep_workspace == i)
 				{
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
-					XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 				}
 			}
 			fluorite.workspaces[fluorite.current_workspace].frames_count--;
@@ -922,7 +906,6 @@ void fluorite_handle_unmapping(Window e)
 						if (keep_workspace == i)
 						{
 							XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
-							XDestroyWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 						}
 					}
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
