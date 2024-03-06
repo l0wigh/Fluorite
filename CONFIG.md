@@ -12,4 +12,4 @@ It my main font so I put it everywhere. Keep that in mind.
 - Compositor    : Picom (XoDefender fork)
 - Taskbar       : Polybar
 
-Default config files for these programs are located inside `base_dotfiles` folder
+Default config files for these programs are located inside `dotfiles_examples` folder

@@ -689,11 +689,11 @@ void fluorite_handle_enternotify(XEvent e)
 
 int fluorite_handle_errors(Display *display, XErrorEvent *e)
 {
-	int fd = open("/var/log/fluorite.log", O_WRONLY | O_CREAT);
+	int fd = open("/tmp/fluorite.log", O_WRONLY | O_CREAT | O_APPEND, 0666);
 	char error[1024];
 
 	XGetErrorText(display, e->error_code, error, sizeof(error));
-	dprintf(fd, "Err Code : %d\nRequest : %d, %s\n", e->error_code, e->request_code, error);
+	dprintf(fd, "Err Code : %d\nRequest : %d\n%s\n", e->error_code, e->request_code, error);
 	return e->error_code;
 }
 
