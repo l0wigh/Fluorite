@@ -843,6 +843,8 @@ void fluorite_redraw_windows()
 	else
 		fluorite_redraw_tiling();
 	XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+	XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
 }
 
 void fluorite_handle_unmapping(Window e)
@@ -866,9 +868,7 @@ void fluorite_handle_unmapping(Window e)
 			{
 				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.root, 0, 0);
 				if (keep_workspace == i)
-				{
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
-				}
 			}
 			fluorite.workspaces[fluorite.current_workspace].frames_count--;
 			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
@@ -904,9 +904,7 @@ void fluorite_handle_unmapping(Window e)
 					{
 						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame, fluorite.root, 0, 0);
 						if (keep_workspace == i)
-						{
 							XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
-						}
 					}
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
@@ -925,7 +923,6 @@ void fluorite_handle_unmapping(Window e)
 			}
 		}
 	}
-	XSync(fluorite.display, False);
 	fluorite.current_workspace = keep_workspace;
 }
 
