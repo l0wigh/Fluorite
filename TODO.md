@@ -15,6 +15,7 @@
 - [ ] Fluorite 0.5
     - [ ] Better popup check, test if it's x-y are 0-0
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
+    - [ ] Adding Move and Resize for dialog (popup) apps
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

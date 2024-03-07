@@ -4,7 +4,7 @@
 
 You probably need to either install Victor Mono Nerd Font or change the font value in the config file(s)
 
-It my main font so I put it everywhere. Keep that in mind.
+It's my main font so I put it everywhere. Keep that in mind.
 
 # Additionnal X11 programs
 
