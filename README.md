@@ -33,7 +33,7 @@ make install
 ``` sh
 polybar &
 picom &
-setxkbmap fr &
+setxkbmap -layout fr
 exec Fluorite
 ```
 
