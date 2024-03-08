@@ -6,16 +6,20 @@
         - [x] Handle real unmapping
         - [x] Fix the redrawing when a window is closed while being in fullscreen
         - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
-        - [ ] Need More testing
     - [x] Adding a bindings to swap focus without mouse
     - [x] Clean the code
-    - [ ] Adding informations inside .md files
+    - [x] Adding informations inside .md files
     - [x] Changing version in Makefile
+    - [x] Adding Move and Resize for dialog (popup) apps
+    - [x] FluoriteWebsite remaster
+    - [x] Takes a good screenshot for github (maybe use the last one I took)
+    - [x] Record a video with most of the features reddit (layouts, focus with mouse, focus without mouse, floating, workspaces)
 
 - [ ] Fluorite 0.5
-    - [ ] Better popup check, test if it's x-y are 0-0
+    - [ ] Better popup functions
+    - [ ] Add a way to kill popup windows with keybinds when focused
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
-    - [ ] Adding Move and Resize for dialog (popup) apps
+    - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

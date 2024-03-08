@@ -2,6 +2,8 @@
 
 Fluorite is a really simple window manager that aims to be light and functionnal.
 
+![FluoriteWM](https://fluorite.surge.sh/files/Fluorite.png)
+
 ## Information ?
 
 Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. I talk about configuration, installation, ect...
@@ -39,5 +41,4 @@ Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so
 
 ### Known issues
 
-    - Java apps might be broken. (ex: Ghidra)
-    - Some popup windows might be hidden behind tiled windows (switch to an empty workspace if something like this happens).
+    - Java apps might be broken on some features. (ex: Ghidra)
