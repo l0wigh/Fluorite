@@ -2,6 +2,8 @@
 
 Fluorite is a really simple window manager that aims to be light and functionnal.
 
+This is a very experimental version. Use at your own risk.
+
 ![FluoriteWM](https://fluorite.surge.sh/files/Fluorite.png)
 
 ## Information ?
