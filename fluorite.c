@@ -163,10 +163,14 @@ void fluorite_change_layout(int mode)
 			fluorite_redraw_windows();
 			break;
 		case SLAVES_UP:
+			if (fluorite.workspaces[fluorite.current_workspace].slaves_count < 2)
+				break;
 			fluorite_organise_stack(SLAVES_UP, -1);
 			fluorite_redraw_windows();
 			break;
 		case SLAVES_DOWN:
+			if (fluorite.workspaces[fluorite.current_workspace].slaves_count < 2)
+				break;
 			fluorite_organise_stack(SLAVES_DOWN, -1);
 			fluorite_redraw_windows();
 			break;
