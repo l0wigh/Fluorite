@@ -44,3 +44,4 @@ Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so
 ### Known issues
 
     - Java apps might be broken on some features. (ex: Ghidra)
+    - Support for floating windows is a really early stage and might be unstable, use with caution.
