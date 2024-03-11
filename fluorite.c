@@ -30,13 +30,10 @@ typedef struct
 	Window	frame;
 	Window	fullscreen_frame;
 	Window	window;
-	int		focused;
 	int		pos_x;
 	int		pos_y;
 	int		width;
 	int		height;
-	int		border_color;
-	int		border_width;
 } WinFrames;
 
 typedef struct
@@ -125,21 +122,16 @@ void fluorite_close_window()
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
 
 	XEvent closing;
+	Window focused;
+	int revert;
+	XGetInputFocus(fluorite.display, &focused, &revert);
 	memset(&closing, 0, sizeof(closing));
 	closing.xclient.type = ClientMessage;
 	closing.xclient.message_type = XInternAtom(fluorite.display, "WM_PROTOCOLS", False);
 	closing.xclient.format = 32;
 	closing.xclient.data.l[0] = XInternAtom(fluorite.display, "WM_DELETE_WINDOW", False);
-	if (fluorite.current_focus == 1 && fluorite.workspaces[fluorite.current_workspace].master_winframe->window)
-	{
-		closing.xclient.window = fluorite.workspaces[fluorite.current_workspace].master_winframe->window;
-		XSendEvent(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, False, 0, &closing);
-	}
-	else if (fluorite.current_focus == 2 && fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window)
-	{
-		closing.xclient.window = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window;
-		XSendEvent(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, False, 0, &closing);
-	}
+	closing.xclient.window = focused;
+	XSendEvent(fluorite.display, focused, False, 0, &closing);
 }
 
 void fluorite_user_close()
@@ -818,12 +810,6 @@ WinFrames *fluorite_create_winframe()
 	attribs_set.event_mask = StructureNotifyMask | ExposureMask;
 
 	new_frame = malloc(sizeof(WinFrames));
-	new_frame->pos_x = 0;
-	new_frame->pos_y = 0;
-	new_frame->width = fluorite.screen_width - (BORDER_WIDTH * 2);
-	new_frame->height = fluorite.screen_height - (BORDER_WIDTH * 2);
-	new_frame->border_color = BORDER_FOCUSED;
-	new_frame->border_width = BORDER_WIDTH;
 	new_frame->frame = XCreateWindow(fluorite.display, fluorite.root, 
 			0, 
 			0,
