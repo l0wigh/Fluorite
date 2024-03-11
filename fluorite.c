@@ -299,12 +299,12 @@ void fluorite_change_layout(int mode)
 					if (fluorite.workspaces[fluorite.current_workspace].slaves_count == 0)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
-					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
 					XReparentWindow(fluorite.display, focused, fluorite.root, 0, 0);
 					fluorite_handle_specials(focused);
 					bzero(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
 					fluorite_organise_stack(STACK_DEL, 0);
+					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 					fluorite_redraw_windows();
 					dprintf(fluorite.log, "-----------------------------\nSLAVE -> FLOAT\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
 				}
@@ -320,7 +320,6 @@ void fluorite_change_layout(int mode)
 								memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[j - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[j], sizeof(Floating));
 							fluorite.workspaces[fluorite.current_workspace].floating_count--;
 							fluorite_handle_normals(focused);
-							bzero(fluorite.workspaces[fluorite.current_workspace].floating_windows[i], sizeof(WinFrames));
 							fluorite_redraw_windows();
 							dprintf(fluorite.log, "-----------------------------\nFLOAT -> MASTER\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
 							break;
@@ -690,6 +689,7 @@ void fluorite_handle_specials(Window e)
 	XGrabButton(fluorite.display, Button3, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XSetWindowBorderWidth(fluorite.display, e, BORDER_WIDTH);
 	XSetWindowBorder(fluorite.display, e, BORDER_FOCUSED);
+	XSetInputFocus(fluorite.display, e, RevertToPointerRoot, CurrentTime);
 	XSync(fluorite.display, True);
 }
 

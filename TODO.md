@@ -1,23 +1,7 @@
 # TODO !
-- [ ] Fluorite 0.4
-    - [-] Fullscreen Mode
-        - [x] Toggle
-        - [x] Blocking most of the bindings, might be really boring
-        - [x] Handle real unmapping
-        - [x] Fix the redrawing when a window is closed while being in fullscreen
-        - [x] Fix crashing when multiple slaves are opened and one of them is closed while slaves[0] is fullscreen
-    - [x] Adding a bindings to swap focus without mouse
-    - [x] Clean the code
-    - [x] Adding informations inside .md files
-    - [x] Changing version in Makefile
-    - [x] Adding Move and Resize for dialog (popup) apps
-    - [x] FluoriteWebsite remaster
-    - [x] Takes a good screenshot for github (maybe use the last one I took)
-    - [x] Record a video with most of the features reddit (layouts, focus with mouse, focus without mouse, floating, workspaces)
-
 - [ ] Fluorite 0.5
     - [ ] Better popup functions
-    - [ ] Add a way to kill popup windows with keybinds when focused
+    - [x] Add a way to kill popup windows with keybinds when focused
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
     - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
 
