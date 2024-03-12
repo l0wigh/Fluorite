@@ -14,7 +14,8 @@
 #define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
-#define MAX_WINDOWS				20				/* number of windows per workspaces */
+#define MAX_WINDOWS				10				/* number of windows per workspaces */
+#define AUTO_FLOATING			False			/* When False, floating windows, will open in tiled layout */
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10

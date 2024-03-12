@@ -740,7 +740,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		return ;
 	}
 
-	if (fluorite_check_type(e.window))
+	if (fluorite_check_type(e.window) && AUTO_FLOATING)
 	{
 		fluorite_handle_specials(e.window);
 		return ;
@@ -1078,7 +1078,7 @@ void fluorite_handle_unmapping(Window e)
 			}
 			else
 			{
-				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.root, 0, 0);
+				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
 				if (keep_workspace == i)
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 			}
@@ -1114,7 +1114,7 @@ void fluorite_handle_unmapping(Window e)
 					}
 					else
 					{
-						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame, fluorite.root, 0, 0);
+						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
 						if (keep_workspace == i)
 							XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 					}
