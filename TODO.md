@@ -1,12 +1,9 @@
 # TODO !
 - [ ] Fluorite 0.5
-    - [x] Sometimes floating will not go back to layout, use another checking method
-    - [ ] Fix windows that can be moved when inside tiling
-    - [ ] Better floating default position
-    - [x] Add a way to kill popup windows with keybinds when focused
+    - [-] Better floating default position
+        - Seems to not work on some apps
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
     - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
-    - [x] Tray seems broken, maybe coming from floating window stuff
     - [ ] Document every functions
 
 # PARTIALLY DONE
@@ -26,6 +23,7 @@
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
 - [ ] Some very precise apps, make Fluorite Crash
 - [ ] killall command can sometimes break stuff (need more testing)
+- [ ] Fix windows that can be moved when inside tiling (thunar for example)
 
 # DONE !
 - [x] Fixing the multi closing issue
@@ -70,3 +68,7 @@
 - [x] New binding to restore default master offset
 - [x] Adding a default master offset value in config file
 - [x] Find a way to only have one border when stacked
+- [x] Handle fullscreen toggle when it's requested on floating
+- [x] Sometimes floating will not go back to layout, use another checking method
+- [x] Add a way to kill popup windows with keybinds when focused
+- [x] Tray seems broken, maybe coming from floating window stuff
