@@ -278,7 +278,6 @@ void fluorite_change_layout(int mode)
 				XGetInputFocus(fluorite.display, &focused, &revert);
 				if (focused == fluorite.workspaces[fluorite.current_workspace].master_winframe->window && fluorite.workspaces[fluorite.current_workspace].floating_count < MAX_WINDOWS)
 				{
-					dprintf(fluorite.log, "FLOATING If\n");
 					if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
@@ -293,11 +292,9 @@ void fluorite_change_layout(int mode)
 						fluorite_organise_stack(STACK_DEL, 0);
 					}
 					fluorite_redraw_windows();
-					dprintf(fluorite.log, "-----------------------------\nMASTER -> FLOAT\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
 				}
 				else if (focused == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window && fluorite.workspaces[fluorite.current_workspace].floating_count < MAX_WINDOWS)
 				{
-					dprintf(fluorite.log, "FLOATING Else If\n");
 					if (fluorite.workspaces[fluorite.current_workspace].slaves_count == 0)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
@@ -308,11 +305,9 @@ void fluorite_change_layout(int mode)
 					fluorite_organise_stack(STACK_DEL, 0);
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 					fluorite_redraw_windows();
-					dprintf(fluorite.log, "-----------------------------\nSLAVE -> FLOAT\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
 				}
 				else
 				{
-					dprintf(fluorite.log, "FLOATING Else\n");
 					if (fluorite.workspaces[fluorite.current_workspace].frames_count >= 10)
 						return ;
 					for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
@@ -324,7 +319,6 @@ void fluorite_change_layout(int mode)
 							fluorite.workspaces[fluorite.current_workspace].floating_count--;
 							fluorite_handle_normals(focused);
 							fluorite_redraw_windows();
-							dprintf(fluorite.log, "-----------------------------\nFLOAT -> MASTER\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
 							break;
 						}
 					}
@@ -428,14 +422,6 @@ void fluorite_apply_property()
 		XFree(workspaces);
 	}
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
-}
-
-int fluorite_error_handle(Display *display, XErrorEvent *e)
-{
-	char err_mess[1024];
-	XGetErrorText(display, e->error_code, err_mess, sizeof(err_mess));
-	dprintf(fluorite.log, "%d | %lu | %u | %u | %u\n%s", e->type, e->serial, e->error_code, e->request_code, e->minor_code, err_mess);
-	exit(1);
 }
 
 void fluorite_init()
@@ -645,6 +631,7 @@ int fluorite_check_type(Window e)
 	unsigned long dl;
 	unsigned char *p = NULL;
 	Atom da, atom = None;
+	XClassHint name;
 
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
@@ -656,6 +643,14 @@ int fluorite_check_type(Window e)
 		}
 	}
 	XFree(p);
+	XGetClassHint(fluorite.display, e, &name);
+	if (strlen(name.res_class) == 0)
+		return False;
+	for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
+	{
+		if (strcmp(default_floating[i].wm_class, name.res_class) == 0)
+			return True;
+	}
 	return False;
 }
 
@@ -1038,7 +1033,6 @@ void fluorite_handle_unmapping(Window e)
 				for (int j = i + 1; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
 					memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[j - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[j], sizeof(Floating));
 				fluorite.workspaces[fluorite.current_workspace].floating_count--;
-				dprintf(fluorite.log, "-----------------------------\nUnmapping\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
 				XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 				fluorite.current_workspace = keep_workspace;
 				return ;

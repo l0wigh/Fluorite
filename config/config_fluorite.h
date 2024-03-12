@@ -32,13 +32,6 @@
 // For now only single character names are working
 // You might be able to change polybar config to handle nerdfont and other custom names
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
- 
-typedef struct
-{
-	unsigned int	mod;
-	KeySym			key;
-	void			(*func)();
-} Bindings;
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
@@ -101,6 +94,13 @@ static void	fluorite_appto_workspace_seven() { fluorite_change_workspace(6, 1); 
 static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); }
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
+ 
+typedef struct
+{
+	unsigned int	mod;
+	KeySym			key;
+	void			(*func)();
+} Bindings;
 
 static const Bindings bind[] = {
 	{METAKEY,				XK_Return,					fluorite_terminal},
@@ -152,4 +152,15 @@ static const Bindings bind[] = {
 	{0,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
 	{0,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
 	{0,				XF86XK_AudioMute,			fluorite_volume_mute},
+};
+
+typedef struct
+{
+	char	wm_class[255];
+} Rules;
+
+// Use xprop on a floating window to get the WM_CLASS name used by a window.
+static const Rules default_floating[] = {
+	{"VirtualBox Manager"},
+	{"spectacle"},
 };
