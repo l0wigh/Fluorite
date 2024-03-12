@@ -140,7 +140,8 @@ void fluorite_close_window()
 
 	XEvent closing;
 	Window focused;
-	XGetInputFocus(fluorite.display, &focused, (int *)NULL);
+	int revert;
+	XGetInputFocus(fluorite.display, &focused, &revert);
 	memset(&closing, 0, sizeof(closing));
 	closing.xclient.type = ClientMessage;
 	closing.xclient.message_type = XInternAtom(fluorite.display, "WM_PROTOCOLS", False);
@@ -297,8 +298,9 @@ void fluorite_change_layout(int mode)
 		case FLOATING_TOGGLE:
 			{
 				Window focused;
+				int revert;
 
-				XGetInputFocus(fluorite.display, &focused, (int *)NULL);
+				XGetInputFocus(fluorite.display, &focused, &revert);
 				int pos = fluorite_check_infloat(focused);
 				if (pos != -1)
 				{
@@ -646,7 +648,7 @@ void fluorite_handle_configuration(XConfigureRequestEvent e)
 
 int fluorite_check_infloat(Window e)
 {
-	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+	for (int i = 1; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 		if (e == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
 			return i;
 	return -1;
@@ -655,7 +657,8 @@ int fluorite_check_infloat(Window e)
 int fluorite_check_focused_infloat()
 {
 	Window focused;
-	XGetInputFocus(fluorite.display, &focused, (int *)NULL);
+	int revert;
+	XGetInputFocus(fluorite.display, &focused, &revert);
 
 	if (fluorite_check_infloat(focused) != -1)
 		return True;
