@@ -1,9 +1,11 @@
 # TODO !
 - [ ] Fluorite 0.5
+    - [ ] Fix windows that can be moved when inside tiling
     - [ ] Better popup functions
     - [x] Add a way to kill popup windows with keybinds when focused
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
     - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
+    - [ ] Document every functions
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

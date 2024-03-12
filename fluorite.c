@@ -278,13 +278,13 @@ void fluorite_change_layout(int mode)
 				XGetInputFocus(fluorite.display, &focused, &revert);
 				if (focused == fluorite.workspaces[fluorite.current_workspace].master_winframe->window && fluorite.workspaces[fluorite.current_workspace].floating_count < MAX_WINDOWS)
 				{
+					dprintf(fluorite.log, "FLOATING If\n");
 					if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 					XReparentWindow(fluorite.display, focused, fluorite.root, 0, 0);
 					fluorite_handle_specials(focused);
-					bzero(fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 					if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 					{
 						memcpy(fluorite.workspaces[fluorite.current_workspace].master_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
@@ -296,13 +296,13 @@ void fluorite_change_layout(int mode)
 				}
 				else if (focused == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window && fluorite.workspaces[fluorite.current_workspace].floating_count < MAX_WINDOWS)
 				{
+					dprintf(fluorite.log, "FLOATING Else If\n");
 					if (fluorite.workspaces[fluorite.current_workspace].slaves_count == 0)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
 					XReparentWindow(fluorite.display, focused, fluorite.root, 0, 0);
 					fluorite_handle_specials(focused);
-					bzero(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
 					fluorite_organise_stack(STACK_DEL, 0);
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 					fluorite_redraw_windows();
@@ -310,6 +310,7 @@ void fluorite_change_layout(int mode)
 				}
 				else
 				{
+					dprintf(fluorite.log, "FLOATING Else\n");
 					if (fluorite.workspaces[fluorite.current_workspace].frames_count >= 10)
 						return ;
 					for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
@@ -1024,23 +1025,22 @@ void fluorite_handle_unmapping(Window e)
 	int keep_workspace = fluorite.current_workspace;
 	int closed = False;
 
-	if (fluorite_check_type(e))
+	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
-		for (int i = 0; i < MAX_WORKSPACES; i++)
-		{
-			fluorite.current_workspace = i;
-			for (int j = 0; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
+		if (fluorite.workspaces[i].floating_count == 0)
+			continue;
+		fluorite.current_workspace = i;
+		for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+			if (fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window == e)
 			{
-				if (e == fluorite.workspaces[fluorite.current_workspace].floating_windows[j]->window)
-				{
-					for (int x = j + 1; x < fluorite.workspaces[fluorite.current_workspace].floating_count; x++)
-						memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[x - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[x], sizeof(WinFrames));
-					fluorite.workspaces[fluorite.current_workspace].floating_count--;
-				}
+				for (int j = i + 1; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
+					memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[j - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[j], sizeof(Floating));
+				fluorite.workspaces[fluorite.current_workspace].floating_count--;
+				dprintf(fluorite.log, "-----------------------------\nUnmapping\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
+				XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+				fluorite.current_workspace = keep_workspace;
+				return ;
 			}
-		}
-		fluorite.current_workspace = keep_workspace;
-		return ;
 	}
 
 	for (int i = 0; i < MAX_WORKSPACES; i++)
@@ -1057,7 +1057,7 @@ void fluorite_handle_unmapping(Window e)
 			}
 			else
 			{
-				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
+				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.root, 0, 0);
 				if (keep_workspace == i)
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 			}
@@ -1093,7 +1093,7 @@ void fluorite_handle_unmapping(Window e)
 					}
 					else
 					{
-						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
+						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame, fluorite.root, 0, 0);
 						if (keep_workspace == i)
 							XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 					}
@@ -1111,23 +1111,6 @@ void fluorite_handle_unmapping(Window e)
 				}
 				stack_offset++;
 			}
-		}
-	}
-	if (!closed)
-	{
-		for (int i = 0; i < MAX_WORKSPACES; i++)
-		{
-			if (fluorite.workspaces[i].floating_count == 0)
-				continue;
-			fluorite.current_workspace = i;
-			for (int j = 0; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
-				if (fluorite.workspaces[fluorite.current_workspace].floating_windows[j]->window == e)
-				{
-					for (int j = i + 1; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
-						memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[j - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[j], sizeof(Floating));
-					fluorite.workspaces[fluorite.current_workspace].floating_count--;
-					dprintf(fluorite.log, "-----------------------------\nUnmapping\nfloating_count: %d\nframes_count: %d\nslaves_count: %d\n", fluorite.workspaces[fluorite.current_workspace].floating_count, fluorite.workspaces[fluorite.current_workspace].frames_count, fluorite.workspaces[fluorite.current_workspace].slaves_count);
-				}
 		}
 	}
 	fluorite.current_workspace = keep_workspace;
