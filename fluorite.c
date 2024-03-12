@@ -283,6 +283,7 @@ void fluorite_change_layout(int mode)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+					bzero(fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 					XReparentWindow(fluorite.display, focused, fluorite.root, 0, 0);
 					fluorite_handle_specials(focused);
 					if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
@@ -301,6 +302,7 @@ void fluorite_change_layout(int mode)
 						return ;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
+					bzero(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
 					XReparentWindow(fluorite.display, focused, fluorite.root, 0, 0);
 					fluorite_handle_specials(focused);
 					fluorite_organise_stack(STACK_DEL, 0);
