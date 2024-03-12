@@ -669,6 +669,10 @@ void fluorite_handle_specials(Window e)
 
 	if (XGetWMNormalHints(fluorite.display, e, &hints, &lhints))
 	{
+		if (hints.x < 2)
+			hints.x = fluorite.screen_width / 2 - (hints.width / 2);
+		if (hints.y < 2)
+			hints.y = fluorite.screen_height / 2 - (hints.height / 2);
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_x = hints.x;
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_y = hints.y;
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->width = hints.width;
@@ -809,7 +813,15 @@ void fluorite_get_pointer_coord(int *x, int *y)
 
 void fluorite_handle_buttonpress(XButtonEvent e)
 {
+	int is_float = False;
 	unsigned b_w, d;
+
+	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+		if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
+			is_float = True;
+	if (!is_float)
+		return ;
+
 	fluorite.mouse.start_pos_x = e.x_root;
 	fluorite.mouse.start_pos_y = e.y_root;
 	XGetGeometry(fluorite.display, e.window, &fluorite.root, &fluorite.mouse.start_frame_x, &fluorite.mouse.start_frame_y, &fluorite.mouse.start_frame_w, &fluorite.mouse.start_frame_h, &b_w, &d);
@@ -818,6 +830,8 @@ void fluorite_handle_buttonpress(XButtonEvent e)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
 	if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
+	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_UNFOCUSED);
 	XSetWindowBorder(fluorite.display, e.window, BORDER_FOCUSED);
 	XRaiseWindow(fluorite.display, e.window);
 	fluorite.current_focus = FLOAT_FOCUS;

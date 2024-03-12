@@ -1,8 +1,8 @@
 # TODO !
 - [ ] Fluorite 0.5
-    - [ ] Sometimes floating will not go back to layout, use another checking method
+    - [x] Sometimes floating will not go back to layout, use another checking method
     - [ ] Fix windows that can be moved when inside tiling
-    - [ ] Better popup functions
+    - [ ] Better floating default position
     - [x] Add a way to kill popup windows with keybinds when focused
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
     - [ ] Find why some apps make fullscreen bugs when closing (feh for example)

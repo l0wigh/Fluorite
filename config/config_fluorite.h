@@ -163,4 +163,5 @@ typedef struct
 static const Rules default_floating[] = {
 	{"VirtualBox Manager"},
 	{"spectacle"},
+	{"ghidra-Ghidra"},
 };
