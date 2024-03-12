@@ -6,6 +6,7 @@
     - [x] Add a way to kill popup windows with keybinds when focused
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
     - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
+    - [x] Tray seems broken, maybe coming from floating window stuff
     - [ ] Document every functions
 
 # PARTIALLY DONE

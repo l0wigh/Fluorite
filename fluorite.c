@@ -690,7 +690,7 @@ void fluorite_handle_specials(Window e)
 	XGrabButton(fluorite.display, Button1, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.display, Button3, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XSetWindowBorderWidth(fluorite.display, e, BORDER_WIDTH);
-	XSetWindowBorder(fluorite.display, e, BORDER_UNFOCUSED);
+	XSetWindowBorder(fluorite.display, e, BORDER_FOCUSED);
 	XSetInputFocus(fluorite.display, e, RevertToPointerRoot, CurrentTime);
 	XSync(fluorite.display, True);
 }
@@ -732,17 +732,17 @@ void fluorite_handle_normals(Window e)
 
 void fluorite_handle_mapping(XMapRequestEvent e)
 {
-	if (fluorite_check_type(e.window))
-	{
-		fluorite_handle_specials(e.window);
-		return ;
-	}
-
 	if (fluorite_check_fixed(e.window))
 	{
 		XMapWindow(fluorite.display, e.window);
 		XRaiseWindow(fluorite.display, e.window);
 		XSync(fluorite.display, True);
+		return ;
+	}
+
+	if (fluorite_check_type(e.window))
+	{
+		fluorite_handle_specials(e.window);
 		return ;
 	}
 

@@ -161,7 +161,6 @@ typedef struct
 
 // Use xprop on a floating window to get the WM_CLASS name used by a window.
 static const Rules default_floating[] = {
-	{"VirtualBox Manager"},
 	{"spectacle"},
 	{"ghidra-Ghidra"},
 };
