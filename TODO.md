@@ -1,5 +1,6 @@
 # TODO !
 - [ ] Fluorite 0.5
+    - [ ] Sometimes floating will not go back to layout, use another checking method
     - [ ] Fix windows that can be moved when inside tiling
     - [ ] Better popup functions
     - [x] Add a way to kill popup windows with keybinds when focused
