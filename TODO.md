@@ -1,10 +1,8 @@
 # TODO !
 - [ ] Fluorite 0.5
-    - [-] Better floating default position
-        - Seems to not work on some apps
+    - [x] Fix hidding function
+        - Probably an issue with the variable floating_hidden
     - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
-    - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
-    - [ ] Document every functions
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -24,6 +22,10 @@
 - [ ] Some very precise apps, make Fluorite Crash
 - [ ] killall command can sometimes break stuff (need more testing)
 - [ ] Fix windows that can be moved when inside tiling (thunar for example)
+- [ ] Find why some apps make fullscreen bugs when closing (feh for example)
+- [ ] Document every functions
+- [-] Better floating default position
+    - Seems to not work on some apps
 
 # DONE !
 - [x] Fixing the multi closing issue

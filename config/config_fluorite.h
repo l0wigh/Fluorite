@@ -29,6 +29,7 @@
 #define FULLSCREEN_TOGGLE	18
 #define SWAP_FOCUS			19
 #define FLOATING_TOGGLE		20
+#define FLOATING_HIDE_SHOW	21
 
 // For now only single character names are working
 // You might be able to change polybar config to handle nerdfont and other custom names
@@ -65,6 +66,7 @@ static void fluorite_stacking_toggle() { fluorite_change_layout(STACKING_TOGGLE)
 static void fluorite_fullscreen_toggle() { fluorite_change_layout(FULLSCREEN_TOGGLE); }
 static void fluorite_swap_focus() { fluorite_change_layout(SWAP_FOCUS); }
 static void fluorite_floating_toggle() { fluorite_change_layout(FLOATING_TOGGLE); }
+static void fluorite_floating_hide_show() { fluorite_change_layout(FLOATING_HIDE_SHOW); }
 static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog, NOGUI); }
 static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
@@ -147,6 +149,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_k,						fluorite_stack_rotate_up},
 	{METAKEY|ShiftMask,		XK_l,						fluorite_stack_rotate_down},
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
+	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 
 	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
 	{0,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
