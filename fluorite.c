@@ -764,17 +764,17 @@ void fluorite_handle_normals(Window e)
 
 void fluorite_handle_mapping(XMapRequestEvent e)
 {
+	if (fluorite_check_type(e.window) && AUTO_FLOATING)
+	{
+		fluorite_handle_specials(e.window);
+		return ;
+	}
+
 	if (fluorite_check_fixed(e.window))
 	{
 		XMapWindow(fluorite.display, e.window);
 		XRaiseWindow(fluorite.display, e.window);
 		XSync(fluorite.display, True);
-		return ;
-	}
-
-	if (fluorite_check_type(e.window) && AUTO_FLOATING)
-	{
-		fluorite_handle_specials(e.window);
 		return ;
 	}
 
