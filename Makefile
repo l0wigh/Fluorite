@@ -1,5 +1,5 @@
 # Fluorite Window Manager
-# Version 0.4
+# Version 0.5
 # Master Layout but better
 
 BLU			= \033[0;34m

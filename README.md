@@ -1,4 +1,4 @@
-# Fluorite 0.4
+# Fluorite 0.5
 
 Fluorite is a really simple window manager that aims to be light and functionnal.
 
@@ -44,4 +44,4 @@ Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so
 ### Known issues
 
     - Java apps might be broken on some features. (ex: Ghidra)
-    - Support for floating windows is a really early stage and might be unstable, I recommend that you do not use it manually (Meta+Spacebar) for now.
+    - Support for floating windows is a really early stage and might be unstable, I recommend that you be careful with what you are doing.
