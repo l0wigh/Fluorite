@@ -747,6 +747,16 @@ void fluorite_handle_normals(Window e)
 		XSetWMHints(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, source_hints);
 		XFree(source_hints);
 	}
+
+	// TODO: Check if it's working
+	XTextProperty name;
+	XClassHint class;
+	XGetWMName(fluorite.display, e, &name);
+	XStoreName(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, (const char *)name.value);
+	XGetClassHint(fluorite.display, e, &class);
+	if (strlen(class.res_class) != 0)
+		XSetClassHint(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, &class);
+
 	XSetWindowBorder(fluorite.display, e, 0x0);
 	XSetWindowBorderWidth(fluorite.display, e, 0);
 	XReparentWindow(fluorite.display, e, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0, 0);
