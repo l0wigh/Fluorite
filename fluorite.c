@@ -448,6 +448,9 @@ void fluorite_apply_property()
 		XFree(workspaces);
 	}
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
+	Atom supported[1];
+	supported[0] = XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False);
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 1);
 }
 
 void fluorite_init()
@@ -770,6 +773,7 @@ void fluorite_handle_normals(Window e)
 
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_UNFOCUSED);
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &e, 1);
 }
 
 void fluorite_handle_mapping(XMapRequestEvent e)
@@ -817,6 +821,7 @@ void fluorite_handle_enternotify(XEvent e)
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_FOCUSED);
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
 			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+			XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 1);
 		}
 		else if (e.xcrossing.window == fluorite.workspaces[fluorite.current_workspace].master_winframe->frame)
 		{
@@ -824,6 +829,7 @@ void fluorite_handle_enternotify(XEvent e)
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED);
 			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+			XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 1);
 		}
 	}
 	else
@@ -833,11 +839,13 @@ void fluorite_handle_enternotify(XEvent e)
 			fluorite.current_focus = MASTER_FOCUS;
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
 			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+			XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 1);
 		}
 		else
 		{
 			fluorite.current_focus = NO_FOCUS;
 			XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+			XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 		}
 	}
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
@@ -877,6 +885,7 @@ void fluorite_handle_buttonpress(XButtonEvent e)
 	XSetWindowBorder(fluorite.display, e.window, BORDER_FOCUSED);
 	XRaiseWindow(fluorite.display, e.window);
 	fluorite.current_focus = FLOAT_FOCUS;
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &e.window, 1);
 }
 
 void fluorite_handle_motions(XMotionEvent e)
@@ -1177,6 +1186,8 @@ void fluorite_handle_unmapping(Window e)
 		}
 	}
 	fluorite.current_workspace = keep_workspace;
+	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
+		XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 }
 
 int main(void)
