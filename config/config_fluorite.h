@@ -167,4 +167,5 @@ typedef struct
 static const Rules default_floating[] = {
 	{"spectacle"},
 	{"ghidra-Ghidra"},
+	{"spotify"},
 };

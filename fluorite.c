@@ -697,12 +697,23 @@ void fluorite_handle_specials(Window e)
 	XSizeHints hints;
 	int	pos;
 
+	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+	{
+		XMapWindow(fluorite.display, e);
+		XGrabButton(fluorite.display, Button1, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+		XGrabButton(fluorite.display, Button3, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+		XSetWindowBorderWidth(fluorite.display, e, BORDER_WIDTH);
+		XSetWindowBorder(fluorite.display, e, BORDER_FOCUSED);
+		XSetInputFocus(fluorite.display, e, RevertToPointerRoot, CurrentTime);
+		XSync(fluorite.display, True);
+		return ;
+	}
+
 	pos = fluorite.workspaces[fluorite.current_workspace].floating_count;
 	if (pos >= 1 && fluorite.workspaces[fluorite.current_workspace].floating_hidden)
 		fluorite_change_layout(FLOATING_HIDE_SHOW);
 	fluorite.workspaces[fluorite.current_workspace].floating_count++;
 	fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->window = e;
-
 	if (XGetWMNormalHints(fluorite.display, e, &hints, &lhints))
 	{
 		if (hints.x < 2)
