@@ -128,6 +128,8 @@ void fluorite_close_window()
 {
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0 && fluorite.workspaces[fluorite.current_workspace].floating_count == 0)
 		return ;
+	if (fluorite.workspaces[fluorite.current_workspace].is_organising)
+		return ;
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
@@ -158,9 +160,9 @@ void fluorite_redraw_organizer()
 
 	for (int i = fluorite.workspaces[fluorite.current_workspace].slaves_count - 1; i >= 0; i--)
 	{
-		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = ((i + 1) * special_offset) + (GAPS * 4);
+		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = ((i + 1) * special_offset) + (GAPS * 2);
 		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.screen_height / 16 + (GAPS * 2) + TOPBAR_GAPS;
-		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width = special_offset - (GAPS * 2) - (BORDER_WIDTH * 2);
+		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width = special_offset - (GAPS * 3) - (BORDER_WIDTH * 2);
 		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.screen_height - special_height - (BORDER_WIDTH * 2) - (GAPS * 4) - TOPBAR_GAPS - BOTTOMBAR_GAPS;
 		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_WIDTH);
 		XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height);
@@ -170,7 +172,7 @@ void fluorite_redraw_organizer()
 	}
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = 0 + (GAPS * 2);
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.screen_height / 16 + (GAPS * 2) + TOPBAR_GAPS;
-	fluorite.workspaces[fluorite.current_workspace].master_winframe->width = special_offset - (BORDER_WIDTH * 2) - (GAPS * 2);
+	fluorite.workspaces[fluorite.current_workspace].master_winframe->width = special_offset - (GAPS * 3) - (BORDER_WIDTH * 2);
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.screen_height - special_height - (BORDER_WIDTH * 2) - (GAPS * 4) - TOPBAR_GAPS - BOTTOMBAR_GAPS;
 	XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_WIDTH);
 	XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x, fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
@@ -542,8 +544,10 @@ void fluorite_change_workspace(int new_workspace, int mode)
 		return;
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
-	if (fluorite.workspaces[fluorite.current_workspace].is_organising)
+	if (fluorite.workspaces[fluorite.current_workspace].is_organising && mode == 0)
 		fluorite_change_layout(ORGANIZER_TOGGLE);
+	else if (fluorite.workspaces[fluorite.current_workspace].is_organising && mode == 1)
+		return ;
 	if (mode == 0)
 		fluorite_show_new_workspace(new_workspace);
 	else
@@ -1230,9 +1234,6 @@ void fluorite_handle_unmapping(Window e)
 {
 	int keep_workspace = fluorite.current_workspace;
 	int closed = False;
-
-	if (fluorite.workspaces[fluorite.current_workspace].is_organising)
-		fluorite_change_layout(ORGANIZER_TOGGLE);
 
 	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
