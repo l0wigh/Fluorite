@@ -15,7 +15,7 @@
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
 #define MAX_WINDOWS				10				/* number of windows per workspaces */
-#define AUTO_FLOATING			False			/* When False, floating windows, will open in tiled layout */
+#define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
@@ -28,6 +28,11 @@
 #define STACKING_TOGGLE		17
 #define FULLSCREEN_TOGGLE	18
 #define SWAP_FOCUS			19
+#define ORGANIZER_TOGGLE	22
+#define SELECT_NEXT			23
+#define SELECT_PREV			24
+#define MOVE_RIGHT			25
+#define MOVE_LEFT			26
 
 // For now only single character names are working
 // You might be able to change polybar config to handle nerdfont and other custom names
@@ -46,6 +51,7 @@ void fluorite_close_window();
 void fluorite_change_layout(int mode);
 void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
+void fluorite_organizer_mapping(int mode);
 
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog, GUI); }
@@ -69,6 +75,11 @@ static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
 static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog, NOGUI); }
+static void fluorite_toggle_organizer() { fluorite_change_layout(ORGANIZER_TOGGLE); }
+static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT); }
+static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
+static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT); }
+static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -113,6 +124,11 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_w,						fluorite_webbrowser},
 	{METAKEY,				XK_f,						fluorite_fullscreen_toggle},
 	{METAKEY,				XK_n,						fluorite_swap_focus},
+	{METAKEY,				XK_o,						fluorite_toggle_organizer},
+	{METAKEY,				XK_Up,						fluorite_organizer_next},
+	{METAKEY, 				XK_Down,					fluorite_organizer_prev},
+	{METAKEY, 				XK_Right,					fluorite_organizer_right},
+	{METAKEY, 				XK_Left,					fluorite_organizer_left},
 
 	{0,						XF86XK_MonBrightnessUp,		fluorite_brightness_up},
 	{0,						XF86XK_MonBrightnessDown,	fluorite_brightness_down},

@@ -79,8 +79,6 @@ static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
 static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog, NOGUI); }
-
-// BETA !!!
 static void fluorite_toggle_organizer() { fluorite_change_layout(ORGANIZER_TOGGLE); }
 static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT); }
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
@@ -132,6 +130,11 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_f,						fluorite_fullscreen_toggle},
 	{METAKEY,				XK_n,						fluorite_swap_focus},
 	{METAKEY,				XK_space,					fluorite_floating_toggle},
+	{METAKEY,				XK_o,						fluorite_toggle_organizer},
+	{METAKEY,				XK_Up,						fluorite_organizer_next},
+	{METAKEY, 				XK_Down,					fluorite_organizer_prev},
+	{METAKEY, 				XK_Right,					fluorite_organizer_right},
+	{METAKEY, 				XK_Left,					fluorite_organizer_left},
 
 	// Workspaces switching
 	{METAKEY,				XK_ampersand, 				fluorite_goto_workspace_one},
@@ -169,12 +172,6 @@ static const Bindings bind[] = {
 	{0,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
 	{0,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
 	{0,				XF86XK_AudioMute,			fluorite_volume_mute},
-
-	{METAKEY, XK_o, fluorite_toggle_organizer},
-	{METAKEY, XK_Up, fluorite_organizer_next},
-	{METAKEY, XK_Down, fluorite_organizer_prev},
-	{METAKEY, XK_Right, fluorite_organizer_right},
-	{METAKEY, XK_Left, fluorite_organizer_left},
 };
 
 typedef struct

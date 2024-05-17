@@ -28,11 +28,18 @@
 #define STACKING_TOGGLE		17
 #define FULLSCREEN_TOGGLE	18
 #define SWAP_FOCUS			19
+#define FLOATING_TOGGLE		20
+#define FLOATING_HIDE_SHOW	21
+#define ORGANIZER_TOGGLE	22
+#define SELECT_NEXT			23
+#define SELECT_PREV			24
+#define MOVE_RIGHT			25
+#define MOVE_LEFT			26
 
 // For now only single character names are working
 // You might be able to change polybar config to handle nerdfont and other custom names
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
- 
+
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
  *  Be carefull with this, it can create bugs and and crashes ! */
@@ -46,9 +53,10 @@ void fluorite_close_window();
 void fluorite_change_layout(int mode);
 void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
+void fluorite_organizer_mapping(int mode);
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
@@ -63,12 +71,19 @@ static void fluorite_base_master() { fluorite_change_layout(BASE_MASTER); }
 static void fluorite_stacking_toggle() { fluorite_change_layout(STACKING_TOGGLE); }
 static void fluorite_fullscreen_toggle() { fluorite_change_layout(FULLSCREEN_TOGGLE); }
 static void fluorite_swap_focus() { fluorite_change_layout(SWAP_FOCUS); }
+static void fluorite_floating_toggle() { fluorite_change_layout(FLOATING_TOGGLE); }
+static void fluorite_floating_hide_show() { fluorite_change_layout(FLOATING_HIDE_SHOW); }
 static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog, NOGUI); }
 static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
 static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog, NOGUI); }
+static void fluorite_toggle_organizer() { fluorite_change_layout(ORGANIZER_TOGGLE); }
+static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT); }
+static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
+static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT); }
+static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -93,7 +108,7 @@ static void	fluorite_appto_workspace_seven() { fluorite_change_workspace(6, 1); 
 static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); }
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
-
+ 
 typedef struct
 {
 	unsigned int	mod;
@@ -101,7 +116,6 @@ typedef struct
 	void			(*func)();
 } Bindings;
 
-// 0 instead of METAKEY means pressing only the needed key
 static const Bindings bind[] = {
 	{METAKEY,				XK_Return,					fluorite_terminal},
 	{METAKEY,				XK_a,						fluorite_filemanager},
@@ -115,18 +129,12 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_s,						fluorite_stacking_toggle},
 	{METAKEY,				XK_f,						fluorite_fullscreen_toggle},
 	{METAKEY,				XK_n,						fluorite_swap_focus},
-
-	{0,						XF86XK_MonBrightnessUp,		fluorite_brightness_up},
-	{0,						XF86XK_MonBrightnessDown,	fluorite_brightness_down},
-	{0,						XF86XK_AudioLowerVolume,	fluorite_volume_down},
-	{0,						XF86XK_AudioRaiseVolume,	fluorite_volume_up},
-	{0,						XF86XK_AudioMute,			fluorite_volume_mute},
-
-	{METAKEY|ShiftMask,		XK_p,						fluorite_exit},
-	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
-	{METAKEY|ShiftMask,		XK_k,						fluorite_stack_rotate_up},
-	{METAKEY|ShiftMask,		XK_l,						fluorite_stack_rotate_down},
-	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
+	{METAKEY,				XK_space,					fluorite_floating_toggle},
+	{METAKEY,				XK_o,						fluorite_toggle_organizer},
+	{METAKEY,				XK_Up,						fluorite_organizer_next},
+	{METAKEY, 				XK_Down,					fluorite_organizer_prev},
+	{METAKEY, 				XK_Right,					fluorite_organizer_right},
+	{METAKEY, 				XK_Left,					fluorite_organizer_left},
 
 	// Workspaces switching
 	{METAKEY,				XK_ampersand, 				fluorite_goto_workspace_one},
@@ -141,16 +149,29 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_agrave,  				fluorite_goto_workspace_ten},
 
 	// App Workspaces switching
-	{METAKEY|ShiftMask,		XK_ampersand, 				fluorite_appto_workspace_one},
-	{METAKEY|ShiftMask,		XK_eacute,    				fluorite_appto_workspace_two},
-	{METAKEY|ShiftMask,		XK_quotedbl,  				fluorite_appto_workspace_three},
-	{METAKEY|ShiftMask,		XK_apostrophe,				fluorite_appto_workspace_four},
-	{METAKEY|ShiftMask,		XK_parenleft, 				fluorite_appto_workspace_five},
-	{METAKEY|ShiftMask,		XK_minus,     				fluorite_appto_workspace_six},
-	{METAKEY|ShiftMask,		XK_egrave,    				fluorite_appto_workspace_seven},
-	{METAKEY|ShiftMask,		XK_underscore,				fluorite_appto_workspace_eight},
-	{METAKEY|ShiftMask,		XK_ccedilla,  				fluorite_appto_workspace_nine},
-	{METAKEY|ShiftMask,		XK_agrave,  				fluorite_appto_workspace_ten},
+	{METAKEY|ShiftMask,				XK_ampersand, 				fluorite_appto_workspace_one},
+	{METAKEY|ShiftMask,				XK_eacute,    				fluorite_appto_workspace_two},
+	{METAKEY|ShiftMask,				XK_quotedbl,  				fluorite_appto_workspace_three},
+	{METAKEY|ShiftMask,				XK_apostrophe,				fluorite_appto_workspace_four},
+	{METAKEY|ShiftMask,				XK_parenleft, 				fluorite_appto_workspace_five},
+	{METAKEY|ShiftMask,				XK_minus,     				fluorite_appto_workspace_six},
+	{METAKEY|ShiftMask,				XK_egrave,    				fluorite_appto_workspace_seven},
+	{METAKEY|ShiftMask,				XK_underscore,				fluorite_appto_workspace_eight},
+	{METAKEY|ShiftMask,				XK_ccedilla,  				fluorite_appto_workspace_nine},
+	{METAKEY|ShiftMask,				XK_agrave,  				fluorite_appto_workspace_ten},
+
+	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
+	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
+	{METAKEY|ShiftMask,		XK_k,						fluorite_stack_rotate_up},
+	{METAKEY|ShiftMask,		XK_l,						fluorite_stack_rotate_down},
+	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
+	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
+
+	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
+	{0,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
+	{0,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
+	{0,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
+	{0,				XF86XK_AudioMute,			fluorite_volume_mute},
 };
 
 typedef struct
@@ -160,6 +181,7 @@ typedef struct
 
 // Use xprop on a floating window to get the WM_CLASS name used by a window.
 static const Rules default_floating[] = {
-	{"VirtualBox Manager"},
 	{"spectacle"},
+	{"ghidra-Ghidra"},
+	{"spotify"},
 };
