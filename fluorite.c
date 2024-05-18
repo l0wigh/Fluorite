@@ -5,7 +5,9 @@
 #include <X11/Xutil.h>
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/extensions/Xcomposite.h>
+#include <xdo.h>
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrandr.h>
 #include <err.h>
 #include <stdlib.h>
 #include <string.h>
@@ -79,6 +81,15 @@ typedef struct
 
 typedef struct
 {
+	int pos_x;
+	int pos_y;
+	int width;
+	int height;
+	int workspace;
+} Monitor;
+
+typedef struct
+{
 	Display		*display;
 	Window		root;
 	int			screen;
@@ -86,8 +97,11 @@ typedef struct
 	int			screen_height;
 	int			running;
 	Workspaces	*workspaces;
+	Monitor		*monitor;
 	int			current_workspace;
 	int			current_focus;
+	int			current_monitor;
+	int			monitor_count;
 	Mouse		mouse;
 	int			log;
 } Fluorite;
@@ -591,6 +605,28 @@ void fluorite_init()
 	fluorite.current_workspace = 0;
 	fluorite.current_focus = NO_FOCUS;
 
+	XRRMonitorInfo *infos;
+	infos = XRRGetMonitors(fluorite.display, fluorite.root, 0, &fluorite.monitor_count);
+	fluorite.monitor = (Monitor *) malloc(sizeof(Monitor) * fluorite.monitor_count);
+	int non_primary_workspace = 1;
+	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		fluorite.monitor[i].width = infos[i].width;
+		fluorite.monitor[i].height = infos[i].height;
+		fluorite.monitor[i].pos_x = infos[i].x;
+		fluorite.monitor[i].pos_y = infos[i].y;
+		if (infos[i].primary)
+		{
+			fluorite.monitor[i].workspace = 0;
+			fluorite.current_monitor = i;
+		}
+		else
+		{
+			fluorite.monitor[i].workspace = non_primary_workspace;
+			non_primary_workspace++;
+		}
+	}
+
 	fluorite.workspaces = malloc(sizeof(Workspaces) * MAX_WORKSPACES);
 	for (int i = 0; i < MAX_WORKSPACES; i++)
 	{
@@ -1031,6 +1067,9 @@ void fluorite_handle_motions(XMotionEvent e)
 	int drag_dest_x, drag_dest_y;
 	long lhints;
 	XSizeHints hints;
+	xdo_t *xdo;
+	int xdo_mouse_x;
+	int xdo_mouse_y;
 
 	if (XGetWMNormalHints(fluorite.display, e.window, &hints, &lhints))
 	{
@@ -1070,6 +1109,30 @@ void fluorite_handle_motions(XMotionEvent e)
 		}
 		XRaiseWindow(fluorite.display, e.window);
 		XSetInputFocus(fluorite.display, e.window, RevertToPointerRoot, CurrentTime);
+	}
+	else
+	{
+		xdo = xdo_new(NULL);
+		xdo_get_mouse_location(xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
+		xdo_free(xdo);
+
+		int keep_monitor = fluorite.current_monitor;
+		for (int i = 0; i < fluorite.monitor_count; i++)
+		{
+			int max_x;
+			int max_y;
+			int pos_x;
+			int pos_y;
+
+			max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
+			max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
+			pos_x = fluorite.monitor[i].pos_x;
+			pos_y = fluorite.monitor[i].pos_y;
+			if ((xdo_mouse_x >= pos_x && xdo_mouse_x <= max_x) && (xdo_mouse_y >= pos_y && xdo_mouse_y <= max_y))
+				fluorite.current_monitor = i;
+		}
+		if (fluorite.current_monitor != keep_monitor)
+			fluorite_show_new_workspace(fluorite.monitor[fluorite.current_monitor].workspace);
 	}
 }
 
