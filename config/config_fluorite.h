@@ -9,8 +9,8 @@
 #define BORDER_INACTIVE			0x11111b		/* Unselectable window's border color */
 #define GAPS					5				/* gaps around the window */
 #define STACK_OFFSET			5				/* how the stacked window are separated */
-#define TOPBAR_GAPS				30				/* gaps for the top bar */
-#define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
+#define TOPBAR_GAPS				0				/* gaps for the top bar */
+#define BOTTOMBAR_GAPS			35				/* gaps for the bottom bar */
 #define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
