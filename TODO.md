@@ -1,8 +1,6 @@
 # TODO !
-- [ ] Fluorite 0.5
-    - [x] Fix hidding function
-        - Probably an issue with the variable floating_hidden
-    - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
+    - [ ] Fix floating movement locking
+        - Block the good value based on what part will leave the current monitor
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
