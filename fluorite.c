@@ -1070,6 +1070,15 @@ void fluorite_handle_motions(XMotionEvent e)
 	xdo_t *xdo;
 	int xdo_mouse_x;
 	int xdo_mouse_y;
+	int max_x;
+	int max_y;
+	int pos_x;
+	int pos_y;
+	int window_max_x;
+	int window_max_y;
+	int window_pos_x;
+	int window_pos_y;
+
 
 	if (XGetWMNormalHints(fluorite.display, e.window, &hints, &lhints))
 	{
@@ -1085,9 +1094,21 @@ void fluorite_handle_motions(XMotionEvent e)
 			{
 				if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
 				{
-					XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x = hints.x;
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y = hints.y;
+					max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
+					max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
+					pos_x = fluorite.monitor[i].pos_x;
+					pos_y = fluorite.monitor[i].pos_y;
+					window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
+					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
+					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
+					window_pos_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y;
+
+					if (window_pos_x > pos_x && window_pos_y > pos_y && window_max_x < max_x && window_max_y < max_y)
+					{
+						XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
+						fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x = hints.x;
+						fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y = hints.y;
+					}
 				}
 			}
 		}
@@ -1101,39 +1122,42 @@ void fluorite_handle_motions(XMotionEvent e)
 			{
 				if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
 				{
-					XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width = hints.width;
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height = hints.height;
+					max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
+					max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
+					pos_x = fluorite.monitor[i].pos_x;
+					pos_y = fluorite.monitor[i].pos_y;
+					window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
+					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
+					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
+					window_pos_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y;
+					if (window_pos_x > pos_x && window_pos_y > pos_y && window_max_x < max_x && window_max_y < max_y)
+					{
+						XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
+						fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width = hints.width;
+						fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height = hints.height;
+					}
 				}
 			}
 		}
 		XRaiseWindow(fluorite.display, e.window);
 		XSetInputFocus(fluorite.display, e.window, RevertToPointerRoot, CurrentTime);
 	}
-	else
+	xdo = xdo_new(NULL);
+	xdo_get_mouse_location(xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
+	xdo_free(xdo);
+
+	int keep_monitor = fluorite.current_monitor;
+	for (int i = 0; i < fluorite.monitor_count; i++)
 	{
-		xdo = xdo_new(NULL);
-		xdo_get_mouse_location(xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
-		xdo_free(xdo);
-
-		int keep_monitor = fluorite.current_monitor;
-		for (int i = 0; i < fluorite.monitor_count; i++)
-		{
-			int max_x;
-			int max_y;
-			int pos_x;
-			int pos_y;
-
-			max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
-			max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
-			pos_x = fluorite.monitor[i].pos_x;
-			pos_y = fluorite.monitor[i].pos_y;
-			if ((xdo_mouse_x >= pos_x && xdo_mouse_x <= max_x) && (xdo_mouse_y >= pos_y && xdo_mouse_y <= max_y))
-				fluorite.current_monitor = i;
-		}
-		if (fluorite.current_monitor != keep_monitor)
-			fluorite_show_new_workspace(fluorite.monitor[fluorite.current_monitor].workspace);
+		max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
+		max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
+		pos_x = fluorite.monitor[i].pos_x;
+		pos_y = fluorite.monitor[i].pos_y;
+		if ((xdo_mouse_x >= pos_x && xdo_mouse_x <= max_x) && (xdo_mouse_y >= pos_y && xdo_mouse_y <= max_y))
+			fluorite.current_monitor = i;
 	}
+	if (fluorite.current_monitor != keep_monitor)
+		fluorite_show_new_workspace(fluorite.monitor[fluorite.current_monitor].workspace);
 }
 
 int fluorite_handle_errors(Display *display, XErrorEvent *e)
