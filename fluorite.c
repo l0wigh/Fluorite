@@ -588,6 +588,20 @@ void fluorite_send_window(int new_workspace)
 		fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 	}
 
+	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		if (fluorite.monitor[i].workspace == new_workspace)
+		{
+			int keep_monitor = fluorite.current_monitor;
+			fluorite.current_monitor = i;
+			fluorite.current_workspace = new_workspace;
+			XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
+			fluorite_redraw_windows();
+			fluorite.current_monitor = keep_monitor;
+			fluorite.current_workspace = keep_workspace;
+		}
+	}
+
 	if (fluorite.current_focus == SLAVE_FOCUS)
 		fluorite_organise_stack(STACK_DOWN, -1);
 
