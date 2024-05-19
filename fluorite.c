@@ -171,13 +171,28 @@ void fluorite_user_close()
 
 void fluorite_change_monitor(int new_monitor)
 {
+	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
+	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].frames_count; i++)
+	{
+		if (i == 0)
+			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_UNFOCUSED);
+		else
+			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_INACTIVE);
+	}
 	fluorite.current_monitor = new_monitor;
 	fluorite.current_workspace = fluorite.monitor[new_monitor].workspace;
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
+	{
 		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+		XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 1);
+	}
 	else
+	{
 		XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+		XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
+	}
 }
 
 void fluorite_redraw_organizer()
