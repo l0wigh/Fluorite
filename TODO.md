@@ -1,6 +1,10 @@
 # TODO !
     - [ ] Fix floating movement locking
         - Block the good value based on what part will leave the current monitor
+    - [ ] Fix Fullscreen Mode
+        - Switching workspaces works badly
+    - [ ] Fix floating windows
+        - Switching workspaces should move in X or Y the window based on the new monitor
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
