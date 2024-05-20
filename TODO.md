@@ -1,9 +1,7 @@
 # TODO !
-    - [ ] Fix Fullscreen Mode
-        - Switching workspaces works badly
+    - [ ] Completly check EnterNotify function, it sucks
     - [ ] Fix floating windows
         - Switching workspaces should move in X or Y the window based on the new monitor
-    - [ ] Fix focus when switching between workspaces that are in different monitors
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -77,3 +75,7 @@
 - [x] Tray seems broken, maybe coming from floating window stuff
 - [x] Fix floating movement locking
     - Block the good value based on what part will leave the current monitor
+- [x] Fix Fullscreen Mode
+    - Switching workspaces works badly
+- [x] Fix focus when switching between workspaces that are in different monitors
+    - Both keeps border and focus might be wrong
