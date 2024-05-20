@@ -1028,7 +1028,7 @@ void fluorite_handle_specials(Window e)
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.monitor[fluorite.current_monitor].width / 2) - (fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->width / 2);
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.monitor[fluorite.current_monitor].height / 2) - (fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->height / 2);
 	}
-	XMoveResizeWindow(fluorite.display, e, hints.x, hints.y, hints.width, hints.height);
+	XMoveResizeWindow(fluorite.display, e, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_x, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_y, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->width, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->height);
 	XMapWindow(fluorite.display, e);
 	XGrabButton(fluorite.display, Button1, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.display, Button3, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
@@ -1036,6 +1036,8 @@ void fluorite_handle_specials(Window e)
 	XSetWindowBorder(fluorite.display, e, BORDER_FOCUSED);
 	XSetInputFocus(fluorite.display, e, RevertToPointerRoot, CurrentTime);
 	XSync(fluorite.display, True);
+	fluorite_change_layout(FLOATING_HIDE_SHOW);
+	fluorite_change_layout(FLOATING_HIDE_SHOW);
 	fluorite.workspaces[fluorite.current_workspace].current_focus = FLOAT_FOCUS;
 }
 

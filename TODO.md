@@ -5,9 +5,10 @@
     - [x] Border are still there on Fullscreen windows ! Oh no ! Anyways...
         - Set border to 0
     - [ ] Completly check EnterNotify function, it sucks
-    - [ ] Fix floating windows
+    - [-] Fix floating windows
         - [ ] Switching workspaces should move in X or Y the window based on the new monitor
-        - [ ] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
+        - [-] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
+            - Partial fix, using two times the function fluorite_change_layout(FLOATING_HIDE_SHOW)
     - [ ] Add config to select predefined workspaces for monitor
 
 # PARTIALLY DONE
