@@ -56,7 +56,7 @@ void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
@@ -167,11 +167,11 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 
-	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
-	{0,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
-	{0,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
-	{0,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
-	{0,				XF86XK_AudioMute,			fluorite_volume_mute},
+	{0,				XK_F5,		fluorite_brightness_up},
+	{0,				XK_F4,		fluorite_brightness_down},
+	{0,				XK_F2,		fluorite_volume_down},
+	{0,				XK_F3,		fluorite_volume_up},
+	{0,				XK_F1,		fluorite_volume_mute},
 };
 
 typedef struct

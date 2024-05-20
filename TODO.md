@@ -1,10 +1,9 @@
 # TODO !
-    - [ ] Fix floating movement locking
-        - Block the good value based on what part will leave the current monitor
     - [ ] Fix Fullscreen Mode
         - Switching workspaces works badly
     - [ ] Fix floating windows
         - Switching workspaces should move in X or Y the window based on the new monitor
+    - [ ] Fix focus when switching between workspaces that are in different monitors
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -76,3 +75,5 @@
 - [x] Sometimes floating will not go back to layout, use another checking method
 - [x] Add a way to kill popup windows with keybinds when focused
 - [x] Tray seems broken, maybe coming from floating window stuff
+- [x] Fix floating movement locking
+    - Block the good value based on what part will leave the current monitor
