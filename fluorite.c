@@ -1443,7 +1443,7 @@ void fluorite_redraw_tiling()
 		size_offset = STACK_OFFSET * (fluorite.workspaces[fluorite.current_workspace].slaves_count - 1) * 10;
 		for (int i = fluorite.workspaces[fluorite.current_workspace].slaves_count - 1; i >= 0; i--)
 		{
-			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = fluorite.monitor[fluorite.current_monitor].width / 2 + (GAPS) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + fluorite.workspaces[fluorite.current_workspace].master_offset;
+			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + fluorite.monitor[fluorite.current_monitor].width / 2 + (GAPS) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + fluorite.workspaces[fluorite.current_workspace].master_offset;
 			if (fluorite.monitor[fluorite.current_monitor].primary == True)
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (GAPS * 2) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + TOPBAR_GAPS;
 			else
