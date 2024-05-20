@@ -1179,19 +1179,18 @@ void fluorite_handle_motions(XMotionEvent e)
 					window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
 					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
 					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
-					window_pos_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y;
 
-					if (window_pos_x < pos_x)
+					if (window_pos_x + drag_dest_x < pos_x)
 						drag_dest_x = pos_x;
 					if (window_max_x + drag_dest_x > max_x)
 						drag_dest_x = max_x - window_max_x;
-					if (window_pos_y < pos_y)
+					if (drag_dest_y < pos_y)
 						drag_dest_y = pos_y;
 					if (window_max_y + drag_dest_y > max_y)
 						drag_dest_y = max_y - window_max_y;
 					XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x = hints.x;
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y = hints.y;
+					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x = drag_dest_x;
+					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y = drag_dest_y;
 				}
 			}
 		}
@@ -1213,12 +1212,14 @@ void fluorite_handle_motions(XMotionEvent e)
 					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
 					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
 					window_pos_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y;
-					if (window_pos_x > pos_x && window_pos_y > pos_y && window_max_x < max_x && window_max_y < max_y)
-						XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
-					else
-						XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, window_pos_x - 10, window_pos_y - 10);
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width = hints.width;
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height = hints.height;
+
+					if (drag_dest_x + window_pos_x > max_x)
+						drag_dest_x = window_max_x;
+					if (drag_dest_y + window_pos_y > max_y)
+						drag_dest_y = window_max_y;
+					XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
+					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width = drag_dest_x;
+					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height = drag_dest_y;
 				}
 			}
 		}
