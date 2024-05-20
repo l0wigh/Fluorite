@@ -73,8 +73,8 @@ static void fluorite_fullscreen_toggle() { fluorite_change_layout(FULLSCREEN_TOG
 static void fluorite_swap_focus() { fluorite_change_layout(SWAP_FOCUS); }
 static void fluorite_floating_toggle() { fluorite_change_layout(FLOATING_TOGGLE); }
 static void fluorite_floating_hide_show() { fluorite_change_layout(FLOATING_HIDE_SHOW); }
-static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog, NOGUI); }
-static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog, NOGUI); }
+static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 5%+"; fluorite_execute(prog, NOGUI); }
+static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 5%-"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }

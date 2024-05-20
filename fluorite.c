@@ -186,6 +186,11 @@ void fluorite_change_monitor(int new_monitor)
 		else
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_INACTIVE);
 	}
+	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+	{
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0x0);
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, 0x0);
+	}
 	fluorite.current_monitor = new_monitor;
 	fluorite.current_workspace = fluorite.monitor[new_monitor].workspace;
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
