@@ -148,7 +148,14 @@ void fluorite_close_window()
 		return ;
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+	{
+		int keep_focus = fluorite.workspaces[fluorite.current_workspace].current_focus;
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
+		if (keep_focus == MASTER_FOCUS)
+			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+		else
+			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+	}
 
 	XEvent closing;
 	Window focused;
@@ -184,9 +191,17 @@ void fluorite_change_monitor(int new_monitor)
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 	{
-		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+		if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
+			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+		else
+			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
 		if (!fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
-			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+		{
+			if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED);
+			else
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_FOCUSED);
+		}
 		XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 1);
 	}
 	else
