@@ -1055,7 +1055,6 @@ void fluorite_handle_normals(Window e)
 		XFree(source_hints);
 	}
 
-	// TODO: Check if it's working
 	XTextProperty name;
 	XClassHint class;
 	XGetWMName(fluorite.display, e, &name);
@@ -1078,6 +1077,7 @@ void fluorite_handle_normals(Window e)
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_UNFOCUSED);
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &e, 1);
+	XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
 }
 
 void fluorite_handle_mapping(XMapRequestEvent e)

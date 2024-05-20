@@ -1,7 +1,8 @@
 # TODO !
     - [ ] Completly check EnterNotify function, it sucks
     - [ ] Fix floating windows
-        - Switching workspaces should move in X or Y the window based on the new monitor
+        - [ ] Switching workspaces should move in X or Y the window based on the new monitor
+        - [ ] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
