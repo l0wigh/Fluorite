@@ -105,6 +105,7 @@ typedef struct
 	int			monitor_count;
 	Mouse		mouse;
 	int			log;
+	xdo_t		*xdo;
 } Fluorite;
 
 static Fluorite fluorite;
@@ -736,29 +737,28 @@ void fluorite_init()
 	fluorite.screen_width = DisplayWidth(fluorite.display, fluorite.screen);
 	fluorite.screen_height = DisplayHeight(fluorite.display, fluorite.screen);
 	fluorite.current_workspace = 0;
+	fluorite.xdo = xdo_new(NULL);
 
 	XRRMonitorInfo *infos;
 	infos = XRRGetMonitors(fluorite.display, fluorite.root, 0, &fluorite.monitor_count);
 	fluorite.monitor = (Monitor *) malloc(sizeof(Monitor) * fluorite.monitor_count);
-	int non_primary_workspace = 1;
 	for (int i = 0; i < fluorite.monitor_count; i++)
 	{
 		fluorite.monitor[i].width = infos[i].width;
 		fluorite.monitor[i].height = infos[i].height;
 		fluorite.monitor[i].pos_x = infos[i].x;
 		fluorite.monitor[i].pos_y = infos[i].y;
+		if (default_monitor_workspace[i] == 0)
+			fluorite.monitor[i].workspace = 9;
+		else
+			fluorite.monitor[i].workspace = default_monitor_workspace[i] - 1;
 		if (infos[i].primary)
 		{
 			fluorite.monitor[i].primary = True;
-			fluorite.monitor[i].workspace = 0;
 			fluorite.current_monitor = i;
 		}
 		else
-		{
 			fluorite.monitor[i].primary = False;
-			fluorite.monitor[i].workspace = non_primary_workspace;
-			non_primary_workspace++;
-		}
 	}
 
 	fluorite.workspaces = malloc(sizeof(Workspaces) * MAX_WORKSPACES);
@@ -797,7 +797,6 @@ void fluorite_init()
 			fluorite.workspaces[j].floating_windows[i] = (Floating *) malloc(sizeof(Floating));
 		}
 	}
-
 	dwm_grabkeys();
 }
 
@@ -859,6 +858,7 @@ void fluorite_clean()
 			free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]);
 		free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes);
 	}
+	xdo_free(fluorite.xdo);
 	XCloseDisplay(fluorite.display);
 }
 
@@ -1208,7 +1208,6 @@ void fluorite_handle_motions(XMotionEvent e)
 	int drag_dest_x, drag_dest_y;
 	long lhints;
 	XSizeHints hints;
-	xdo_t *xdo;
 	int xdo_mouse_x;
 	int xdo_mouse_y;
 	int max_x;
@@ -1289,9 +1288,7 @@ void fluorite_handle_motions(XMotionEvent e)
 		XRaiseWindow(fluorite.display, e.window);
 		XSetInputFocus(fluorite.display, e.window, RevertToPointerRoot, CurrentTime);
 	}
-	xdo = xdo_new(NULL);
-	xdo_get_mouse_location(xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
-	xdo_free(xdo);
+	xdo_get_mouse_location(fluorite.xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
 
 	for (int i = 0; i < fluorite.monitor_count; i++)
 	{
