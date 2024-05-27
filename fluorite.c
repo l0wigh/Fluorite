@@ -180,12 +180,19 @@ void fluorite_user_close()
 void fluorite_change_monitor(int new_monitor)
 {
 	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_UNFOCUSED);
-	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].frames_count; i++)
+	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
 	{
 		if (i == 0)
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_UNFOCUSED);
 		else
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, BORDER_INACTIVE);
+	}
+	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+	{
+		if (i == 0)
+			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_UNFOCUSED);
+		else
+			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_INACTIVE);
 	}
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 	{
@@ -960,7 +967,17 @@ int fluorite_check_fixed(Window e)
 	XSizeHints size;
 	int maxw, maxh;
 	int minw, minh;
+	XClassHint name;
 
+
+	XGetClassHint(fluorite.display, e, &name);
+	if (strlen(name.res_class) == 0)
+		return False;
+	for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
+	{
+		if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
+			return True;
+	}
 	if (!XGetWMNormalHints(fluorite.display, e, &size, &msize))
 		return False;
 	if (size.flags & PMaxSize)
@@ -995,6 +1012,14 @@ int fluorite_check_type(Window e)
 	Atom da, atom = None;
 	XClassHint name;
 
+	XGetClassHint(fluorite.display, e, &name);
+	if (strlen(name.res_class) == 0)
+		return False;
+	for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
+	{
+		if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
+			return True;
+	}
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
 		atom = *(Atom *)p;
@@ -1005,14 +1030,6 @@ int fluorite_check_type(Window e)
 		}
 	}
 	XFree(p);
-	XGetClassHint(fluorite.display, e, &name);
-	if (strlen(name.res_class) == 0)
-		return False;
-	for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
-	{
-		if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
-			return True;
-	}
 	return False;
 }
 

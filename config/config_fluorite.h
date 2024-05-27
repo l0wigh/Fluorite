@@ -186,6 +186,10 @@ static const Rules default_floating[] = {
 	{"spotify"},
 };
 
+static const Rules default_fixed[] = {
+	{"GLava"},
+};
+
 // Configure this to set predefined workspaces to monitors
 // Use xrandr --listactivemonitor to know the order they are sets
 // Make sure to not have a workspaces set for two monitors. 
