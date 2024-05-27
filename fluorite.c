@@ -805,6 +805,7 @@ void fluorite_init()
 		{
 			fluorite.monitor[i].primary = True;
 			fluorite.current_monitor = i;
+			xdo_move_mouse(fluorite.xdo, fluorite.monitor[i].pos_x + (fluorite.monitor[i].width / 2), fluorite.monitor[i].pos_y + (fluorite.monitor[i].height / 2), fluorite.screen);
 		}
 		else
 			fluorite.monitor[i].primary = False;
