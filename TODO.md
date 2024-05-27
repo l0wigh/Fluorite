@@ -1,8 +1,10 @@
 # TODO !
-    - [ ] Check monitor every mouse movements
+    - [x] Check monitor every mouse movements
+        - Needs more testing to see if it's stable
     - [ ] Closing **last** slave window bring focus back on master window but, bindings doesn't works
         - Probably something to do with the unmap function that need to change **fluorite.workspaces[fluorite.current_workspace].current_focus**
     - [ ] Completly check EnterNotify function, it sucks
+        - Might not be necessary
     - [x] Fix floating windows
         - [x] Switching workspaces should move in X or Y the window based on the new monitor
         - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.

@@ -746,6 +746,23 @@ void fluorite_apply_property()
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 1);
 }
 
+void fluorite_check_monitor_from_mouse()
+{
+	int pointer_x, pointer_y, s_num;
+	int pos_x, pos_y, max_x, max_y;
+
+	xdo_get_mouse_location(fluorite.xdo, &pointer_x, &pointer_y, &s_num);
+	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
+		max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
+		pos_x = fluorite.monitor[i].pos_x;
+		pos_y = fluorite.monitor[i].pos_y;
+		if ((pointer_x >= pos_x && pointer_x <= max_x) && (pointer_y >= pos_y && pointer_y <= max_y) && fluorite.current_monitor != i)
+			fluorite_change_monitor(i);
+	}
+}
+
 void fluorite_init()
 {
 	XSetWindowAttributes attributes;
@@ -843,24 +860,18 @@ void fluorite_run()
 				fluorite_handle_unmapping(ev.xunmap.window);
 				break;
 			case EnterNotify:
+				fluorite_check_monitor_from_mouse();
 				fluorite_handle_enternotify(ev);
 				break;
 			case ButtonPress:
 				fluorite_handle_buttonpress(ev.xbutton);
 				break;
 			case MotionNotify:
+				fluorite_check_monitor_from_mouse();
 				fluorite_handle_motions(ev.xmotion);
 				break;
 			case LeaveNotify:
-				/* if (fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS && fluorite.workspaces[fluorite.current_workspace].frames_count > 0 && !fluorite.workspaces[fluorite.current_workspace].is_fullscreen && !fluorite.workspaces[fluorite.current_workspace].is_organising) */
-				/* { */
-				/* 	fluorite.workspaces[fluorite.current_workspace].current_focus = MASTER_FOCUS; */
-				/* 	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_UNFOCUSED); */
-				/* 	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, BORDER_FOCUSED); */
-				/* 	XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime); */
-				/* } */
-				/* for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++) */
-				/* 	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_UNFOCUSED); */
+				fluorite_check_monitor_from_mouse();
 				break;
 			case KeyPress:
 				fluorite_handle_keys(ev.xkey);
@@ -1169,15 +1180,6 @@ void fluorite_handle_enternotify(XEvent e)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, BORDER_UNFOCUSED);
 }
 
-void fluorite_get_pointer_coord(int *x, int *y)
-{
-	int di;
-	unsigned int dui;
-	Window dummy;
-
-	XQueryPointer(fluorite.display, fluorite.root, &dummy, &dummy, x, y, &di, &di, &dui);
-}
-
 void fluorite_handle_buttonpress(XButtonEvent e)
 {
 	int is_float = False;
@@ -1292,16 +1294,6 @@ void fluorite_handle_motions(XMotionEvent e)
 		XSetInputFocus(fluorite.display, e.window, RevertToPointerRoot, CurrentTime);
 	}
 	xdo_get_mouse_location(fluorite.xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
-
-	for (int i = 0; i < fluorite.monitor_count; i++)
-	{
-		max_x = fluorite.monitor[i].pos_x + fluorite.monitor[i].width;
-		max_y = fluorite.monitor[i].pos_y + fluorite.monitor[i].height;
-		pos_x = fluorite.monitor[i].pos_x;
-		pos_y = fluorite.monitor[i].pos_y;
-		if ((xdo_mouse_x >= pos_x && xdo_mouse_x <= max_x) && (xdo_mouse_y >= pos_y && xdo_mouse_y <= max_y) && fluorite.current_monitor != i)
-			fluorite_change_monitor(i);
-	}
 }
 
 int fluorite_handle_errors(Display *display, XErrorEvent *e)
