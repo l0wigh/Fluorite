@@ -198,9 +198,15 @@ void fluorite_change_monitor(int new_monitor)
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 	{
 		if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
+		{
 			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+			XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 1);
+		}
 		else
+		{
 			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+			XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 1);
+		}
 		if (!fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 		{
 			if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
@@ -208,7 +214,6 @@ void fluorite_change_monitor(int new_monitor)
 			else
 				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, BORDER_FOCUSED);
 		}
-		XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 1);
 	}
 	else
 	{
@@ -565,6 +570,7 @@ void fluorite_show_new_workspace(int new_workspace)
 			swap_monitor = fluorite.current_monitor;
 			fluorite.monitor[i].workspace = swap_workspaces;
 			fluorite.current_monitor = i;
+			XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 			{
 				fluorite_change_layout(FULLSCREEN_TOGGLE);
