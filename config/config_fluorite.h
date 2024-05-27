@@ -36,9 +36,9 @@
 #define MOVE_RIGHT			25
 #define MOVE_LEFT			26
 
-// For now only single character names are working
-// You might be able to change polybar config to handle nerdfont and other custom names
+
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
+/* static const char *workspace_names[10] = { " ", "󰈹", " ", "4", "5", "6", "7", "8", "9", "0" }; */
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app

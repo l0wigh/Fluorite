@@ -1,8 +1,9 @@
 # TODO !
     - [x] Check monitor every mouse movements
         - Needs more testing to see if it's stable
-    - [ ] Closing **last** slave window bring focus back on master window but, bindings doesn't works
+    - [x] Closing **last** slave window bring focus back on master window but, bindings doesn't works
         - Probably something to do with the unmap function that need to change **fluorite.workspaces[fluorite.current_workspace].current_focus**
+        - Should be fixed, by hard refocus master window on unmapping
     - [ ] Completly check EnterNotify function, it sucks
         - Might not be necessary
     - [x] Fix floating windows
@@ -20,8 +21,6 @@
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
         - Firefox still stuggle sometimes (mainly at the opening)
-- [-] Fix the custom workspace names
-    - Works but doesn't support nerdfont and longer names properly
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
@@ -90,3 +89,4 @@
 - [x] Border are still there on Fullscreen windows ! Oh no ! Anyways...
     - Set border to 0
 - [x] Add config to select predefined workspaces for monitor
+- [x] Fix the custom workspace names

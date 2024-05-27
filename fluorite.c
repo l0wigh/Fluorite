@@ -735,17 +735,13 @@ int fluorite_get_monitor_from_window(int pos)
 
 void fluorite_apply_property()
 {
+	XTextProperty text;
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_WM_NAME", False), XInternAtom(fluorite.display, "UTF8_STRING", False), 8, PropModeReplace, (const unsigned char *) "Fluorite", 8);
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTING_WM_CHECK", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.root, 1);
 	int num_work_atom = MAX_WORKSPACES;
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_NUMBER_OF_DESKTOPS", False), XA_CARDINAL, 32, PropModeReplace, (const unsigned char *)&num_work_atom, 1);
-	char *workspaces;
-	for (int i = 0; i < MAX_WORKSPACES; i++)
-	{
-		workspaces = strdup(workspace_names[i]);
-		XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_DESKTOP_NAMES", False), XInternAtom(fluorite.display, "UTF8_STRING", False), 8, PropModeAppend, (const unsigned char *)workspaces, 2);
-		XFree(workspaces);
-	}
+	Xutf8TextListToTextProperty(fluorite.display, (char **)workspace_names, MAX_WORKSPACES, XUTF8StringStyle, &text);
+	XSetTextProperty(fluorite.display, fluorite.root, &text, XInternAtom(fluorite.display, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
 	Atom supported[1];
 	supported[0] = XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False);
@@ -1610,6 +1606,12 @@ void fluorite_handle_unmapping(Window e)
 	}
 	fluorite.current_monitor = keep_monitor;
 	fluorite.current_workspace = keep_workspace;
+	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 1)
+	{
+		fluorite.workspaces[fluorite.current_workspace].current_focus = MASTER_FOCUS;
+		XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 1);
+		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+	}
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0)
 		XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 }
