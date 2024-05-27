@@ -1,15 +1,4 @@
 # TODO !
-    - [x] Check monitor every mouse movements
-        - Needs more testing to see if it's stable
-    - [x] Closing **last** slave window bring focus back on master window but, bindings doesn't works
-        - Probably something to do with the unmap function that need to change **fluorite.workspaces[fluorite.current_workspace].current_focus**
-        - Should be fixed, by hard refocus master window on unmapping
-    - [ ] Completly check EnterNotify function, it sucks
-        - Might not be necessary
-    - [x] Fix floating windows
-        - [x] Switching workspaces should move in X or Y the window based on the new monitor
-        - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
-            - Fixed by forcing it to a size and a position (not that great, it removes the flexibility)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -90,3 +79,12 @@
     - Set border to 0
 - [x] Add config to select predefined workspaces for monitor
 - [x] Fix the custom workspace names
+- [x] Check monitor every mouse movements
+    - Needs more testing to see if it's stable
+- [x] Closing **last** slave window bring focus back on master window but, bindings doesn't works
+    - Probably something to do with the unmap function that need to change **fluorite.workspaces[fluorite.current_workspace].current_focus**
+    - Should be fixed, by hard refocus master window on unmapping
+- [x] Fix floating windows
+    - [x] Switching workspaces should move in X or Y the window based on the new monitor
+    - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
+        - Fixed by forcing it to a size and a position (not that great, it removes the flexibility)
