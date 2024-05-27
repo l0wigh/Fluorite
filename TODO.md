@@ -1,15 +1,11 @@
 # TODO !
-    - [ ] Closing slave window bring focus back on master window but, bindings doesn't works
+    - [ ] Closing **last** slave window bring focus back on master window but, bindings doesn't works
         - Probably something to do with the unmap function that need to change **fluorite.workspaces[fluorite.current_workspace].current_focus**
-        - Might not be a problem anymore ?
-    - [x] Border are still there on Fullscreen windows ! Oh no ! Anyways...
-        - Set border to 0
     - [ ] Completly check EnterNotify function, it sucks
     - [-] Fix floating windows
         - [ ] Switching workspaces should move in X or Y the window based on the new monitor
-        - [-] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
-            - Partial fix, using two times the function fluorite_change_layout(FLOATING_HIDE_SHOW)
-    - [ ] Add config to select predefined workspaces for monitor
+        - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
+            - Fixed by forcing it to a size and a position (not that great, it removes the flexibility)
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -87,3 +83,7 @@
     - Switching workspaces works badly
 - [x] Fix focus when switching between workspaces that are in different monitors
     - Both keeps border and focus might be wrong
+- [x] Slaves rotations keep focus on the previous slave
+- [x] Border are still there on Fullscreen windows ! Oh no ! Anyways...
+    - Set border to 0
+- [x] Add config to select predefined workspaces for monitor

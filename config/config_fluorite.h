@@ -3,14 +3,14 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-#define BORDER_WIDTH			2				/* Border width around windows */
-#define BORDER_FOCUSED			0x7287fd		/* Selected window's border color */
-#define BORDER_UNFOCUSED		0x1e1e2e		/* Selectable window's border color */
-#define BORDER_INACTIVE			0x11111b		/* Unselectable window's border color */
+#define BORDER_WIDTH			1				/* Border width around windows */
+#define BORDER_FOCUSED			0xa7c786		/* Selected window's border color */
+#define BORDER_UNFOCUSED		0x0				/* Selectable window's border color */
+#define BORDER_INACTIVE			0x0				/* Unselectable window's border color */
 #define GAPS					5				/* gaps around the window */
 #define STACK_OFFSET			5				/* how the stacked window are separated */
-#define TOPBAR_GAPS				0				/* gaps for the top bar */
-#define BOTTOMBAR_GAPS			35				/* gaps for the bottom bar */
+#define TOPBAR_GAPS				25				/* gaps for the top bar */
+#define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
 #define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
@@ -189,4 +189,4 @@ static const Rules default_floating[] = {
 // Configure this to set predefined workspaces to monitors
 // Use xrandr --listactivemonitor to know the order they are sets
 // Make sure to not have a workspaces set for two monitors. 
-static int default_monitor_workspace[10] = { 2, 1, 3, 4, 5, 6, 7, 8, 9, 0 };
+static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
