@@ -1485,7 +1485,8 @@ void fluorite_redraw_windows()
 			int new_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y - (fluorite.monitor[check_mon].pos_y - fluorite.monitor[fluorite.current_monitor].pos_y);
 			fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x = new_x;
 			fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y = new_y;
-			XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, new_x, new_y);
+			if (!fluorite.workspaces[fluorite.current_workspace].floating_hidden)
+				XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, new_x, new_y);
 		}
 		XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window);
 	}
