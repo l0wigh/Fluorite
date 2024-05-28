@@ -1,6 +1,7 @@
 # TODO !
     - [ ] Why "NET_ACTIVE_WINDOW" doesn't work anymore ??????????????????????
-    - [ ] Add monitor focus change binding
+        - Seems like a polybar bug. Executing just before fluorite seems to fix the issue.
+    - [x] Add monitor focus change binding
     - [ ] Dynamic configuration
 
 # PARTIALLY DONE
