@@ -1,7 +1,6 @@
 # TODO !
     - [ ] Why "NET_ACTIVE_WINDOW" doesn't work anymore ??????????????????????
         - Seems like a polybar bug. Executing just before fluorite seems to fix the issue.
-    - [x] Add monitor focus change binding
     - [ ] Dynamic configuration
 
 # PARTIALLY DONE
@@ -92,3 +91,4 @@
     - [x] Switching workspaces should move in X or Y the window based on the new monitor
     - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
         - Fixed by forcing it to a size and a position (not that great, it removes the flexibility)
+- [x] Add monitor focus change binding
