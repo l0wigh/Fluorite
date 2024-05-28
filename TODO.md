@@ -1,4 +1,7 @@
 # TODO !
+    - [ ] Why "NET_ACTIVE_WINDOW" doesn't work anymore ??????????????????????
+    - [ ] Add monitor focus change binding
+    - [ ] Dynamic configuration
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
