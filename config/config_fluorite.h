@@ -3,8 +3,8 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-#define BORDER_WIDTH			1				/* Border width around windows */
-#define BORDER_FOCUSED			0xa7c786		/* Selected window's border color */
+static int BORDER_WIDTH			= 1;				/* Border width around windows */
+static int BORDER_FOCUSED		= 0xa7c786;		/* Selected window's border color */
 #define BORDER_UNFOCUSED		0x0				/* Selectable window's border color */
 #define BORDER_INACTIVE			0x0				/* Unselectable window's border color */
 #define GAPS					5				/* gaps around the window */
@@ -55,6 +55,7 @@ void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
+void fluorite_change_config();
 
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }

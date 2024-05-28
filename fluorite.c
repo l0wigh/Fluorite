@@ -133,6 +133,11 @@ static void			fluorite_change_monitor(int monitor);
 static void			dwm_grabkeys();
 
 // Bindings functions (defined in config_fluorite.h)
+void fluorite_change_config()
+{
+	fluorite_redraw_windows();
+}
+
 void fluorite_execute(char *argument, int mode)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode == GUI)

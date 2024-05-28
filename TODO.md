@@ -1,7 +1,9 @@
 # TODO !
     - [ ] Why "NET_ACTIVE_WINDOW" doesn't work anymore ??????????????????????
         - Seems like a polybar bug. Executing just before fluorite seems to fix the issue.
-    - [ ] Dynamic configuration
+    - [ ] Dynamic configuration brainstorming
+        - ENV variables + fluorite_reload_config function
+        - posibility to call fluorite_reload_config from a pipe or a signal
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
