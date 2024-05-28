@@ -3,8 +3,8 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-static int BORDER_WIDTH			= 1;				/* Border width around windows */
-static int BORDER_FOCUSED		= 0xa7c786;		/* Selected window's border color */
+#define BORDER_WIDTH			1				/* Border width around windows */
+#define BORDER_FOCUSED			0xa7c786		/* Selected window's border color */
 #define BORDER_UNFOCUSED		0x0				/* Selectable window's border color */
 #define BORDER_INACTIVE			0x0				/* Unselectable window's border color */
 #define GAPS					5				/* gaps around the window */

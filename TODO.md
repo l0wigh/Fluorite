@@ -94,3 +94,5 @@
     - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
         - Fixed by forcing it to a size and a position (not that great, it removes the flexibility)
 - [x] Add monitor focus change binding
+- [x] Sending window to a fullscreen workspace cause big issue
+    - Close fullscreen on new workspace if needed
