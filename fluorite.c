@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <pwd.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
@@ -150,12 +151,14 @@ static void			dwm_grabkeys();
 // Bindings functions (defined in config_fluorite.h)
 void fluorite_reload_config()
 {
-	char *config_path = "/home/thomas/.config/Fluorite/fluorite.conf";
+	struct passwd *pw = getpwuid(getuid());
+	char *config_path = pw->pw_dir;
 	FILE *config_file;
 	size_t buffer_size;
 	char *buffer, *key, *value;
 	int converted_value;
 
+	strcat(config_path, "/.config/Fluorite/fluorite.conf");
 	config_file = fopen(config_path, "rb");
 	if (config_file == NULL)
 		return;
