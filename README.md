@@ -51,4 +51,4 @@ Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so
 
 ## Known issues
 
-- Java apps might be broken on some features. (ex: Ghidra) To fix this, you can add `export _JAVA_AWT_WM_NONREPARENTING=1` to you .xinitrc just before Fluorite execution.
+- If java apps are clunky, you can add `export _JAVA_AWT_WM_NONREPARENTING=1` to you .xinitrc just before Fluorite execution.
