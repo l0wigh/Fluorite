@@ -3,15 +3,6 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
-#define BORDER_WIDTH			1				/* Border width around windows */
-#define BORDER_FOCUSED			0xa7c786		/* Selected window's border color */
-#define BORDER_UNFOCUSED		0x0				/* Selectable window's border color */
-#define BORDER_INACTIVE			0x0				/* Unselectable window's border color */
-#define GAPS					5				/* gaps around the window */
-#define STACK_OFFSET			5				/* how the stacked window are separated */
-#define TOPBAR_GAPS				25				/* gaps for the top bar */
-#define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
-#define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			True			/* do you want to change workspace when sending a window to another workspace */
 #define MAX_WINDOWS				10				/* number of windows per workspaces */
@@ -43,7 +34,6 @@ static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
  *  Be carefull with this, it can create bugs and and crashes ! */
-
 #define GUI      30
 #define NOGUI    31
 

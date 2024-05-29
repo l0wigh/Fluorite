@@ -209,12 +209,17 @@ void fluorite_reload_config()
 	int keep_workspace = fluorite.current_workspace;
 	for (int i = 0; i < fluorite.monitor_count; i++)
 	{
+		if (i == keep_monitor)
+			continue;
 		fluorite.current_monitor = i;
 		fluorite.current_workspace = fluorite.monitor[i].workspace;
 		fluorite_redraw_windows();
 	}
 	fluorite.current_monitor = keep_monitor;
 	fluorite.current_workspace = keep_workspace;
+	fluorite_redraw_windows();
+	for (int i = 0; i < fluorite.monitor_count; i++)
+		fluorite_focus_next_monitor();
 	free(buffer);
 }
 
@@ -984,15 +989,15 @@ void fluorite_init()
 			fluorite.workspaces[j].floating_windows[i] = (Floating *) malloc(sizeof(Floating));
 		}
 	}
-	fluorite.config.border_width = BORDER_WIDTH;
-	fluorite.config.border_focused = BORDER_FOCUSED;
-	fluorite.config.border_unfocused = BORDER_UNFOCUSED;
-	fluorite.config.border_inactive = BORDER_INACTIVE;
-	fluorite.config.gaps = GAPS;
-	fluorite.config.stack_offset = STACK_OFFSET;
-	fluorite.config.topbar_gaps = TOPBAR_GAPS;
-	fluorite.config.bottombar_gaps = BOTTOMBAR_GAPS;
-	fluorite.config.default_master_offset = DEFAULT_MASTER_OFFSET;
+	fluorite.config.border_width = 1;
+	fluorite.config.border_focused = 0x35e5dc;
+	fluorite.config.border_unfocused = 0xf576e4;
+	fluorite.config.border_inactive = 0x9c082d;
+	fluorite.config.gaps = 5;
+	fluorite.config.stack_offset = 5;
+	fluorite.config.topbar_gaps = 25;
+	fluorite.config.bottombar_gaps = 0;
+	fluorite.config.default_master_offset = 0;
 	fluorite_reload_config();
 	dwm_grabkeys();
 }
