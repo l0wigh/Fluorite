@@ -10,7 +10,7 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 - Stacked layout (Monocle layout in DWM).
 - Floating windows management.
 - Static configuration for bindings, custom C functions and more, compiled with Fluorite.
-- Dynamic configuration with auto-reload for styling from text file.
+- Dynamic configuration with auto-reload for styling.
 - Organizer mode, let you swap windows freely.
 - Works with multiple monitors. XMonad style.
 
