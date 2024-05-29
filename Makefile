@@ -47,5 +47,4 @@ re: fclean all
 install: re
 	sudo cp -f ./Fluorite /usr/bin/
 
-
 .PHONY:		all clean fclean re install
