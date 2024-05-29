@@ -1,8 +1,4 @@
 # TODO !
-    - [ ] Dynamic configuration brainstorming
-        - Change makefile to check if a file exist in the ~/.config/Fluorite/fluorite.conf
-            - if not create the folder and copy the default theme
-        - Write the hardcoded value to the fluorite_init function
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

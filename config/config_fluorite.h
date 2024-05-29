@@ -3,6 +3,18 @@
 #include <X11/XF86keysym.h>
 #include <stdlib.h>
 
+typedef struct
+{
+	unsigned int	mod;
+	KeySym			key;
+	void			(*func)();
+} Bindings;
+
+typedef struct
+{
+	char	wm_class[255];
+} Rules;
+
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 #define FOLLOW_WINDOWS			True			/* do you want to change workspace when sending a window to another workspace */
 #define MAX_WINDOWS				10				/* number of windows per workspaces */
@@ -28,8 +40,24 @@
 #define MOVE_LEFT			26
 
 
+// Configure this to set predefined workspaces to monitors
+// Use xrandr --listactivemonitor to know the order they are sets
+// Make sure to not have a workspaces set for two monitors. 
+static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
 /* static const char *workspace_names[10] = { " ", "󰈹", " ", "4", "5", "6", "7", "8", "9", "0" }; */
+
+// Use xprop on a floating window to get the WM_CLASS name used by a window.
+static const Rules default_floating[] = {
+	{"spectacle"},
+	{"ghidra-Ghidra"},
+	{"spotify"},
+};
+
+static const Rules default_fixed[] = {
+	{"GLava"},
+};
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
@@ -101,13 +129,6 @@ static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); 
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
  
-typedef struct
-{
-	unsigned int	mod;
-	KeySym			key;
-	void			(*func)();
-} Bindings;
-
 static const Bindings bind[] = {
 	{METAKEY,				XK_Return,					fluorite_terminal},
 	{METAKEY,				XK_a,						fluorite_filemanager},
@@ -168,24 +189,3 @@ static const Bindings bind[] = {
 	{0,				XK_F3,		fluorite_volume_up},
 	{0,				XK_F1,		fluorite_volume_mute},
 };
-
-typedef struct
-{
-	char	wm_class[255];
-} Rules;
-
-// Use xprop on a floating window to get the WM_CLASS name used by a window.
-static const Rules default_floating[] = {
-	{"spectacle"},
-	{"ghidra-Ghidra"},
-	{"spotify"},
-};
-
-static const Rules default_fixed[] = {
-	{"GLava"},
-};
-
-// Configure this to set predefined workspaces to monitors
-// Use xrandr --listactivemonitor to know the order they are sets
-// Make sure to not have a workspaces set for two monitors. 
-static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
