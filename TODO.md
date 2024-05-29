@@ -1,9 +1,8 @@
 # TODO !
-    - [ ] Why "NET_ACTIVE_WINDOW" doesn't work anymore ??????????????????????
-        - Seems like a polybar bug. Executing just before fluorite seems to fix the issue.
     - [ ] Dynamic configuration brainstorming
-        - ENV variables + fluorite_reload_config function
-        - posibility to call fluorite_reload_config from a pipe or a signal
+        - Change makefile to check if a file exist in the ~/.config/Fluorite/fluorite.conf
+            - if not create the folder and copy the default theme
+        - Write the hardcoded value to the fluorite_init function
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

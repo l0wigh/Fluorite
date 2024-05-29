@@ -13,7 +13,7 @@
 #define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
 #define	DEFAULT_MASTER_OFFSET	0				/* master window size by default */
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
-#define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
+#define FOLLOW_WINDOWS			True			/* do you want to change workspace when sending a window to another workspace */
 #define MAX_WINDOWS				10				/* number of windows per workspaces */
 #define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
 
@@ -55,7 +55,7 @@ void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
-void fluorite_change_config();
+void fluorite_reload_config();
 
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
@@ -145,6 +145,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
+	{METAKEY|ShiftMask,		XK_r,						fluorite_reload_config},
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},

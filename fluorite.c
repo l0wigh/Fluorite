@@ -101,8 +101,6 @@ typedef struct
 	int topbar_gaps;
 	int bottombar_gaps;
 	int	default_master_offset;
-	int follow_windows;
-	int auto_floating;
 } Configuration;
 
 typedef struct
@@ -146,12 +144,101 @@ static WinFrames	*fluorite_create_winframe();
 static void			fluorite_organise_stack(int mode, int offset);
 static void			fluorite_redraw_windows();
 static void			fluorite_change_monitor(int monitor);
+static int			fluorite_get_config_option(char *key);
 static void			dwm_grabkeys();
 
 // Bindings functions (defined in config_fluorite.h)
-void fluorite_change_config()
+void fluorite_reload_config()
 {
-	fluorite_redraw_windows();
+	char *config_path = "/home/thomas/.config/Fluorite/fluorite.conf";
+	FILE *config_file;
+	size_t buffer_size;
+	char *buffer, *key, *value;
+	int converted_value;
+
+	config_file = fopen(config_path, "rb");
+	if (config_file == NULL)
+		return;
+	buffer = (char *) calloc(buffer_size, sizeof(char));
+	while (1145)
+	{
+		if (getline(&buffer, &buffer_size, config_file) == -1)
+			break;
+		key = strtok(buffer, "=");
+		value = strtok(NULL, "=");
+		value[strlen(value) - 1] = '\0';
+		if (value[1] == 'x')
+			converted_value = (int) strtol(value, NULL, 0);
+		else
+			converted_value = (int) strtol(value, NULL, 16);
+
+		switch(fluorite_get_config_option(key))
+		{
+			case 0:
+				fluorite.config.border_width = atoi(value);
+				break;
+			case 1:
+				fluorite.config.border_focused = converted_value;
+				break;
+			case 2:
+				fluorite.config.border_unfocused = converted_value;
+				break;
+			case 3:
+				fluorite.config.border_inactive = converted_value;
+				break;
+			case 4:
+				fluorite.config.gaps = atoi(value);
+				break;
+			case 5:
+				fluorite.config.stack_offset = atoi(value);
+				break;
+			case 6:
+				fluorite.config.topbar_gaps = atoi(value);
+				break;
+			case 7:
+				fluorite.config.bottombar_gaps = atoi(value);
+				break;
+			case 8:
+				fluorite.config.default_master_offset = atoi(value);
+				for (int i = 0; i < MAX_WORKSPACES; i++)
+					fluorite.workspaces[i].master_offset = fluorite.config.default_master_offset;
+				break;
+		}
+	}
+	int keep_monitor = fluorite.current_monitor;
+	int keep_workspace = fluorite.current_workspace;
+	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		fluorite.current_monitor = i;
+		fluorite.current_workspace = fluorite.monitor[i].workspace;
+		fluorite_redraw_windows();
+	}
+	fluorite.current_monitor = keep_monitor;
+	fluorite.current_workspace = keep_workspace;
+	free(buffer);
+}
+
+int fluorite_get_config_option(char *key)
+{
+	if (strcmp(key, "BORDER_WIDTH") == 0)
+		return 0;
+	if (strcmp(key, "BORDER_FOCUSED") == 0)
+		return 1;
+	if (strcmp(key, "BORDER_UNFOCUSED") == 0)
+		return 2;
+	if (strcmp(key, "BORDER_INACTIVE") == 0)
+		return 3;
+	if (strcmp(key, "GAPS") == 0)
+		return 4;
+	if (strcmp(key, "STACK_OFFSET") == 0)
+		return 5;
+	if (strcmp(key, "TOPBAR_GAPS") == 0)
+		return 6;
+	if (strcmp(key, "BOTTOMBAR_GAPS") == 0)
+		return 7;
+	if (strcmp(key, "DEFAULT_MASTER_OFFSET") == 0)
+		return 8;
+	return -1;
 }
 
 void fluorite_execute(char *argument, int mode)
@@ -741,7 +828,7 @@ void fluorite_send_window(int new_workspace)
 	if (fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
 		fluorite_organise_stack(STACK_DOWN, -1);
 
-	if (fluorite.config.follow_windows)
+	if (FOLLOW_WINDOWS)
 		fluorite_change_workspace(new_workspace, 0);
 }
 
@@ -906,8 +993,7 @@ void fluorite_init()
 	fluorite.config.topbar_gaps = TOPBAR_GAPS;
 	fluorite.config.bottombar_gaps = BOTTOMBAR_GAPS;
 	fluorite.config.default_master_offset = DEFAULT_MASTER_OFFSET;
-	fluorite.config.follow_windows = FOLLOW_WINDOWS;
-	fluorite.config.auto_floating = AUTO_FLOATING;
+	fluorite_reload_config();
 	dwm_grabkeys();
 }
 
@@ -1187,7 +1273,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 	if (fluorite.workspaces[fluorite.current_workspace].is_organising)
 		fluorite_change_layout(ORGANIZER_TOGGLE);
 
-	if (fluorite_check_type(e.window) && fluorite.config.auto_floating)
+	if (fluorite_check_type(e.window) && AUTO_FLOATING)
 	{
 		fluorite_handle_specials(e.window);
 		return ;
