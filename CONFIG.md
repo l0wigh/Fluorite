@@ -36,7 +36,7 @@ Keep in mind that no security are there to avoid errors in the configuration, be
 
 You can set only the options that you want to configure and let Fluorite use default values for the other. Just remove the lines you don't need to configure.
 
-You can reload the config while Fluorite is running by using a keybind that will call `fluorite_reload_config`. (By default META + SHIFT + R)
+Fluorite will reload the configuration on save. You can also reload the config while Fluorite is running by using a keybind that will call `fluorite_reload_config`. (By default META + SHIFT + R)
 
 Available options :
 - BORDER_WIDTH (integer value, stay at or above 0)
