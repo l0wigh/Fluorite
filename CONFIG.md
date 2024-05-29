@@ -28,7 +28,7 @@ The dynamic configuration needs to be created by user. Fluorite will use default
 
 To create the configuration, go to `$HOME/.config/` (create the .config folder if it doesn't exist yet) and create a folder called `Fluorite`.
 
-Inside this folder you can create and edit your fluorite.conf file. If you doesn't feel inspired or want to start from a default configuration, copy ones from `dynamic_config` folder inside Fluorite repo.
+Inside this folder you can create and edit your `fluorite.conf` file. If you doesn't feel inspired or want to start from a default configuration, copy ones from `dynamic_config` folder inside Fluorite repo.
 
 Options should be written in CAPS. One option per line. Respect the OPTIONS=value format, otherwise **kaboom** !
 
