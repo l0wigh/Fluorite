@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <sys/inotify.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
@@ -94,15 +95,15 @@ typedef struct
 
 typedef struct
 {
-	int border_width;
-	int border_focused;
-	int border_unfocused;
-	int border_inactive;
-	int gaps;
-	int stack_offset;
-	int topbar_gaps;
-	int bottombar_gaps;
-	int	default_master_offset;
+	int		border_width;
+	int		border_focused;
+	int 	border_unfocused;
+	int 	border_inactive;
+	int 	gaps;
+	int 	stack_offset;
+	int 	topbar_gaps;
+	int 	bottombar_gaps;
+	int		default_master_offset;
 } Configuration;
 
 typedef struct
@@ -122,6 +123,7 @@ typedef struct
 	int				log;
 	xdo_t			*xdo;
 	Configuration	config;
+	int				uid;
 } Fluorite;
 
 static Fluorite fluorite;
@@ -152,15 +154,15 @@ static void			dwm_grabkeys();
 // Bindings functions (defined in config_fluorite.h)
 void fluorite_reload_config()
 {
-	struct passwd *pw = getpwuid(getuid());
-	char *config_path = pw->pw_dir;
 	FILE *config_file;
 	size_t buffer_size;
 	char *buffer, *key, *value;
 	int converted_value;
+	char *file_path = getpwuid(fluorite.uid)->pw_dir;
 
-	strcat(config_path, "/.config/Fluorite/fluorite.conf");
-	config_file = fopen(config_path, "rb");
+
+	strcat(file_path, "/.config/Fluorite/fluorite.conf");
+	config_file = fopen(file_path, "rb");
 	if (config_file == NULL)
 		return;
 	buffer = (char *) calloc(buffer_size, sizeof(char));
@@ -922,7 +924,9 @@ void fluorite_init()
 {
 	XSetWindowAttributes attributes;
 
+	fluorite.uid = getuid();
 	fluorite.log = open("/tmp/fluorite.log", O_WRONLY | O_CREAT | O_APPEND, 0666);
+
 	fluorite.display = XOpenDisplay(NULL);
 	if (fluorite.display == NULL)
 		errx(1, "Can't open display.");
@@ -1815,9 +1819,44 @@ void fluorite_handle_unmapping(Window e)
 		XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 }
 
+void *fluorite_hot_reload()
+{
+	int inotify_fd;
+	int buffer_size = (10 * (sizeof(struct inotify_event) + NAME_MAX + 1));
+	char buffer[buffer_size] __attribute__ ((aligned(8)));
+	struct inotify_event *event;
+	char *folder = getpwuid(fluorite.uid)->pw_dir;
+
+	strcat(folder, "/.config/Fluorite/");
+	inotify_fd = inotify_init();
+	if (inotify_fd == -1)
+		return NULL;
+	inotify_add_watch(inotify_fd, folder, IN_MODIFY);
+
+	while (1145)
+	{
+		int ret_val = read(inotify_fd, buffer, buffer_size);
+		if (ret_val != -1 || ret_val != 0)
+		{
+			int i = 0;
+			while (i < ret_val)
+			{
+				event = (struct inotify_event *)&buffer[i];
+				if (event->len)
+					if (event->mask & IN_MODIFY)
+						fluorite_reload_config();
+				i += sizeof(struct inotify_event) + event->len;
+			}
+		}
+	}
+}
+
 int main(void)
 {
+	pthread_t reload;
+
 	fluorite_init();
+	pthread_create(&reload, NULL, fluorite_hot_reload, NULL);
 	fluorite_run();
 	fluorite_clean();
 	return 0;

@@ -1,4 +1,7 @@
 # TODO !
+    - [ ] Border bug : Focus Slave -> rotate slaves -> rotate stack. Both have borders
+        - Probably a focus bug with enternotify
+        - might be fixable easily
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
