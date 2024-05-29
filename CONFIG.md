@@ -3,24 +3,24 @@
 The static configuration can be found inside `config/config_fluorite.h` and it contains all the options that can't be dynamically reloaded. Which means you need to configure this first.
 
 Inside this file you'll find :
-    - Metakey option
-    - Follow windows option
-        (True means that sending a window to a new workspace will make you go to that workspace)
-    - Max windows option
-        (Limit the number of windows per workspace. Less windows means less ram usage)
-    - Auto floating option
-        (False means that floating windows will be put inside the tiling layout)
-    - Default monitor workspace variable
-    - Workspace names variable
-        (Change the workspace names for polybar for example)
-    - Default floating array
-        (Windows that needs to be opened in floating mode)
-    - Default fixed array
-        (Windows that will not be managed by Fluorite)
-    - Fluorite intern functions
-    - User defined functions
-    - Bind array
-        (Type of Metakey (0 means no need for metakey), key, function)
+- Metakey option
+- Follow windows option
+    (True means that sending a window to a new workspace will make you go to that workspace)
+- Max windows option
+    (Limit the number of windows per workspace. Less windows means less ram usage)
+- Auto floating option
+    (False means that floating windows will be put inside the tiling layout)
+- Default monitor workspace variable
+- Workspace names variable
+    (Change the workspace names for polybar for example)
+- Default floating array
+    (Windows that needs to be opened in floating mode)
+- Default fixed array
+    (Windows that will not be managed by Fluorite)
+- Fluorite intern functions
+- User defined functions
+- Bind array
+    (Type of Metakey (0 means no need for metakey), key, function)
 
 # Part 2: Dynamic configuration
 
@@ -39,15 +39,15 @@ You can set only the options that you want to configure and let Fluorite use def
 You can reload the config while Fluorite is running by using a keybind that will call `fluorite_reload_config`. (By default META + SHIFT + R)
 
 Available options :
-    - BORDER_WIDTH (integer value, stay at or above 0)
-    - BORDER_FOCUSED (hex value, 0xRRGGBB or RRGGBB)
-    - BORDER_UNFOCUSED (hex value, 0xRRGGBB or RRGGBB)
-    - BORDER_INACTIVE (hex value, 0xRRGGBB or RRGGBB)
-    - GAPS (integer value, stay at or above 0)
-    - STACK_OFFSET (integer value, stay at or above 0)
-    - TOPBAR_GAPS (integer value, stay at or above 0)
-    - BOTTOMBAR_GAPS (integer value, stay at or above 0)
-    - DEFAULT_MASTER_OFFSET (integer value, stay above half your monitor width)
+- BORDER_WIDTH (integer value, stay at or above 0)
+- BORDER_FOCUSED (hex value, 0xRRGGBB or RRGGBB)
+- BORDER_UNFOCUSED (hex value, 0xRRGGBB or RRGGBB)
+- BORDER_INACTIVE (hex value, 0xRRGGBB or RRGGBB)
+- GAPS (integer value, stay at or above 0)
+- STACK_OFFSET (integer value, stay at or above 0)
+- TOPBAR_GAPS (integer value, stay at or above 0)
+- BOTTOMBAR_GAPS (integer value, stay at or above 0)
+- DEFAULT_MASTER_OFFSET (integer value, stay above half your monitor width)
 
 Example :
 ```
