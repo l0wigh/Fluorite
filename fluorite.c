@@ -1686,6 +1686,7 @@ void fluorite_redraw_windows()
 				XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, new_x, new_y);
 		}
 		XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window);
+		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_width);
 	}
 	if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
 		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
