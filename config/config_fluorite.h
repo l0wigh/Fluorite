@@ -53,6 +53,7 @@ static const Rules default_floating[] = {
 	{"spectacle"},
 	{"ghidra-Ghidra"},
 	{"spotify"},
+	{"thunar"}
 };
 
 static const Rules default_fixed[] = {
@@ -104,6 +105,9 @@ static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT);
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
 static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT); }
 static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
+static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar"; fluorite_execute(prog, NOGUI); }
+static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_execute(prog, NOGUI); }
+static void fluorite_full_reload() { fluorite_reload_polybar(); fluorite_reload_fehgb(); fluorite_reload_config(); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -156,7 +160,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
-	{METAKEY|ShiftMask,		XK_r,						fluorite_reload_config},
+	{METAKEY|ShiftMask,		XK_r,						fluorite_full_reload},
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},

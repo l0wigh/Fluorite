@@ -95,6 +95,7 @@ typedef struct
 
 typedef struct
 {
+	char	*home_dir;
 	int		border_width;
 	int		border_focused;
 	int 	border_unfocused;
@@ -123,7 +124,6 @@ typedef struct
 	int				log;
 	xdo_t			*xdo;
 	Configuration	config;
-	int				uid;
 } Fluorite;
 
 static Fluorite fluorite;
@@ -158,10 +158,10 @@ void fluorite_reload_config()
 	size_t buffer_size;
 	char *buffer, *key, *value;
 	int converted_value;
-	char *file_path = getpwuid(fluorite.uid)->pw_dir;
+	char *file_path = (char *) calloc(1145, sizeof(char));
 
 
-	strcat(file_path, "/.config/Fluorite/fluorite.conf");
+	snprintf(file_path, 1145, "%s%s", fluorite.config.home_dir, "/.config/Fluorite/fluorite.conf");
 	config_file = fopen(file_path, "rb");
 	if (config_file == NULL)
 		return;
@@ -924,9 +924,8 @@ void fluorite_init()
 {
 	XSetWindowAttributes attributes;
 
-	fluorite.uid = getuid();
+	fluorite.config.home_dir = strdup(getenv("HOME"));
 	fluorite.log = open("/tmp/fluorite.log", O_WRONLY | O_CREAT | O_APPEND, 0666);
-
 	fluorite.display = XOpenDisplay(NULL);
 	if (fluorite.display == NULL)
 		errx(1, "Can't open display.");
@@ -1825,9 +1824,9 @@ void *fluorite_hot_reload()
 	int buffer_size = (10 * (sizeof(struct inotify_event) + NAME_MAX + 1));
 	char buffer[buffer_size] __attribute__ ((aligned(8)));
 	struct inotify_event *event;
-	char *folder = getpwuid(fluorite.uid)->pw_dir;
+	char *folder = (char *) calloc(1145, sizeof(char));
 
-	strcat(folder, "/.config/Fluorite/");
+	snprintf(folder, 1145, "%s%s", fluorite.config.home_dir, "/.config/Fluorite/");
 	inotify_fd = inotify_init();
 	if (inotify_fd == -1)
 		return NULL;
