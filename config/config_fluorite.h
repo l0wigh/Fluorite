@@ -77,6 +77,7 @@ void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
 void fluorite_reload_config();
+void fluorite_tile_all_float();
 
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
@@ -154,6 +155,7 @@ static const Bindings bind[] = {
 	{METAKEY, 				XK_Down,					fluorite_organizer_prev},
 	{METAKEY, 				XK_Right,					fluorite_organizer_right},
 	{METAKEY, 				XK_Left,					fluorite_organizer_left},
+	{METAKEY, 				XK_t,						fluorite_tile_all_float},
 
 	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},

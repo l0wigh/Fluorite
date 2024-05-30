@@ -229,6 +229,17 @@ void fluorite_reload_config()
 	free(buffer);
 }
 
+void fluorite_tile_all_float()
+{
+	while (1145)
+	{
+		if (fluorite.workspaces[fluorite.current_workspace].frames_count == MAX_WINDOWS || fluorite.workspaces[fluorite.current_workspace].floating_count == 0)
+			break;
+		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[0]->window, RevertToPointerRoot, CurrentTime);
+		fluorite_change_layout(FLOATING_TOGGLE);
+	}
+}
+
 int fluorite_get_config_option(char *key)
 {
 	if (strcmp(key, "BORDER_WIDTH") == 0)
