@@ -1,29 +1,44 @@
-# Fluorite 0.5
+# Fluorite 1.0 (BETA)
 
-Fluorite is a really simple window manager that aims to be light and functionnal.
+Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
-This is a very experimental version. Use at your own risk.
+![Fluorite Presentation](./screenshots/rose-pine.png)
+*Rosé-pine Theme*
 
-<!-- ![FluoriteWM](https://fluorite.surge.sh/files/Fluorite.png) -->
-![FluoriteWM](./Fluorite_Multimonitor.png)
+![Fluorite Presentation](./screenshots/Multimonitor.png)
+*Multimonitor Demo*
 
-## Information ?
+## Features
+
+- Dynamic master layout tiling.
+- Stacked layout (Monocle layout in DWM).
+- Floating windows management.
+- Static configuration for bindings, custom C functions and more, compiled with Fluorite.
+- Dynamic configuration with auto-reload for styling.
+- Organizer mode, let you swap windows freely.
+- Works with multiple monitors. XMonad style.
+
+## Why BETA ?
+
+I'm trying to go for a stable release for early June (around 8... If you know you know). In this short period of time (writing this on 30 May), I would like to implement some more features and catch some bugs.
+
+## Documentation ?
 
 Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. I talk about configuration, installation, ect...
 
-You can also find some quick tips inside CONFIG.md.
+You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
 
-## Installation (basic informations)
+# Installation (basic informations)
 
-### Deps
+## Deps
 
 On Archlinux you can type this command to install everything you need.
 
 ``` sh
-sudo pacman -S xorg
+sudo pacman -S xorg xdo libxft libxcomposite libxcursor libxrandr
 ```
 
-### Build and install
+## Build and install
 
 After doing modifications to the config, just type (WITHOUT sudo). It will remake and copy the Fluorite executable to `/usr/bin/`.
 
@@ -31,18 +46,17 @@ After doing modifications to the config, just type (WITHOUT sudo). It will remak
 make install
 ```
 
-### .xinitrc example
+## .xinitrc example
 
 ``` sh
+setxkbmap -layout fr
 polybar &
 picom &
-setxkbmap -layout fr
 exec Fluorite
 ```
 
 Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so you can have all your bindings working.
 
-### Known issues
+## Known issues
 
-    - Java apps might be broken on some features. (ex: Ghidra)
-    - Support for floating windows is a really early stage and might be unstable, I recommend that you be careful with what you are doing.
+- If java apps are clunky, you can add `export _JAVA_AWT_WM_NONREPARENTING=1` to you .xinitrc just before Fluorite execution.
