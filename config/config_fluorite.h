@@ -53,11 +53,12 @@ static const Rules default_floating[] = {
 	{"spectacle"},
 	{"ghidra-Ghidra"},
 	{"spotify"},
-	{"thunar"}
+	{"thunar"},
 };
 
 static const Rules default_fixed[] = {
 	{"GLava"},
+	{"Conky"},
 };
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
