@@ -1693,6 +1693,8 @@ void fluorite_redraw_windows()
 		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
 	else if (fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
 		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+	else
+		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[fluorite.workspaces[fluorite.current_workspace].floating_count - 1]->window, RevertToPointerRoot, CurrentTime);
 }
 
 void fluorite_handle_unmapping(Window e)
