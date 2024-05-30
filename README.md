@@ -3,10 +3,10 @@
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
 ![Fluorite Presentation](./screenshots/rose-pine.png)
-*Rosé-pine Themes*
+<em align="center">*Rosé-pine Theme*</em>
 
 ![Fluorite Presentation](./screenshots/Multimonitor.png)
-*Multimonitor Demo*
+<em align="center">*Multimonitor Demo*</em>
 
 ## Features
 
