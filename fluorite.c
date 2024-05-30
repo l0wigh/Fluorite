@@ -1454,12 +1454,12 @@ void fluorite_handle_motions(XMotionEvent e)
 					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
 					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
 
-					if (window_pos_x + drag_dest_x < pos_x)
-						drag_dest_x = pos_x;
+					if (window_pos_x + drag_dest_x < pos_x - fluorite.config.border_width)
+						drag_dest_x = pos_x + (fluorite.config.border_width * 2);
 					if (window_max_x + drag_dest_x > max_x)
 						drag_dest_x = max_x - window_max_x;
-					if (drag_dest_y < pos_y)
-						drag_dest_y = pos_y;
+					if (drag_dest_y < pos_y - fluorite.config.border_width)
+						drag_dest_y = pos_y + (fluorite.config.border_width * 2);
 					if (window_max_y + drag_dest_y > max_y)
 						drag_dest_y = max_y - window_max_y;
 					XMoveWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
