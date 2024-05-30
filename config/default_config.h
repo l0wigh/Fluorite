@@ -38,14 +38,18 @@ typedef struct
 #define SELECT_PREV			24
 #define MOVE_RIGHT			25
 #define MOVE_LEFT			26
+<<<<<<< HEAD:config/default_config.h
 
 
 // Configure this to set predefined workspaces to monitors
 // Use xrandr --listactivemonitor to know the order they are sets
 // Make sure to not have a workspaces set for two monitors. 
 static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+=======
+>>>>>>> master:default_config/azerty/config_fluorite.h
 
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
+<<<<<<< HEAD:config/default_config.h
 /* static const char *workspace_names[10] = { " ", "󰈹", " ", "4", "5", "6", "7", "8", "9", "0" }; */
 
 // Use xprop on a floating window to get the WM_CLASS name used by a window.
@@ -58,6 +62,8 @@ static const Rules default_floating[] = {
 static const Rules default_fixed[] = {
 	{"GLava"},
 };
+=======
+>>>>>>> master:default_config/azerty/config_fluorite.h
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
@@ -72,11 +78,17 @@ void fluorite_change_layout(int mode);
 void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
+<<<<<<< HEAD:config/default_config.h
 void fluorite_focus_next_monitor();
 void fluorite_reload_config();
 
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
+=======
+
+// User functions (use it or create yours with these examples)
+static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
+>>>>>>> master:default_config/azerty/config_fluorite.h
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
@@ -93,8 +105,13 @@ static void fluorite_fullscreen_toggle() { fluorite_change_layout(FULLSCREEN_TOG
 static void fluorite_swap_focus() { fluorite_change_layout(SWAP_FOCUS); }
 static void fluorite_floating_toggle() { fluorite_change_layout(FLOATING_TOGGLE); }
 static void fluorite_floating_hide_show() { fluorite_change_layout(FLOATING_HIDE_SHOW); }
+<<<<<<< HEAD:config/default_config.h
 static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 5%+"; fluorite_execute(prog, NOGUI); }
 static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 5%-"; fluorite_execute(prog, NOGUI); }
+=======
+static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog, NOGUI); }
+static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog, NOGUI); }
+>>>>>>> master:default_config/azerty/config_fluorite.h
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
@@ -129,6 +146,16 @@ static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); 
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
  
+<<<<<<< HEAD:config/default_config.h
+=======
+typedef struct
+{
+	unsigned int	mod;
+	KeySym			key;
+	void			(*func)();
+} Bindings;
+
+>>>>>>> master:default_config/azerty/config_fluorite.h
 static const Bindings bind[] = {
 	{METAKEY,				XK_Return,					fluorite_terminal},
 	{METAKEY,				XK_a,						fluorite_filemanager},
@@ -148,6 +175,7 @@ static const Bindings bind[] = {
 	{METAKEY, 				XK_Down,					fluorite_organizer_prev},
 	{METAKEY, 				XK_Right,					fluorite_organizer_right},
 	{METAKEY, 				XK_Left,					fluorite_organizer_left},
+<<<<<<< HEAD:config/default_config.h
 
 	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
@@ -157,6 +185,8 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
 	{METAKEY|ShiftMask,		XK_r,						fluorite_reload_config},
+=======
+>>>>>>> master:default_config/azerty/config_fluorite.h
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},
@@ -181,6 +211,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,				XK_underscore,				fluorite_appto_workspace_eight},
 	{METAKEY|ShiftMask,				XK_ccedilla,  				fluorite_appto_workspace_nine},
 	{METAKEY|ShiftMask,				XK_agrave,  				fluorite_appto_workspace_ten},
+<<<<<<< HEAD:config/default_config.h
 
 	// No METAKEY bindings
 	{0,				XK_F5,		fluorite_brightness_up},
@@ -188,4 +219,31 @@ static const Bindings bind[] = {
 	{0,				XK_F2,		fluorite_volume_down},
 	{0,				XK_F3,		fluorite_volume_up},
 	{0,				XK_F1,		fluorite_volume_mute},
+=======
+
+	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
+	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
+	{METAKEY|ShiftMask,		XK_k,						fluorite_stack_rotate_up},
+	{METAKEY|ShiftMask,		XK_l,						fluorite_stack_rotate_down},
+	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
+	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
+
+	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
+	{0,				XF86XK_MonBrightnessDown,	fluorite_brightness_down},
+	{0,				XF86XK_AudioLowerVolume,	fluorite_volume_down},
+	{0,				XF86XK_AudioRaiseVolume,	fluorite_volume_up},
+	{0,				XF86XK_AudioMute,			fluorite_volume_mute},
+};
+
+typedef struct
+{
+	char	wm_class[255];
+} Rules;
+
+// Use xprop on a floating window to get the WM_CLASS name used by a window.
+static const Rules default_floating[] = {
+	{"spectacle"},
+	{"ghidra-Ghidra"},
+	{"spotify"},
+>>>>>>> master:default_config/azerty/config_fluorite.h
 };
