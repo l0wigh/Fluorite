@@ -43,7 +43,7 @@ typedef struct
 // Configure this to set predefined workspaces to monitors
 // Use xrandr --listactivemonitor to know the order they are sets
 // Make sure to not have a workspaces set for two monitors. 
-static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+static int default_monitor_workspace[10] = { 1, 0, 3, 4, 5, 6, 7, 8, 9, 2 };
 
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
 /* static const char *workspace_names[10] = { " ", "󰈹", " ", "4", "5", "6", "7", "8", "9", "0" }; */
@@ -54,6 +54,7 @@ static const Rules default_floating[] = {
 	{"ghidra-Ghidra"},
 	{"spotify"},
 	{"thunar"},
+	{"ymuse"},
 };
 
 static const Rules default_fixed[] = {
