@@ -751,6 +751,12 @@ void fluorite_show_new_workspace(int new_workspace)
 			fluorite.current_monitor = swap_monitor;
 			fluorite.monitor[fluorite.current_monitor].workspace = new_workspace;
 			XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
+			for (int j = 0; j < fluorite.monitor_count; j++)
+			{
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.monitor[j].workspace].master_winframe->frame, fluorite.config.border_unfocused);
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.monitor[j].workspace].slaves_winframes[0]->frame, fluorite.config.border_unfocused);
+				XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
+			}
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 			{
 				int keep_focus = fluorite.workspaces[fluorite.current_workspace].current_focus;
@@ -758,12 +764,6 @@ void fluorite_show_new_workspace(int new_workspace)
 				fluorite_redraw_windows();
 				fluorite.workspaces[fluorite.current_workspace].current_focus = keep_focus;
 				fluorite_change_layout(FULLSCREEN_TOGGLE);
-			}
-			for (int j = 0; j < fluorite.monitor_count; j++)
-			{
-				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.monitor[j].workspace].master_winframe->frame, fluorite.config.border_unfocused);
-				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.monitor[j].workspace].slaves_winframes[0]->frame, fluorite.config.border_unfocused);
-				XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 			}
 			return ;
 		}
@@ -807,6 +807,9 @@ void fluorite_show_new_workspace(int new_workspace)
 void fluorite_send_window(int new_workspace)
 {
 	int keep_workspace = fluorite.current_workspace;
+
+	if (fluorite.workspaces[fluorite.current_workspace].current_focus == FLOAT_FOCUS)
+		fluorite_change_layout(FLOATING_TOGGLE);
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
