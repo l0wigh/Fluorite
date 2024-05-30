@@ -1332,6 +1332,12 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		return ;
 	}
 
+	if (OPEN_IN_FLOAT)
+	{
+		fluorite_handle_specials(e.window);
+		return ;
+	}
+
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == MAX_WINDOWS)
 		return ;
 
