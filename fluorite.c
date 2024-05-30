@@ -298,21 +298,11 @@ void fluorite_user_close()
 
 void fluorite_change_monitor(int new_monitor)
 {
-	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_unfocused);
+	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_inactive);
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
-	{
-		if (i == 0)
-			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_unfocused);
-		else
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_inactive);
-	}
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
-	{
-		if (i == 0)
-			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_unfocused);
-		else
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_inactive);
-	}
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 	{
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0x0);
@@ -336,9 +326,15 @@ void fluorite_change_monitor(int new_monitor)
 		if (!fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 		{
 			if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
+			{
 				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_focused);
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, fluorite.config.border_unfocused);
+			}
 			else
+			{
 				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, fluorite.config.border_focused);
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_unfocused);
+			}
 		}
 	}
 	else
@@ -458,11 +454,11 @@ void fluorite_focus_next_monitor()
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_organising)
 		fluorite_change_layout(ORGANIZER_TOGGLE);
-	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_unfocused);
+	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_inactive);
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
-		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_unfocused);
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_inactive);
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
-		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_unfocused);
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_inactive);
 	fluorite.current_monitor++;
 	if (fluorite.current_monitor >= fluorite.monitor_count)
 		fluorite.current_monitor = 0;
