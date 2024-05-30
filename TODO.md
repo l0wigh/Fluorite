@@ -16,8 +16,6 @@
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
-- [ ] Some very precise apps, make Fluorite Crash
-- [ ] killall command can sometimes break stuff (need more testing)
 - [ ] Fix windows that can be moved when inside tiling (thunar for example)
 - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
 - [ ] Document every functions

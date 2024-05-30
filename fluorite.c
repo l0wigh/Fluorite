@@ -637,9 +637,15 @@ void fluorite_change_layout(int mode)
 			{
 				Window focused;
 				int revert;
+				int keep_x, keep_y, keep_w, keep_h;
+
 				XGetInputFocus(fluorite.display, &focused, &revert);
 				if (focused == fluorite.workspaces[fluorite.current_workspace].master_winframe->window && fluorite.workspaces[fluorite.current_workspace].floating_count < MAX_WINDOWS && fluorite.workspaces[fluorite.current_workspace].frames_count != 0)
 				{
+					keep_x = fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x;
+					keep_y = fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y;
+					keep_w = fluorite.workspaces[fluorite.current_workspace].master_winframe->width;
+					keep_h = fluorite.workspaces[fluorite.current_workspace].master_winframe->height;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 					bzero(fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
@@ -651,12 +657,16 @@ void fluorite_change_layout(int mode)
 						fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 						fluorite_organise_stack(STACK_DEL, 0);
 					}
+					XMoveWindow(fluorite.display, focused, keep_x, keep_y);
+					XResizeWindow(fluorite.display, focused, keep_w, keep_h);
 					fluorite_redraw_windows();
 				}
 				else if (focused == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window && fluorite.workspaces[fluorite.current_workspace].floating_count < MAX_WINDOWS && fluorite.workspaces[fluorite.current_workspace].slaves_count != 0)
 				{
-					if (fluorite.workspaces[fluorite.current_workspace].slaves_count == 0)
-						return ;
+					keep_x = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->pos_x;
+					keep_y = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->pos_y;
+					keep_w = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->width;
+					keep_h = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->height;
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
 					bzero(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
@@ -664,6 +674,8 @@ void fluorite_change_layout(int mode)
 					fluorite_handle_specials(focused);
 					fluorite_organise_stack(STACK_DEL, 0);
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
+					XMoveWindow(fluorite.display, focused, keep_x, keep_y);
+					XResizeWindow(fluorite.display, focused, keep_w, keep_h);
 					fluorite_redraw_windows();
 				}
 				else
