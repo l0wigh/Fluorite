@@ -551,8 +551,8 @@ void fluorite_change_layout(int mode)
 					fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame = tmp_window;
 					XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame);
 					XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, 0);
-					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, 0, 0, fluorite.screen_width, fluorite.screen_height);
-					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 0, 0, fluorite.screen_width, fluorite.screen_height);
+					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, 0, 0, fluorite.monitor[fluorite.current_monitor].width, fluorite.monitor[fluorite.current_monitor].height);
+					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 0, 0, fluorite.monitor[fluorite.current_monitor].width, fluorite.monitor[fluorite.current_monitor].height);
 					XSync(fluorite.display, True);
 					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
 				}
