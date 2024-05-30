@@ -1,8 +1,7 @@
 # TODO !
-- [ ] Fluorite 0.5
-    - [x] Fix hidding function
-        - Probably an issue with the variable floating_hidden
-    - [ ] Rewrite the redraw tiling function, needs many many refactoring on maths. It's really ugly even if it works fine
+    - [ ] Border bug : Focus Slave -> rotate slaves -> rotate stack. Both have borders
+        - Probably a focus bug with enternotify
+        - might be fixable easily
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -14,8 +13,6 @@
     - [x] Try hacky fixes with XMove and XResize windows before reparenting. DWM seems to do a XMoveResize even if not needed (IF ALL ELSE FAILS) 
         - Seems to be the only solution right now, but it causes some kind of jumping on master switching
         - Firefox still stuggle sometimes (mainly at the opening)
-- [-] Fix the custom workspace names
-    - Works but doesn't support nerdfont and longer names properly
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
@@ -74,3 +71,26 @@
 - [x] Sometimes floating will not go back to layout, use another checking method
 - [x] Add a way to kill popup windows with keybinds when focused
 - [x] Tray seems broken, maybe coming from floating window stuff
+- [x] Fix floating movement locking
+    - Block the good value based on what part will leave the current monitor
+- [x] Fix Fullscreen Mode
+    - Switching workspaces works badly
+- [x] Fix focus when switching between workspaces that are in different monitors
+    - Both keeps border and focus might be wrong
+- [x] Slaves rotations keep focus on the previous slave
+- [x] Border are still there on Fullscreen windows ! Oh no ! Anyways...
+    - Set border to 0
+- [x] Add config to select predefined workspaces for monitor
+- [x] Fix the custom workspace names
+- [x] Check monitor every mouse movements
+    - Needs more testing to see if it's stable
+- [x] Closing **last** slave window bring focus back on master window but, bindings doesn't works
+    - Probably something to do with the unmap function that need to change **fluorite.workspaces[fluorite.current_workspace].current_focus**
+    - Should be fixed, by hard refocus master window on unmapping
+- [x] Fix floating windows
+    - [x] Switching workspaces should move in X or Y the window based on the new monitor
+    - [x] Sometimes it doesn't open in the right spot even with safe guard. But hiding and showing them again works.
+        - Fixed by forcing it to a size and a position (not that great, it removes the flexibility)
+- [x] Add monitor focus change binding
+- [x] Sending window to a fullscreen workspace cause big issue
+    - Close fullscreen on new workspace if needed
