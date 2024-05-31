@@ -1314,6 +1314,8 @@ void fluorite_handle_normals(Window e)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_unfocused);
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &e, 1);
 	XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+	XMoveWindow(fluorite.display, e, 0, 1);
+	XMoveWindow(fluorite.display, e, 0, 0);
 }
 
 void fluorite_handle_mapping(XMapRequestEvent e)
