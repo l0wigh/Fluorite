@@ -206,6 +206,10 @@ void fluorite_reload_config()
 				break;
 			case 8:
 				fluorite.config.default_master_offset = atoi(value);
+				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->width - fluorite.config.default_master_offset < 10)
+					fluorite.config.default_master_offset = 0;
+				if (fluorite.workspaces[fluorite.current_workspace].master_winframe->width - fluorite.config.default_master_offset)
+					fluorite.config.default_master_offset = 0;
 				for (int i = 0; i < MAX_WORKSPACES; i++)
 					fluorite.workspaces[i].master_offset = fluorite.config.default_master_offset;
 				break;
@@ -226,7 +230,23 @@ void fluorite_reload_config()
 	fluorite_redraw_windows();
 	for (int i = 0; i < fluorite.monitor_count; i++)
 		fluorite_focus_next_monitor();
+	fclose(config_file);
+	free(file_path);
 	free(buffer);
+}
+
+int fluorite_get_config_option(char *key)
+{
+	if (strcmp(key, "BORDER_WIDTH") == 0)			return 0;
+	if (strcmp(key, "BORDER_FOCUSED") == 0)			return 1;
+	if (strcmp(key, "BORDER_UNFOCUSED") == 0)		return 2;
+	if (strcmp(key, "BORDER_INACTIVE") == 0)		return 3;
+	if (strcmp(key, "GAPS") == 0)					return 4;
+	if (strcmp(key, "STACK_OFFSET") == 0)			return 5;
+	if (strcmp(key, "TOPBAR_GAPS") == 0)			return 6;
+	if (strcmp(key, "BOTTOMBAR_GAPS") == 0)			return 7;
+	if (strcmp(key, "DEFAULT_MASTER_OFFSET") == 0)	return 8;
+	return -1;
 }
 
 void fluorite_tile_all_float()
@@ -240,29 +260,6 @@ void fluorite_tile_all_float()
 	}
 }
 
-int fluorite_get_config_option(char *key)
-{
-	if (strcmp(key, "BORDER_WIDTH") == 0)
-		return 0;
-	if (strcmp(key, "BORDER_FOCUSED") == 0)
-		return 1;
-	if (strcmp(key, "BORDER_UNFOCUSED") == 0)
-		return 2;
-	if (strcmp(key, "BORDER_INACTIVE") == 0)
-		return 3;
-	if (strcmp(key, "GAPS") == 0)
-		return 4;
-	if (strcmp(key, "STACK_OFFSET") == 0)
-		return 5;
-	if (strcmp(key, "TOPBAR_GAPS") == 0)
-		return 6;
-	if (strcmp(key, "BOTTOMBAR_GAPS") == 0)
-		return 7;
-	if (strcmp(key, "DEFAULT_MASTER_OFFSET") == 0)
-		return 8;
-	return -1;
-}
-
 void fluorite_execute(char *argument, int mode)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode == GUI)
@@ -273,9 +270,11 @@ void fluorite_execute(char *argument, int mode)
 
 void fluorite_close_window()
 {
-	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 0 && fluorite.workspaces[fluorite.current_workspace].floating_count == 0)
-		return ;
-	if (fluorite.workspaces[fluorite.current_workspace].is_organising)
+	XEvent closing;
+	Window focused;
+	int revert;
+
+	if ((fluorite.workspaces[fluorite.current_workspace].frames_count == 0 && fluorite.workspaces[fluorite.current_workspace].floating_count == 0) || fluorite.workspaces[fluorite.current_workspace].is_organising)
 		return ;
 
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
@@ -288,9 +287,6 @@ void fluorite_close_window()
 			XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
 	}
 
-	XEvent closing;
-	Window focused;
-	int revert;
 	XGetInputFocus(fluorite.display, &focused, &revert);
 	memset(&closing, 0, sizeof(closing));
 	closing.xclient.type = ClientMessage;
@@ -316,8 +312,8 @@ void fluorite_change_monitor(int new_monitor)
 			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_inactive);
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 	{
-		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0x0);
-		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, 0x0);
+		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0);
+		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, 0);
 	}
 	fluorite.current_monitor = new_monitor;
 	fluorite.current_workspace = fluorite.monitor[new_monitor].workspace;
@@ -372,11 +368,10 @@ void fluorite_redraw_organizer()
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 		else
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
-		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_width);
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_inactive);
 		XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height);
 		XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window, 0, 0, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height);
 		XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame);
-		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_unfocused);
 	}
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.config.gaps * 2);
 	if (fluorite.monitor[fluorite.current_monitor].primary == True)
@@ -388,15 +383,20 @@ void fluorite_redraw_organizer()
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 	else
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
-	XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_width);
+	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_inactive);
 	XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x, fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
 	XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 0, 0, fluorite.workspaces[fluorite.current_workspace].master_winframe->width, fluorite.workspaces[fluorite.current_workspace].master_winframe->height);
 	XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
-	XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_unfocused);
 	if (fluorite.workspaces[fluorite.current_workspace].organizer_selected != 0)
+	{
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[fluorite.workspaces[fluorite.current_workspace].organizer_selected - 1]->frame, fluorite.config.border_focused);
+		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[fluorite.workspaces[fluorite.current_workspace].organizer_selected - 1]->frame, fluorite.config.border_width);
+	}
 	else
+	{
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_focused);
+		XSetWindowBorderWidth(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_width);
+	}
 }
 
 void fluorite_organizer_mapping(int mode)
@@ -406,21 +406,19 @@ void fluorite_organizer_mapping(int mode)
 	switch (mode)
 	{
 		case SELECT_NEXT:
-			if (fluorite.workspaces[fluorite.current_workspace].organizer_selected + 1 < fluorite.workspaces[fluorite.current_workspace].frames_count)
-				fluorite.workspaces[fluorite.current_workspace].organizer_selected++;
-			else
+			fluorite.workspaces[fluorite.current_workspace].organizer_selected++;
+			if (fluorite.workspaces[fluorite.current_workspace].organizer_selected == fluorite.workspaces[fluorite.current_workspace].frames_count)
 				fluorite.workspaces[fluorite.current_workspace].organizer_selected = 0;
 			fluorite_redraw_organizer();
 			break;
 		case SELECT_PREV:
-			if (fluorite.workspaces[fluorite.current_workspace].organizer_selected - 1 >= 0)
 				fluorite.workspaces[fluorite.current_workspace].organizer_selected--;
-			else
+			if (fluorite.workspaces[fluorite.current_workspace].organizer_selected < 0)
 				fluorite.workspaces[fluorite.current_workspace].organizer_selected = fluorite.workspaces[fluorite.current_workspace].frames_count - 1;
 			fluorite_redraw_organizer();
 			break;
 		case MOVE_RIGHT:
-			if (fluorite.workspaces[fluorite.current_workspace].organizer_selected == 0) // Master
+			if (fluorite.workspaces[fluorite.current_workspace].organizer_selected == 0)
 			{
 				memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], sizeof(WinFrames));
 				memcpy(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0], fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
@@ -606,12 +604,7 @@ void fluorite_change_layout(int mode)
 			}
 			break;
 		case ORGANIZER_TOGGLE:
-			if (fluorite.workspaces[fluorite.current_workspace].frames_count <= 1)
-			{
-				fluorite.workspaces[fluorite.current_workspace].is_organising = False;
-				return ;
-			}
-			if (fluorite.workspaces[fluorite.current_workspace].is_organising)
+			if (fluorite.workspaces[fluorite.current_workspace].frames_count <= 1 || fluorite.workspaces[fluorite.current_workspace].is_organising)
 			{
 				fluorite.workspaces[fluorite.current_workspace].is_organising = False;
 				fluorite_redraw_windows();
@@ -622,7 +615,6 @@ void fluorite_change_layout(int mode)
 				fluorite.workspaces[fluorite.current_workspace].organizer_selected = 0;
 				fluorite_redraw_organizer();
 			}
-
 			break;
 		case SWAP_FOCUS:
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen || fluorite.workspaces[fluorite.current_workspace].is_stacked || fluorite.workspaces[fluorite.current_workspace].frames_count <= 1)
@@ -910,22 +902,7 @@ int fluorite_get_monitor_from_window(int pos)
 	return -1;
 }
 
-void fluorite_apply_property()
-{
-	XTextProperty text;
-	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_WM_NAME", False), XInternAtom(fluorite.display, "UTF8_STRING", False), 8, PropModeReplace, (const unsigned char *) "Fluorite", 8);
-	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTING_WM_CHECK", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.root, 1);
-	int num_work_atom = MAX_WORKSPACES;
-	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_NUMBER_OF_DESKTOPS", False), XA_CARDINAL, 32, PropModeReplace, (const unsigned char *)&num_work_atom, 1);
-	Xutf8TextListToTextProperty(fluorite.display, (char **)workspace_names, MAX_WORKSPACES, XUTF8StringStyle, &text);
-	XSetTextProperty(fluorite.display, fluorite.root, &text, XInternAtom(fluorite.display, "_NET_DESKTOP_NAMES", False));
-	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
-	Atom supported[1];
-	supported[0] = XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False);
-	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 1);
-}
-
-void fluorite_check_monitor_from_mouse()
+void fluorite_get_monitor_from_mouse()
 {
 	int pointer_x, pointer_y, s_num;
 	int pos_x, pos_y, max_x, max_y;
@@ -940,6 +917,21 @@ void fluorite_check_monitor_from_mouse()
 		if ((pointer_x >= pos_x && pointer_x <= max_x) && (pointer_y >= pos_y && pointer_y <= max_y) && fluorite.current_monitor != i)
 			fluorite_change_monitor(i);
 	}
+}
+
+void fluorite_apply_property()
+{
+	XTextProperty text;
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_WM_NAME", False), XInternAtom(fluorite.display, "UTF8_STRING", False), 8, PropModeReplace, (const unsigned char *) "Fluorite", 8);
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTING_WM_CHECK", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.root, 1);
+	int num_work_atom = MAX_WORKSPACES;
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_NUMBER_OF_DESKTOPS", False), XA_CARDINAL, 32, PropModeReplace, (const unsigned char *)&num_work_atom, 1);
+	Xutf8TextListToTextProperty(fluorite.display, (char **)workspace_names, MAX_WORKSPACES, XUTF8StringStyle, &text);
+	XSetTextProperty(fluorite.display, fluorite.root, &text, XInternAtom(fluorite.display, "_NET_DESKTOP_NAMES", False));
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.current_workspace, 1);
+	Atom supported[1];
+	supported[0] = XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False);
+	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 1);
 }
 
 void fluorite_init()
@@ -1040,6 +1032,7 @@ void fluorite_run()
 	while (fluorite.running)
 	{
 		XNextEvent(fluorite.display, &ev);
+		fluorite_get_monitor_from_mouse();
 		switch (ev.type)
 		{
 			case ConfigureRequest:
@@ -1052,18 +1045,15 @@ void fluorite_run()
 				fluorite_handle_unmapping(ev.xunmap.window);
 				break;
 			case EnterNotify:
-				fluorite_check_monitor_from_mouse();
 				fluorite_handle_enternotify(ev);
 				break;
 			case ButtonPress:
 				fluorite_handle_buttonpress(ev.xbutton);
 				break;
 			case MotionNotify:
-				fluorite_check_monitor_from_mouse();
 				fluorite_handle_motions(ev.xmotion);
 				break;
 			case LeaveNotify:
-				fluorite_check_monitor_from_mouse();
 				break;
 			case KeyPress:
 				fluorite_handle_keys(ev.xkey);
@@ -1083,6 +1073,9 @@ void fluorite_clean()
 		for (int i = 0; fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]; i++)
 			free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]);
 		free(fluorite.workspaces[fluorite.current_workspace].slaves_winframes);
+		for (int i = 0; fluorite.workspaces[fluorite.current_workspace].floating_windows[i]; i++)
+			free(fluorite.workspaces[fluorite.current_workspace].floating_windows[i]);
+		free(fluorite.workspaces[fluorite.current_workspace].floating_windows);
 	}
 	xdo_free(fluorite.xdo);
 	XCloseDisplay(fluorite.display);
@@ -1157,10 +1150,8 @@ int fluorite_check_fixed(Window e)
 	if (strlen(name.res_class) == 0)
 		return False;
 	for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
-	{
 		if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
 			return True;
-	}
 	if (!XGetWMNormalHints(fluorite.display, e, &size, &msize))
 		return False;
 	if (size.flags & PMaxSize)
@@ -1199,10 +1190,8 @@ int fluorite_check_type(Window e)
 	if (strlen(name.res_class) == 0)
 		return False;
 	for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
-	{
 		if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
 			return True;
-	}
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
 		atom = *(Atom *)p;
@@ -1256,7 +1245,6 @@ void fluorite_handle_specials(Window e)
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.monitor[fluorite.current_monitor].width / 2) - (fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->width / 2);
 		fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.monitor[fluorite.current_monitor].height / 2) - (fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->height / 2);
 	}
-	XMoveResizeWindow(fluorite.display, e, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_x, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->pos_y, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->width, fluorite.workspaces[fluorite.current_workspace].floating_windows[pos]->height);
 	XMapWindow(fluorite.display, e);
 	XGrabButton(fluorite.display, Button1, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.display, Button3, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
@@ -1405,18 +1393,24 @@ void fluorite_handle_enternotify(XEvent e)
 
 void fluorite_handle_buttonpress(XButtonEvent e)
 {
-	int is_float = False;
 	unsigned b_w, d;
+	Window tmp = e.window;
+
+	if (e.window == fluorite.root)
+		return ;
 
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 		if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
-			is_float = True;
-	if (!is_float)
-		return ;
+			tmp = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window;
+	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
+		if (e.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window || e.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame)
+			tmp = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window;
+	if (e.window == fluorite.workspaces[fluorite.current_workspace].master_winframe->window || e.window == fluorite.workspaces[fluorite.current_workspace].master_winframe->frame)
+		tmp = fluorite.workspaces[fluorite.current_workspace].master_winframe->window;
 
 	fluorite.mouse.start_pos_x = e.x_root;
 	fluorite.mouse.start_pos_y = e.y_root;
-	XGetGeometry(fluorite.display, e.window, &fluorite.root, &fluorite.mouse.start_frame_x, &fluorite.mouse.start_frame_y, &fluorite.mouse.start_frame_w, &fluorite.mouse.start_frame_h, &b_w, &d);
+	XGetGeometry(fluorite.display, tmp, &fluorite.root, &fluorite.mouse.start_frame_x, &fluorite.mouse.start_frame_y, &fluorite.mouse.start_frame_w, &fluorite.mouse.start_frame_h, &b_w, &d);
 	XSetInputFocus(fluorite.display, e.window, RevertToPointerRoot, CurrentTime);
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_unfocused);
@@ -1444,38 +1438,28 @@ void fluorite_handle_motions(XMotionEvent e)
 	int drag_dest_x, drag_dest_y;
 	long lhints;
 	XSizeHints hints;
-	int xdo_mouse_x;
-	int xdo_mouse_y;
-	int max_x;
-	int max_y;
-	int pos_x;
-	int pos_y;
-	int window_max_x;
-	int window_max_y;
-	int window_pos_x;
-	int window_pos_y;
-
+	int pos_x, pos_y, max_x, max_y;
+	int window_pos_x, window_pos_y, window_max_x, window_max_y;
 
 	if (XGetWMNormalHints(fluorite.display, e.window, &hints, &lhints))
 	{
 		delta_pos_x = e.x_root - fluorite.mouse.start_pos_x;
 		delta_pos_y = e.y_root - fluorite.mouse.start_pos_y;
-		if (e.state & Button1Mask)
+		max_x = fluorite.monitor[fluorite.current_monitor].pos_x + fluorite.monitor[fluorite.current_monitor].width;
+		max_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height;
+		pos_x = fluorite.monitor[fluorite.current_monitor].pos_x;
+		pos_y = fluorite.monitor[fluorite.current_monitor].pos_y;
+		for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 		{
-			drag_dest_x = fluorite.mouse.start_frame_x + delta_pos_x;
-			drag_dest_y = fluorite.mouse.start_frame_y + delta_pos_y;
-			for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+			if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
 			{
-				if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
+				window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
+				window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
+				window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
+				if (e.state & Button1Mask)
 				{
-					max_x = fluorite.monitor[fluorite.current_monitor].pos_x + fluorite.monitor[fluorite.current_monitor].width;
-					max_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height;
-					pos_x = fluorite.monitor[fluorite.current_monitor].pos_x;
-					pos_y = fluorite.monitor[fluorite.current_monitor].pos_y;
-					window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
-					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
-					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
-
+					drag_dest_x = fluorite.mouse.start_frame_x + delta_pos_x;
+					drag_dest_y = fluorite.mouse.start_frame_y + delta_pos_y;
 					if (window_pos_x + drag_dest_x < pos_x - fluorite.config.border_width)
 						drag_dest_x = pos_x + (fluorite.config.border_width * 2);
 					if (window_max_x + drag_dest_x > max_x)
@@ -1490,34 +1474,26 @@ void fluorite_handle_motions(XMotionEvent e)
 					hints.x = drag_dest_x;
 					hints.y = drag_dest_y;
 				}
-			}
-		}
-		else if (e.state & Button3Mask)
-		{
-			drag_dest_x = fluorite.mouse.start_frame_w + delta_pos_x;
-			drag_dest_y = fluorite.mouse.start_frame_h + delta_pos_y;
-			for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
-			{
-				if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
+				else if (e.state & Button3Mask)
 				{
-					max_x = fluorite.monitor[fluorite.current_monitor].pos_x + fluorite.monitor[fluorite.current_monitor].width;
-					max_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height;
-					pos_x = fluorite.monitor[fluorite.current_monitor].pos_x;
-					pos_y = fluorite.monitor[fluorite.current_monitor].pos_y;
-					window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
-					window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
-					window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
-					window_pos_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y;
-
-					if (drag_dest_x + window_pos_x > max_x)
-						drag_dest_x = window_max_x;
-					if (drag_dest_y + window_pos_y > max_y)
-						drag_dest_y = window_max_y;
-					XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width = drag_dest_x;
-					fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height = drag_dest_y;
-					hints.width = drag_dest_x;
-					hints.height = drag_dest_y;
+					drag_dest_x = fluorite.mouse.start_frame_w + delta_pos_x;
+					drag_dest_y = fluorite.mouse.start_frame_h + delta_pos_y;
+					if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
+					{
+						window_max_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width;
+						window_max_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height;
+						window_pos_x = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_x;
+						window_pos_y = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->pos_y;
+						if (drag_dest_x + window_pos_x > max_x)
+							drag_dest_x = window_max_x;
+						if (drag_dest_y + window_pos_y > max_y)
+							drag_dest_y = window_max_y;
+						XResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, drag_dest_x, drag_dest_y);
+						fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->width = drag_dest_x;
+						fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->height = drag_dest_y;
+						hints.width = drag_dest_x;
+						hints.height = drag_dest_y;
+					}
 				}
 			}
 		}
@@ -1525,7 +1501,6 @@ void fluorite_handle_motions(XMotionEvent e)
 		XSetInputFocus(fluorite.display, e.window, RevertToPointerRoot, CurrentTime);
 		XSetWMNormalHints(fluorite.display, e.window, &hints);
 	}
-	xdo_get_mouse_location(fluorite.xdo, &xdo_mouse_x, &xdo_mouse_y, NULL);
 }
 
 int fluorite_handle_errors(Display *display, XErrorEvent *e)
@@ -1548,22 +1523,9 @@ WinFrames *fluorite_create_winframe()
 	attribs_set.border_pixel = fluorite.config.border_focused;
 	attribs_set.colormap = XCreateColormap(fluorite.display, fluorite.root, vinfo.visual, AllocNone);
 	attribs_set.event_mask = StructureNotifyMask | ExposureMask;
-
 	new_frame = malloc(sizeof(WinFrames));
-	new_frame->frame = XCreateWindow(fluorite.display, fluorite.root, 
-			0, 
-			0,
-			fluorite.screen_width - (fluorite.config.border_width * 2),
-			fluorite.screen_height - (fluorite.config.border_width * 2),
-			fluorite.config.border_width,
-			vinfo.depth,
-			InputOutput,
-			vinfo.visual,
-			CWBackPixel | CWBorderPixel | CWColormap | CWEventMask,
-			&attribs_set
-	);
+	new_frame->frame = XCreateWindow(fluorite.display, fluorite.root, 0, 0, fluorite.screen_width - (fluorite.config.border_width * 2), fluorite.screen_height - (fluorite.config.border_width * 2), fluorite.config.border_width, vinfo.depth, InputOutput, vinfo.visual, CWBackPixel | CWBorderPixel | CWColormap | CWEventMask, &attribs_set);
 	XCompositeRedirectWindow(fluorite.display, new_frame->frame, CompositeRedirectAutomatic);
-
 	return new_frame;
 }
 
@@ -1705,9 +1667,15 @@ void fluorite_redraw_windows()
 		fluorite_redraw_tiling();
 	XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 	if (fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
+	{
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_focused);
-	else
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, fluorite.config.border_unfocused);
+	}
+	else if (fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
+	{
 		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame, fluorite.config.border_focused);
+		XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_unfocused);
+	}
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 	{
 		int check_mon = fluorite_get_monitor_from_window(i);
@@ -1740,11 +1708,11 @@ void fluorite_handle_unmapping(Window e)
 		if (fluorite.workspaces[i].floating_count == 0)
 			continue;
 		fluorite.current_workspace = i;
-		for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
-			if (fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window == e)
+		for (int j = 0; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
+			if (fluorite.workspaces[fluorite.current_workspace].floating_windows[j]->window == e)
 			{
-				for (int j = i + 1; j < fluorite.workspaces[fluorite.current_workspace].floating_count; j++)
-					memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[j - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[j], sizeof(Floating));
+				for (int h = j + 1; h < fluorite.workspaces[fluorite.current_workspace].floating_count; h++)
+					memcpy(fluorite.workspaces[fluorite.current_workspace].floating_windows[h - 1], fluorite.workspaces[fluorite.current_workspace].floating_windows[h], sizeof(Floating));
 				fluorite.workspaces[fluorite.current_workspace].floating_count--;
 				XSetInputFocus(fluorite.display, fluorite.root, RevertToPointerRoot, CurrentTime);
 				fluorite.current_workspace = keep_workspace;
@@ -1762,8 +1730,6 @@ void fluorite_handle_unmapping(Window e)
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
 				fluorite_change_layout(FULLSCREEN_TOGGLE);
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->fullscreen_frame, fluorite.root, 0, 0);
-			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
-			XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
 			XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 			fluorite.workspaces[fluorite.current_workspace].frames_count--;
@@ -1800,19 +1766,10 @@ void fluorite_handle_unmapping(Window e)
 				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window == e)
 				{
 					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && stack_offset == 0 && fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
-					{
 						fluorite_change_layout(FULLSCREEN_TOGGLE);
-						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame, fluorite.root, 0, 0);
-						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, fluorite.root, 0, 0);
-						XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
-						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, fluorite.root, 0, 0);
-						XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->frame);
-					}
-					else
-					{
-						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
-						XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
-					}
+					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame, fluorite.root, 0, 0);
+					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
+					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 					closed = True;
