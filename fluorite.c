@@ -206,10 +206,6 @@ void fluorite_reload_config()
 				break;
 			case 8:
 				fluorite.config.default_master_offset = atoi(value);
-				if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->width - fluorite.config.default_master_offset < 10)
-					fluorite.config.default_master_offset = 0;
-				if (fluorite.workspaces[fluorite.current_workspace].master_winframe->width - fluorite.config.default_master_offset)
-					fluorite.config.default_master_offset = 0;
 				for (int i = 0; i < MAX_WORKSPACES; i++)
 					fluorite.workspaces[i].master_offset = fluorite.config.default_master_offset;
 				break;
@@ -229,7 +225,10 @@ void fluorite_reload_config()
 	fluorite.current_workspace = keep_workspace;
 	fluorite_redraw_windows();
 	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		fluorite_change_layout(BASE_MASTER);
 		fluorite_focus_next_monitor();
+	}
 	fclose(config_file);
 	free(file_path);
 	free(buffer);
