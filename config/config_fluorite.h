@@ -56,6 +56,7 @@ static const Rules default_floating[] = {
 	{"spotify"},
 	{"thunar"},
 	{"ymuse"},
+	{"force_float"},
 };
 
 static const Rules default_fixed[] = {
@@ -112,6 +113,7 @@ static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar"; fluorite_execute(prog, NOGUI); }
 static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_execute(prog, NOGUI); }
 static void fluorite_full_reload() { fluorite_reload_polybar(); fluorite_reload_fehgb(); fluorite_reload_config(); }
+static void fluorite_custom_launcher() { char prog[255] = "~/tools/scripts/rofi_custom.sh"; fluorite_execute(prog, GUI); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -166,6 +168,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
 	{METAKEY|ShiftMask,		XK_r,						fluorite_full_reload},
+	{METAKEY|ShiftMask,		XK_d,						fluorite_custom_launcher},
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},

@@ -1,7 +1,6 @@
 # TODO !
-    - [ ] Border bug : Focus Slave -> rotate slaves -> rotate stack. Both have borders
-        - Probably a focus bug with enternotify
-        - might be fixable easily
+    - [ ] Find a way to fix the fullscreen float window bug
+        - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
