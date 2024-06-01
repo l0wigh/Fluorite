@@ -20,6 +20,7 @@ typedef struct
 #define MAX_WINDOWS				10				/* number of windows per workspaces */
 #define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
 #define OPEN_IN_FLOAT			False			/* When True, windows will be opened in floating be default. Not applied on fixed windows */
+#define ANIMATION_FOCUS			False			/* Tricking picom to do a highlight on the newly focused window/workspace (only from keybinds) */
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
