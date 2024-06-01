@@ -1774,7 +1774,7 @@ void fluorite_handle_unmapping(Window e)
 					fluorite_organise_stack(STACK_DEL, stack_offset);
 					if (keep_workspace == i && closed)
 					{
-						if (!fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
+						if (!fluorite.workspaces[fluorite.current_workspace].is_fullscreen && fluorite.workspaces[fluorite.current_workspace].slaves_count == 0)
 							fluorite.workspaces[fluorite.current_workspace].current_focus = MASTER_FOCUS;
 						fluorite_redraw_windows();
 					}
