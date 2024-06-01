@@ -723,6 +723,11 @@ void fluorite_show_new_workspace(int new_workspace)
 			int swap_workspaces;
 			int swap_monitor;
 
+			XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, fluorite.config.border_inactive);
+			for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame, fluorite.config.border_inactive);
+			for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
+				XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window, fluorite.config.border_inactive);
 			swap_workspaces = fluorite.current_workspace;
 			swap_monitor = fluorite.current_monitor;
 			fluorite.monitor[i].workspace = swap_workspaces;
@@ -1784,15 +1789,15 @@ void fluorite_handle_unmapping(Window e)
 			}
 		}
 	}
-	if (closed)
-	{
-		for (int i = 0; i < fluorite.monitor_count; i++)
-		{
-			fluorite.current_monitor = i;
-			fluorite.current_workspace = fluorite.monitor[i].workspace;
-			fluorite_redraw_windows();
-		}
-	}
+	/* if (closed) */
+	/* { */
+	/* 	for (int i = 0; i < fluorite.monitor_count; i++) */
+	/* 	{ */
+	/* 		fluorite.current_monitor = i; */
+	/* 		fluorite.current_workspace = fluorite.monitor[i].workspace; */
+	/* 		fluorite_redraw_windows(); */
+	/* 	} */
+	/* } */
 	fluorite.current_monitor = keep_monitor;
 	fluorite.current_workspace = keep_workspace;
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count == 1)
