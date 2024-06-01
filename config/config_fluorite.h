@@ -103,7 +103,7 @@ static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 5%-
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
-static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog, NOGUI); }
+static void fluorite_locking() { char prog[255] = "~/.lock.sh; systemctl suspend"; fluorite_execute(prog, NOGUI); }
 static void fluorite_toggle_organizer() { fluorite_change_layout(ORGANIZER_TOGGLE); }
 static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT); }
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }

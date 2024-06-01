@@ -1399,11 +1399,6 @@ void fluorite_handle_buttonpress(XButtonEvent e)
 	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
 		if (e.window == fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window)
 			tmp = fluorite.workspaces[fluorite.current_workspace].floating_windows[i]->window;
-	for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
-		if (e.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window || e.window == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame)
-			tmp = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window;
-	if (e.window == fluorite.workspaces[fluorite.current_workspace].master_winframe->window || e.window == fluorite.workspaces[fluorite.current_workspace].master_winframe->frame)
-		tmp = fluorite.workspaces[fluorite.current_workspace].master_winframe->window;
 
 	fluorite.mouse.start_pos_x = e.x_root;
 	fluorite.mouse.start_pos_y = e.y_root;
