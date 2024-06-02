@@ -1,6 +1,11 @@
 # TODO !
     - [ ] Find a way to fix the fullscreen float window bug
         - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !
+    - [ ] Create a function to set windows property automatically.
+        - Required by swallowing mode on unmapping
+        - Could reduce bloat
+    - [ ] Fix swallowing with floating windows
+        - they should keep the swallowed window, the is_term variable and the swallowing state
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

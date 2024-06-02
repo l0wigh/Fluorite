@@ -5,6 +5,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/extensions/Xcomposite.h>
+#include <sys/types.h>
 #include <xdo.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrandr.h>
@@ -16,6 +17,9 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <sys/inotify.h>
+#include <X11/Xft/Xft.h>
+#include <X11/Xlib-xcb.h>
+#include <xcb/res.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
@@ -43,6 +47,10 @@ typedef struct
 	int		pos_y;
 	int		width;
 	int		height;
+	pid_t	pid;
+	int		is_terminal;
+	int		swallowing;
+	Window	swallowed_win;
 } WinFrames;
 
 typedef struct
@@ -1262,18 +1270,103 @@ void fluorite_handle_specials(Window e)
 	fluorite.workspaces[fluorite.current_workspace].current_focus = FLOAT_FOCUS;
 }
 
+pid_t fluorite_get_parent(pid_t new_pid)
+{
+	unsigned int v = 0;
+	FILE *f;
+	char buf[256];
+
+	snprintf(buf, sizeof(buf) - 1, "/proc/%u/stat", (unsigned)new_pid);
+
+	if (!(f = fopen(buf, "r")))
+		return (pid_t)0;
+
+	if (fscanf(f, "%*u %*s %*c %u", (unsigned *)&v) != 1)
+		v = (pid_t)0;
+	fclose(f);
+	return (pid_t)v;
+}
+
+int fluorite_check_parent(pid_t frame_pid, pid_t new_pid)
+{
+	while (frame_pid != new_pid && new_pid != 0)
+		new_pid = fluorite_get_parent(new_pid);
+	return (int)new_pid;
+}
+
+WinFrames *fluorite_terminal_for_win(pid_t pid)
+{
+	int workspace, is_terminal, swallowing, term_pid, new_pid;
+
+	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		workspace = fluorite.monitor[i].workspace;
+		is_terminal = fluorite.workspaces[workspace].master_winframe->is_terminal;
+		swallowing = fluorite.workspaces[workspace].master_winframe->swallowing;
+		term_pid = fluorite.workspaces[workspace].master_winframe->pid;
+		new_pid = fluorite_check_parent(term_pid, pid);
+		if (is_terminal && !swallowing && pid && new_pid)
+			return fluorite.workspaces[workspace].master_winframe;
+		for (int j = 0; j < fluorite.workspaces[workspace].slaves_count; j++)
+		{
+			is_terminal = fluorite.workspaces[workspace].slaves_winframes[j]->is_terminal;
+			swallowing = fluorite.workspaces[workspace].slaves_winframes[j]->swallowing;
+			term_pid = fluorite.workspaces[workspace].slaves_winframes[j]->pid;
+			new_pid = fluorite_check_parent(term_pid, pid);
+			if (is_terminal && !swallowing && pid && new_pid)
+				return fluorite.workspaces[workspace].slaves_winframes[j];
+		}
+	}
+	return NULL;
+}
+
+int fluorite_need_swallow(Window e)
+{
+	WinFrames *swallow_winframes = fluorite_terminal_for_win(xdo_get_pid_window(fluorite.xdo, e));
+	if (swallow_winframes != NULL)
+	{
+		swallow_winframes->swallowed_win = swallow_winframes->window;
+		swallow_winframes->window = e;
+		swallow_winframes->swallowing = True;
+		XTextProperty name;
+		XClassHint class;
+		XGetWMName(fluorite.display, e, &name);
+		XStoreName(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, (const char *)name.value);
+		XGetClassHint(fluorite.display, e, &class);
+		if (strlen(class.res_class) != 0)
+			XSetClassHint(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, &class);
+		XSetWindowBorderWidth(fluorite.display, swallow_winframes->window, 0);
+		XReparentWindow(fluorite.display, swallow_winframes->window, swallow_winframes->frame, 0, 0);
+		XMoveWindow(fluorite.display, swallow_winframes->window, 0, 1);
+		XMoveResizeWindow(fluorite.display, swallow_winframes->window, 0, 0, swallow_winframes->width, swallow_winframes->height);
+		XMapWindow(fluorite.display, swallow_winframes->window);
+		/* XUnmapWindow(fluorite.display, swallow_winframes->swallowed_win); */
+		XSetInputFocus(fluorite.display, swallow_winframes->window, RevertToPointerRoot, CurrentTime);
+		XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &e, 1);
+		return True;
+	}
+	return False;
+}
+
 void fluorite_handle_normals(Window e)
 {
+	if (fluorite_need_swallow(e))
+		return ;
+	
 	if (fluorite.workspaces[fluorite.current_workspace].frames_count > 0)
 	{
 		memcpy(fluorite.workspaces[fluorite.current_workspace].tmp_winframe, fluorite.workspaces[fluorite.current_workspace].master_winframe, sizeof(WinFrames));
 		fluorite.workspaces[fluorite.current_workspace].slaves_count++;
 	}
 
+
 	fluorite.workspaces[fluorite.current_workspace].frames_count++;
 	fluorite.workspaces[fluorite.current_workspace].master_winframe = fluorite_create_winframe();
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->window = e;
 	fluorite.workspaces[fluorite.current_workspace].current_focus = MASTER_FOCUS;
+	fluorite.workspaces[fluorite.current_workspace].master_winframe->pid = xdo_get_pid_window(fluorite.xdo, e);
+	fluorite.workspaces[fluorite.current_workspace].master_winframe->swallowing = False;
+	fluorite.workspaces[fluorite.current_workspace].master_winframe->is_terminal = False;
 
 	XSelectInput(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, SubstructureNotifyMask | SubstructureRedirectMask | EnterWindowMask);
 	XWMHints *source_hints = XGetWMHints(fluorite.display, e);
@@ -1288,9 +1381,16 @@ void fluorite_handle_normals(Window e)
 	XGetWMName(fluorite.display, e, &name);
 	XStoreName(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, (const char *)name.value);
 	XGetClassHint(fluorite.display, e, &class);
+	for (long unsigned int i = 0; i < LENGTH(default_swallowing); i++)
+	{
+		if (strcmp(default_swallowing[i].wm_class, class.res_name) == 0 || strcmp(default_swallowing[i].wm_class, class.res_class) == 0)
+		{
+			fluorite.workspaces[fluorite.current_workspace].master_winframe->is_terminal = True;
+			break;
+		}
+	}
 	if (strlen(class.res_class) != 0)
 		XSetClassHint(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, &class);
-
 	XSetWindowBorder(fluorite.display, e, 0x0);
 	XSetWindowBorderWidth(fluorite.display, e, 0);
 	XReparentWindow(fluorite.display, e, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0, 0);
@@ -1732,6 +1832,16 @@ void fluorite_handle_unmapping(Window e)
 		{
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
 				fluorite_change_layout(FULLSCREEN_TOGGLE);
+			if (fluorite.workspaces[fluorite.current_workspace].master_winframe->swallowing)
+			{
+				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->fullscreen_frame, fluorite.root, 0, 0);
+				XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
+				fluorite.workspaces[fluorite.current_workspace].master_winframe->window = fluorite.workspaces[fluorite.current_workspace].master_winframe->swallowed_win;
+				XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window);
+				XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+				fluorite.workspaces[fluorite.current_workspace].master_winframe->swallowing = False;
+				return ;
+			}
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->fullscreen_frame, fluorite.root, 0, 0);
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
 			XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
@@ -1770,6 +1880,16 @@ void fluorite_handle_unmapping(Window e)
 				{
 					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && stack_offset == 0 && fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
 						fluorite_change_layout(FULLSCREEN_TOGGLE);
+					if (fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->swallowing)
+					{
+						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->fullscreen_frame, fluorite.root, 0, 0);
+						XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
+						fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window = fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->swallowed_win;
+						XMapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window);
+						XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, RevertToPointerRoot, CurrentTime);
+						fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->swallowing = False;
+						return ;
+					}
 					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame, fluorite.root, 0, 0);
 					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
 					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);

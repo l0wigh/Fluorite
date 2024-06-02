@@ -49,7 +49,7 @@ static int default_monitor_workspace[10] = { 1, 0, 3, 4, 5, 6, 7, 8, 9, 2 };
 static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
 /* static const char *workspace_names[10] = { " ", "󰈹", " ", "4", "5", "6", "7", "8", "9", "0" }; */
 
-// Use xprop on a floating window to get the WM_CLASS name used by a window.
+// Use xprop on a to get the WM_CLASS name used by a window.
 static const Rules default_floating[] = {
 	{"spectacle"},
 	{"ghidra-Ghidra"},
@@ -58,10 +58,15 @@ static const Rules default_floating[] = {
 	{"ymuse"},
 	{"force_float"},
 };
-
 static const Rules default_fixed[] = {
 	{"GLava"},
 	{"Conky"},
+};
+// Entering your terminal name here to make it swallow GUI windows opened from it.
+static const Rules default_swallowing[] = {
+	{"kitty"},
+	{"Alacritty"},
+	{"St"},
 };
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
