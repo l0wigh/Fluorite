@@ -1,11 +1,9 @@
 # TODO !
     - [ ] Find a way to fix the fullscreen float window bug
         - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !
-    - [ ] Create a function to set windows property automatically.
-        - Required by swallowing mode on unmapping
-        - Could reduce bloat
     - [ ] Fix swallowing with floating windows
         - they should keep the swallowed window, the is_term variable and the swallowing state
+        - Would probably be better to wait for the Window Management rework.
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -96,3 +94,6 @@
 - [x] Add monitor focus change binding
 - [x] Sending window to a fullscreen workspace cause big issue
     - Close fullscreen on new workspace if needed
+- [x] Create a function to set windows property automatically.
+    - Required by swallowing mode on unmapping
+    - Could reduce bloat
