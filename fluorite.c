@@ -1236,13 +1236,10 @@ int fluorite_check_type(Window e)
 
 void fluorite_handle_specials(Window e)
 {
+	int	pos = fluorite.workspaces[fluorite.current_workspace].floating_count;
+
 	if (fluorite.workspaces[fluorite.current_workspace].floating_count == MAX_WINDOWS)
 		return ;
-
-	int	pos;
-	/* XSizeHints hints; */
-	/* long lhints; */
-
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen)
 	{
 		XMapWindow(fluorite.display, e);
@@ -1255,7 +1252,6 @@ void fluorite_handle_specials(Window e)
 		return ;
 	}
 
-	pos = fluorite.workspaces[fluorite.current_workspace].floating_count;
 	if (pos >= 1 && fluorite.workspaces[fluorite.current_workspace].floating_hidden)
 		fluorite_change_layout(FLOATING_HIDE_SHOW);
 	fluorite.workspaces[fluorite.current_workspace].floating_count++;
@@ -1270,12 +1266,12 @@ void fluorite_handle_specials(Window e)
 	XGrabButton(fluorite.display, Button1, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.display, Button3, METAKEY, e, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XSetWindowBorderWidth(fluorite.display, e, fluorite.config.border_width);
-	XSetWindowBorder(fluorite.display, e, fluorite.config.border_focused);
-	XSetInputFocus(fluorite.display, e, RevertToPointerRoot, CurrentTime);
 	XSync(fluorite.display, True);
 	fluorite_change_layout(FLOATING_HIDE_SHOW);
 	fluorite_change_layout(FLOATING_HIDE_SHOW);
 	fluorite_redraw_windows();
+	XSetWindowBorder(fluorite.display, e, fluorite.config.border_focused);
+	XSetInputFocus(fluorite.display, e, RevertToPointerRoot, CurrentTime);
 	fluorite.workspaces[fluorite.current_workspace].current_focus = FLOAT_FOCUS;
 }
 
