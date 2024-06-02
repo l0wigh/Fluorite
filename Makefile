@@ -19,7 +19,7 @@ OBJECTS_PREFIXED = $(addprefix $(OBJS_DIR), $(OBJS))
 CC			= gcc
 # CC_FLAGS	= -O0 -I/usr/include/freetype2 -fsanitize=address -g3
 CC_FLAGS	= -Wall -Werror -Wextra -O3 -I/usr/include/freetype2
-LIBS		= -lX11 -lXcursor -lXcomposite -lXft -lXrandr -lxdo -lX11-xcb -lxcb -lxcb-res
+LIBS		= -lX11 -lXcursor -lXcomposite -lXft -lXrandr -lxdo
 
 $(OBJS_DIR)%.o : %.c $(PROJECT_H)
 	@mkdir -p $(OBJS_DIR)

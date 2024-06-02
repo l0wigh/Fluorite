@@ -17,9 +17,6 @@
 #include <fcntl.h>
 #include <pwd.h>
 #include <sys/inotify.h>
-#include <X11/Xft/Xft.h>
-#include <X11/Xlib-xcb.h>
-#include <xcb/res.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
