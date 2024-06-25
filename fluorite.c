@@ -1125,18 +1125,29 @@ int fluorite_check_fixed(Window e)
 {
 	long msize;
 	XSizeHints size;
-	int maxw, maxh;
-	int minw, minh;
 	XClassHint name;
+	int maxw, maxh, minw, minh, di;
+	unsigned long dl;
+	unsigned char *p = NULL;
+	Atom da, atom = None;
 
 
-	XGetClassHint(fluorite.display, e, &name);
-	if (strlen(name.res_class) == 0)
-		return False;
-	for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
+	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
-		if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
-			return True;
+		atom = *(Atom *)p;
+		if (atom == XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE_NORMAL", False))
+		{
+			XFree(p);
+			return False;
+		}
+	}
+	if (XGetClassHint(fluorite.display, e, &name))
+	{
+		for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
+		{
+			if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
+				return True;
+		}
 	}
 	if (!XGetWMNormalHints(fluorite.display, e, &size, &msize))
 		return False;
@@ -1172,13 +1183,13 @@ int fluorite_check_type(Window e)
 	Atom da, atom = None;
 	XClassHint name;
 
-	XGetClassHint(fluorite.display, e, &name);
-	if (strlen(name.res_class) == 0)
-		return False;
-	for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
+	if (XGetClassHint(fluorite.display, e, &name))
 	{
-		if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
-			return True;
+		for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
+		{
+			if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
+				return True;
+		}
 	}
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
@@ -1270,12 +1281,11 @@ void fluorite_handle_normals(Window e)
 
 	XTextProperty name;
 	XClassHint class;
-	XGetWMName(fluorite.display, e, &name);
-	XStoreName(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, (const char *)name.value);
-	XGetClassHint(fluorite.display, e, &class);
-	if (strlen(class.res_class) != 0)
-		XSetClassHint(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, &class);
-
+	if (XGetWMName(fluorite.display, e, &name))
+		XStoreName(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, (const char *)name.value);
+	if (XGetClassHint(fluorite.display, e, &class))
+		if (strlen(class.res_class) != 0)
+			XSetClassHint(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, &class);
 	XSetWindowBorder(fluorite.display, e, 0x0);
 	XSetWindowBorderWidth(fluorite.display, e, 0);
 	XReparentWindow(fluorite.display, e, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0, 0);
