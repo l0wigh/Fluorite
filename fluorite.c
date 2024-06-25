@@ -253,14 +253,34 @@ int fluorite_get_config_option(char *key)
 	return -1;
 }
 
-void fluorite_tile_all_float()
+void fluorite_prev_next_workspace(int mode)
 {
-	while (1145)
+	switch (mode)
 	{
-		if (fluorite.workspaces[fluorite.current_workspace].frames_count == MAX_WINDOWS || fluorite.workspaces[fluorite.current_workspace].floating_count == 0)
+		case 1:
+		case 2:
+			{
+				int new_workspace = fluorite.current_workspace + 1;
+				if (new_workspace == 10)
+					new_workspace = 0;
+				if (mode == 1)
+					fluorite_change_workspace(new_workspace, 0);
+				else
+					fluorite_change_workspace(new_workspace, 1);
+			}
 			break;
-		XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].floating_windows[0]->window, RevertToPointerRoot, CurrentTime);
-		fluorite_change_layout(FLOATING_TOGGLE);
+		case -1:
+		case -2:
+			{
+				int new_workspace = fluorite.current_workspace - 1;
+				if (new_workspace == -1)
+					new_workspace = 9;
+				if (mode == -1)
+					fluorite_change_workspace(new_workspace, 0);
+				else
+					fluorite_change_workspace(new_workspace, -1);
+			}
+			break;
 	}
 }
 
@@ -557,6 +577,7 @@ void fluorite_change_layout(int mode)
 					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 0, 0, fluorite.monitor[fluorite.current_monitor].width, fluorite.monitor[fluorite.current_monitor].height);
 					XSync(fluorite.display, True);
 					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, RevertToPointerRoot, CurrentTime);
+					XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].master_winframe->window, 1);
 				}
 				else if (fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
 				{
@@ -568,6 +589,7 @@ void fluorite_change_layout(int mode)
 					XMoveResizeWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 0, 0, fluorite.monitor[fluorite.current_monitor].width, fluorite.monitor[fluorite.current_monitor].height);
 					XSync(fluorite.display, True);
 					XSetInputFocus(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, RevertToPointerRoot, CurrentTime);
+					XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window, 1);
 				}
 				else
 				{
@@ -780,6 +802,7 @@ void fluorite_show_new_workspace(int new_workspace)
 			fluorite_change_layout(FULLSCREEN_TOGGLE);
 			fluorite.workspaces[fluorite.current_workspace].is_fullscreen = 1;
 		}
+		XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 	}
 	if (!fluorite.workspaces[fluorite.current_workspace].floating_hidden)
 		for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].floating_count; i++)
@@ -1168,17 +1191,29 @@ int fluorite_check_fixed(Window e)
 {
 	long msize;
 	XSizeHints size;
-	int maxw, maxh;
-	int minw, minh;
 	XClassHint name;
+	int maxw, maxh, minw, minh, di;
+	unsigned long dl;
+	unsigned char *p = NULL;
+	Atom da, atom = None;
 
-
-	XGetClassHint(fluorite.display, e, &name);
-	if (strlen(name.res_class) == 0)
-		return False;
-	for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
-		if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
-			return True;
+	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
+	{
+		atom = *(Atom *)p;
+		if (atom == XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE_NORMAL", False))
+		{
+			XFree(p);
+			return False;
+		}
+	}
+	if (XGetClassHint(fluorite.display, e, &name))
+	{
+		for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
+		{
+			if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
+				return True;
+		}
+	}
 	if (!XGetWMNormalHints(fluorite.display, e, &size, &msize))
 		return False;
 	if (size.flags & PMaxSize)
@@ -1213,12 +1248,14 @@ int fluorite_check_type(Window e)
 	Atom da, atom = None;
 	XClassHint name;
 
-	XGetClassHint(fluorite.display, e, &name);
-	if (strlen(name.res_class) == 0)
-		return False;
-	for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
-		if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
-			return True;
+	if (XGetClassHint(fluorite.display, e, &name))
+	{
+		for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
+		{
+			if (strcmp(default_floating[i].wm_class, name.res_class) == 0 || strcmp(default_floating[i].wm_class, name.res_name) == 0)
+				return True;
+		}
+	}
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
 		atom = *(Atom *)p;
@@ -1385,7 +1422,13 @@ void fluorite_handle_normals(Window e)
 		XFree(source_hints);
 	}
 
-	fluorite_set_winframe_name(e);
+	XTextProperty name;
+	XClassHint class;
+	if (XGetWMName(fluorite.display, e, &name))
+		XStoreName(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, (const char *)name.value);
+	if (XGetClassHint(fluorite.display, e, &class))
+		if (strlen(class.res_class) != 0)
+			XSetClassHint(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, &class);
 	XSetWindowBorder(fluorite.display, e, 0x0);
 	XSetWindowBorderWidth(fluorite.display, e, 0);
 	XReparentWindow(fluorite.display, e, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame, 0, 0);

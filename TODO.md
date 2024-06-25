@@ -1,9 +1,7 @@
 # TODO !
+    - [ ] Issues with border colors when sending windows to another visible workspace
     - [ ] Find a way to fix the fullscreen float window bug
         - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !
-    - [ ] Fix swallowing with floating windows
-        - they should keep the swallowed window, the is_term variable and the swallowing state
-        - Would probably be better to wait for the Window Management rework.
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
