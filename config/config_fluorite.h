@@ -113,6 +113,8 @@ static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_exec
 static void fluorite_full_reload() { fluorite_reload_polybar(); fluorite_reload_fehgb(); fluorite_reload_config(); }
 static void fluorite_next_workspace() { fluorite_prev_next_workspace(1); }
 static void fluorite_prev_workspace() { fluorite_prev_next_workspace(-1); }
+static void fluorite_send_next_workspace() { fluorite_prev_next_workspace(2); }
+static void fluorite_send_prev_workspace() { fluorite_prev_next_workspace(-2); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -168,6 +170,8 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_r,						fluorite_full_reload},
 	{METAKEY|ShiftMask,		XK_Left,					fluorite_prev_workspace},
 	{METAKEY|ShiftMask,		XK_Right,					fluorite_next_workspace},
+	{METAKEY|ShiftMask,		XK_Down,					fluorite_send_prev_workspace},
+	{METAKEY|ShiftMask,		XK_Up,					fluorite_send_next_workspace},
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},

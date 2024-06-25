@@ -1,7 +1,5 @@
 # TODO !
-    - [ ] Border bug : Focus Slave -> rotate slaves -> rotate stack. Both have borders
-        - Probably a focus bug with enternotify
-        - might be fixable easily
+    - [ ] Issues with border colors when sending windows to another visible workspace
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design

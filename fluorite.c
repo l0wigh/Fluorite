@@ -257,19 +257,27 @@ void fluorite_prev_next_workspace(int mode)
 	switch (mode)
 	{
 		case 1:
+		case 2:
 			{
 				int new_workspace = fluorite.current_workspace + 1;
 				if (new_workspace == 10)
 					new_workspace = 0;
-				fluorite_change_workspace(new_workspace, 0);
+				if (mode == 1)
+					fluorite_change_workspace(new_workspace, 0);
+				else
+					fluorite_change_workspace(new_workspace, 1);
 			}
 			break;
 		case -1:
+		case -2:
 			{
 				int new_workspace = fluorite.current_workspace - 1;
 				if (new_workspace == -1)
 					new_workspace = 9;
-				fluorite_change_workspace(new_workspace, 0);
+				if (mode == -1)
+					fluorite_change_workspace(new_workspace, 0);
+				else
+					fluorite_change_workspace(new_workspace, -1);
 			}
 			break;
 	}
