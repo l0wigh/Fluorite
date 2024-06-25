@@ -252,6 +252,29 @@ int fluorite_get_config_option(char *key)
 	return -1;
 }
 
+void fluorite_prev_next_workspace(int mode)
+{
+	switch (mode)
+	{
+		case 1:
+			{
+				int new_workspace = fluorite.current_workspace + 1;
+				if (new_workspace == 10)
+					new_workspace = 0;
+				fluorite_change_workspace(new_workspace, 0);
+			}
+			break;
+		case -1:
+			{
+				int new_workspace = fluorite.current_workspace - 1;
+				if (new_workspace == -1)
+					new_workspace = 9;
+				fluorite_change_workspace(new_workspace, 0);
+			}
+			break;
+	}
+}
+
 void fluorite_execute(char *argument, int mode)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode == GUI)
@@ -1130,7 +1153,6 @@ int fluorite_check_fixed(Window e)
 	unsigned long dl;
 	unsigned char *p = NULL;
 	Atom da, atom = None;
-
 
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{

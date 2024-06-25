@@ -77,6 +77,7 @@ void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
 void fluorite_reload_config();
+void fluorite_prev_next_workspace(int mode);
 
 // User functions (use it or create yours with these examples)
 static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
@@ -110,6 +111,8 @@ static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar"; fluorite_execute(prog, NOGUI); }
 static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_execute(prog, NOGUI); }
 static void fluorite_full_reload() { fluorite_reload_polybar(); fluorite_reload_fehgb(); fluorite_reload_config(); }
+static void fluorite_next_workspace() { fluorite_prev_next_workspace(1); }
+static void fluorite_prev_workspace() { fluorite_prev_next_workspace(-1); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -163,6 +166,8 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
 	{METAKEY|ShiftMask,		XK_r,						fluorite_full_reload},
+	{METAKEY|ShiftMask,		XK_Left,					fluorite_prev_workspace},
+	{METAKEY|ShiftMask,		XK_Right,					fluorite_next_workspace},
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},
