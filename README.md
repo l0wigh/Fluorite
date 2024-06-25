@@ -17,6 +17,7 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 - Dynamic configuration with auto-reload for styling.
 - Organizer mode, let you swap windows freely.
 - Works with multiple monitors. XMonad style.
+- Windows Swallowing capabilities (Currently only works with tiled windows. Issues will happens in other situations).
 
 ## Why BETA ?
 
