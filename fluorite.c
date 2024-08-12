@@ -479,10 +479,14 @@ void fluorite_change_layout(int mode)
 	switch(mode)
 	{
 		case FOCUS_TOP:
+			if (fluorite.workspaces[fluorite.current_workspace].frames_count < 2)
+				break;
 			fluorite_organise_stack(STACK_UP, -1);
 			fluorite_redraw_windows();
 			break;
 		case FOCUS_BOTTOM:
+			if (fluorite.workspaces[fluorite.current_workspace].frames_count < 2)
+				break;
 			fluorite_organise_stack(STACK_DOWN, -1);
 			fluorite_redraw_windows();
 			break;
