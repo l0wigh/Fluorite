@@ -352,12 +352,12 @@ void fluorite_redraw_organizer()
 	for (int i = fluorite.workspaces[fluorite.current_workspace].slaves_count - 1; i >= 0; i--)
 	{
 		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + ((i + 1) * special_offset) + (fluorite.config.gaps * 2);
-		if (fluorite.monitor[fluorite.current_monitor].primary == True)
+		if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height / 16 + (fluorite.config.gaps * 2) + fluorite.config.topbar_gaps;
 		else
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height / 16 + (fluorite.config.gaps * 2);
 		fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width = special_offset - (fluorite.config.gaps * 3) - (fluorite.config.border_width * 2);
-		if (fluorite.monitor[fluorite.current_monitor].primary == True)
+		if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 		else
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
@@ -367,12 +367,12 @@ void fluorite_redraw_organizer()
 		XRaiseWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->frame);
 	}
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.config.gaps * 2);
-	if (fluorite.monitor[fluorite.current_monitor].primary == True)
+	if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height / 16 + (fluorite.config.gaps * 2) + fluorite.config.topbar_gaps;
 	else
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + fluorite.monitor[fluorite.current_monitor].height / 16 + (fluorite.config.gaps * 2);
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->width = special_offset - (fluorite.config.gaps * 3) - (fluorite.config.border_width * 2);
-	if (fluorite.monitor[fluorite.current_monitor].primary == True)
+	if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 	else
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - special_height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
@@ -1682,11 +1682,11 @@ void fluorite_organise_stack(int mode, int offset)
 void fluorite_redraw_stacking()
 {
 	fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.config.gaps * 2);
-	if (fluorite.monitor[fluorite.current_monitor].primary == True)
+	if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2) + fluorite.config.topbar_gaps;
 	else
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2);
-	if (fluorite.monitor[fluorite.current_monitor].primary == True)
+	if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 	else
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
@@ -1699,11 +1699,11 @@ void fluorite_redraw_stacking()
 		for (int i = fluorite.workspaces[fluorite.current_workspace].slaves_count - 1; i >= 0; i--)
 		{
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.config.gaps * 2);
-			if (fluorite.monitor[fluorite.current_monitor].primary == True)
+			if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2) + fluorite.config.topbar_gaps;
 			else
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2);
-			if (fluorite.monitor[fluorite.current_monitor].primary == True)
+			if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 			else
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
@@ -1724,12 +1724,12 @@ void fluorite_redraw_tiling()
 		int size_offset;
 
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + (fluorite.config.gaps * 2);
-		if (fluorite.monitor[fluorite.current_monitor].primary == True)
+		if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2) + fluorite.config.topbar_gaps;
 		else
 			fluorite.workspaces[fluorite.current_workspace].master_winframe->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2);
 		fluorite.workspaces[fluorite.current_workspace].master_winframe->width = fluorite.monitor[fluorite.current_monitor].width / 2 - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 3) + fluorite.workspaces[fluorite.current_workspace].master_offset;
-		if (fluorite.monitor[fluorite.current_monitor].primary == True)
+		if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 			fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 		else
 			fluorite.workspaces[fluorite.current_workspace].master_winframe->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4);
@@ -1743,12 +1743,12 @@ void fluorite_redraw_tiling()
 		for (int i = fluorite.workspaces[fluorite.current_workspace].slaves_count - 1; i >= 0; i--)
 		{
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_x = fluorite.monitor[fluorite.current_monitor].pos_x + fluorite.monitor[fluorite.current_monitor].width / 2 + (fluorite.config.gaps) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + fluorite.workspaces[fluorite.current_workspace].master_offset;
-			if (fluorite.monitor[fluorite.current_monitor].primary == True)
+			if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) + fluorite.config.topbar_gaps;
 			else
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->pos_y = fluorite.monitor[fluorite.current_monitor].pos_y + (fluorite.config.gaps * 2) + (position_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count);
 			fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->width =  fluorite.monitor[fluorite.current_monitor].width / 2 - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 3) - (size_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) - fluorite.workspaces[fluorite.current_workspace].master_offset;
-			if (fluorite.monitor[fluorite.current_monitor].primary == True)
+			if (fluorite.monitor[fluorite.current_monitor].primary == True || PRIMARY_BAR_ONLY == False)
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - (size_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count) - fluorite.config.topbar_gaps - fluorite.config.bottombar_gaps;
 			else
 				fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->height = fluorite.monitor[fluorite.current_monitor].height - (fluorite.config.border_width * 2) - (fluorite.config.gaps * 4) - (size_offset / fluorite.workspaces[fluorite.current_workspace].slaves_count);
