@@ -60,14 +60,7 @@ static const Rules default_floating[] = {
 	{"force_float"},
 };
 static const Rules default_fixed[] = {
-	{"GLava"},
 	{"Conky"},
-};
-// Entering your terminal name here to make it swallow GUI windows opened from it.
-static const Rules default_swallowing[] = {
-	{"kitty"},
-	{"Alacritty"},
-	{"St"},
 };
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
