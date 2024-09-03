@@ -1,4 +1,4 @@
-# Fluorite 1.0 (BETA)
+# Fluorite 1.0 (RC-1)
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
@@ -11,21 +11,20 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 ## Features
 
 - Dynamic master layout tiling.
+- Keyboard centric.
 - Stacked layout (Monocle layout in DWM).
-- Floating windows management.
-- Static configuration for bindings, custom C functions and more, compiled with Fluorite.
-- Dynamic configuration with auto-reload for styling.
+- Light floating windows management.
+- Static configuration for bindings, options, and design, compiled with Fluorite.
 - Organizer mode, let you swap windows freely.
 - Works with multiple monitors. XMonad style.
-- Windows Swallowing capabilities (Currently only works with tiled windows. Issues will happens in other situations).
 
-## Why BETA ?
+## Why RC-1 ?
 
-I'm trying to go for a stable release for early June (around 8... If you know you know). In this short period of time (writing this on 30 May), I would like to implement some more features and catch some bugs.
+This version is pretty stable but needs more testing. It's on the master branch because the current code should be really close to be the final release.
 
 ## Documentation ?
 
-Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. I talk about configuration, installation, ect...
+Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. It's a bit outdated so don't follow it blindly.
 
 You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
 
