@@ -1,4 +1,6 @@
-#include "config/config_fluorite.h"
+#include "config/options.h"
+#include "config/design.h"
+#include "config/keybinds.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -150,106 +152,9 @@ static WinFrames	*fluorite_create_winframe();
 static void			fluorite_organise_stack(int mode, int offset);
 static void			fluorite_redraw_windows();
 static void			fluorite_change_monitor(int monitor);
-static int			fluorite_get_config_option(char *key);
 static void			dwm_grabkeys();
 
 // Bindings functions (defined in config_fluorite.h)
-void fluorite_reload_config()
-{
-	FILE *config_file;
-	size_t buffer_size;
-	char *buffer, *key, *value;
-	int converted_value;
-	char *file_path = (char *) calloc(1145, sizeof(char));
-
-
-	snprintf(file_path, 1145, "%s%s", fluorite.config.home_dir, "/.config/Fluorite/fluorite.conf");
-	config_file = fopen(file_path, "rb");
-	if (config_file == NULL)
-		return;
-	buffer = (char *) calloc(buffer_size, sizeof(char));
-	while (1145)
-	{
-		if (getline(&buffer, &buffer_size, config_file) == -1)
-			break;
-		key = strtok(buffer, "=");
-		value = strtok(NULL, "=");
-		value[strlen(value) - 1] = '\0';
-		if (value[1] == 'x')
-			converted_value = (int) strtol(value, NULL, 0);
-		else
-			converted_value = (int) strtol(value, NULL, 16);
-
-		switch(fluorite_get_config_option(key))
-		{
-			case 0:
-				fluorite.config.border_width = atoi(value);
-				break;
-			case 1:
-				fluorite.config.border_focused = converted_value;
-				break;
-			case 2:
-				fluorite.config.border_unfocused = converted_value;
-				break;
-			case 3:
-				fluorite.config.border_inactive = converted_value;
-				break;
-			case 4:
-				fluorite.config.gaps = atoi(value);
-				break;
-			case 5:
-				fluorite.config.stack_offset = atoi(value);
-				break;
-			case 6:
-				fluorite.config.topbar_gaps = atoi(value);
-				break;
-			case 7:
-				fluorite.config.bottombar_gaps = atoi(value);
-				break;
-			case 8:
-				fluorite.config.default_master_offset = atoi(value);
-				for (int i = 0; i < MAX_WORKSPACES; i++)
-					fluorite.workspaces[i].master_offset = fluorite.config.default_master_offset;
-				break;
-		}
-	}
-	int keep_monitor = fluorite.current_monitor;
-	int keep_workspace = fluorite.current_workspace;
-	for (int i = 0; i < fluorite.monitor_count; i++)
-	{
-		if (i == keep_monitor)
-			continue;
-		fluorite.current_monitor = i;
-		fluorite.current_workspace = fluorite.monitor[i].workspace;
-		fluorite_redraw_windows();
-	}
-	fluorite.current_monitor = keep_monitor;
-	fluorite.current_workspace = keep_workspace;
-	fluorite_redraw_windows();
-	for (int i = 0; i < fluorite.monitor_count; i++)
-	{
-		fluorite_change_layout(BASE_MASTER);
-		fluorite_focus_next_monitor();
-	}
-	fclose(config_file);
-	free(file_path);
-	free(buffer);
-}
-
-int fluorite_get_config_option(char *key)
-{
-	if (strcmp(key, "BORDER_WIDTH") == 0)			return 0;
-	if (strcmp(key, "BORDER_FOCUSED") == 0)			return 1;
-	if (strcmp(key, "BORDER_UNFOCUSED") == 0)		return 2;
-	if (strcmp(key, "BORDER_INACTIVE") == 0)		return 3;
-	if (strcmp(key, "GAPS") == 0)					return 4;
-	if (strcmp(key, "STACK_OFFSET") == 0)			return 5;
-	if (strcmp(key, "TOPBAR_GAPS") == 0)			return 6;
-	if (strcmp(key, "BOTTOMBAR_GAPS") == 0)			return 7;
-	if (strcmp(key, "DEFAULT_MASTER_OFFSET") == 0)	return 8;
-	return -1;
-}
-
 void fluorite_execute(char *argument, int mode)
 {
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode == GUI)
@@ -937,6 +842,19 @@ void fluorite_apply_property()
 	XChangeProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 1);
 }
 
+void fluorite_load_theme()
+{
+	fluorite.config.border_width = BORDER_WIDTH;
+	fluorite.config.border_focused = BORDER_FOCUSED;
+	fluorite.config.border_unfocused = BORDER_UNFOCUSED;
+	fluorite.config.border_inactive = BORDER_INACTIVE;
+	fluorite.config.gaps = GAPS;
+	fluorite.config.stack_offset = STACK_OFFSET;
+	fluorite.config.topbar_gaps = TOPBAR_GAPS;
+	fluorite.config.bottombar_gaps = BOTTOMBAR_GAPS;
+	fluorite.config.default_master_offset = DEFAULT_MASTER_OFFSET;
+}
+
 void fluorite_init()
 {
 	XSetWindowAttributes attributes;
@@ -953,6 +871,7 @@ void fluorite_init()
 	fluorite.screen_height = DisplayHeight(fluorite.display, fluorite.screen);
 	fluorite.current_workspace = 0;
 	fluorite.xdo = xdo_new(NULL);
+	fluorite_load_theme();
 
 	XRRMonitorInfo *infos;
 	infos = XRRGetMonitors(fluorite.display, fluorite.root, 0, &fluorite.monitor_count);
@@ -1014,16 +933,6 @@ void fluorite_init()
 			fluorite.workspaces[j].floating_windows[i] = (Floating *) malloc(sizeof(Floating));
 		}
 	}
-	fluorite.config.border_width = 1;
-	fluorite.config.border_focused = 0x35e5dc;
-	fluorite.config.border_unfocused = 0xf576e4;
-	fluorite.config.border_inactive = 0x9c082d;
-	fluorite.config.gaps = 5;
-	fluorite.config.stack_offset = 5;
-	fluorite.config.topbar_gaps = 25;
-	fluorite.config.bottombar_gaps = 0;
-	fluorite.config.default_master_offset = 0;
-	fluorite_reload_config();
 	dwm_grabkeys();
 }
 
@@ -1845,44 +1754,9 @@ void fluorite_handle_unmapping(Window e)
 		XDeleteProperty(fluorite.display, fluorite.root, XInternAtom(fluorite.display, "_NET_ACTIVE_WINDOW", False));
 }
 
-void *fluorite_hot_reload()
-{
-	int inotify_fd;
-	int buffer_size = (10 * (sizeof(struct inotify_event) + NAME_MAX + 1));
-	char buffer[buffer_size] __attribute__ ((aligned(8)));
-	struct inotify_event *event;
-	char *folder = (char *) calloc(1145, sizeof(char));
-
-	snprintf(folder, 1145, "%s%s", fluorite.config.home_dir, "/.config/Fluorite/");
-	inotify_fd = inotify_init();
-	if (inotify_fd == -1)
-		return NULL;
-	inotify_add_watch(inotify_fd, folder, IN_MODIFY);
-
-	while (1145)
-	{
-		int ret_val = read(inotify_fd, buffer, buffer_size);
-		if (ret_val != -1 || ret_val != 0)
-		{
-			int i = 0;
-			while (i < ret_val)
-			{
-				event = (struct inotify_event *)&buffer[i];
-				if (event->len)
-					if (event->mask & IN_MODIFY)
-						fluorite_reload_config();
-				i += sizeof(struct inotify_event) + event->len;
-			}
-		}
-	}
-}
-
 int main(void)
 {
-	pthread_t reload;
-
 	fluorite_init();
-	pthread_create(&reload, NULL, fluorite_hot_reload, NULL);
 	fluorite_run();
 	fluorite_clean();
 	return 0;
