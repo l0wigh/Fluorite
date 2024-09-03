@@ -1,7 +1,7 @@
 # TODO !
-    - [ ] Border bug : Focus Slave -> rotate slaves -> rotate stack. Both have borders
-        - Probably a focus bug with enternotify
-        - might be fixable easily
+    - [ ] Issues with border colors when sending windows to another visible workspace
+    - [ ] Find a way to fix the fullscreen float window bug
+        - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !
 
 # PARTIALLY DONE
 - [-] Style the slaves stacking design
@@ -16,8 +16,6 @@
 
 # Not Really Important
 - [ ] Fix the popup window not showing as popup (something with atoms or hints ? i think ragnar does it nicely)
-- [ ] Some very precise apps, make Fluorite Crash
-- [ ] killall command can sometimes break stuff (need more testing)
 - [ ] Fix windows that can be moved when inside tiling (thunar for example)
 - [ ] Find why some apps make fullscreen bugs when closing (feh for example)
 - [ ] Document every functions
@@ -94,3 +92,6 @@
 - [x] Add monitor focus change binding
 - [x] Sending window to a fullscreen workspace cause big issue
     - Close fullscreen on new workspace if needed
+- [x] Create a function to set windows property automatically.
+    - Required by swallowing mode on unmapping
+    - Could reduce bloat

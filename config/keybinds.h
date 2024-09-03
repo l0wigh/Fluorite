@@ -1,7 +1,8 @@
 #include <X11/X.h>
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
-#include <stdlib.h>
+
+#define METAKEY					Mod4Mask		/* key that will be used for bindings */
 
 typedef struct
 {
@@ -9,16 +10,6 @@ typedef struct
 	KeySym			key;
 	void			(*func)();
 } Bindings;
-
-typedef struct
-{
-	char	wm_class[255];
-} Rules;
-
-#define METAKEY					Mod4Mask		/* key that will be used for bindings */
-#define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
-#define MAX_WINDOWS				10				/* number of windows per workspaces */
-#define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
 
 // Helpers for configuration (don't change values)
 #define FOCUS_TOP			10
@@ -38,29 +29,6 @@ typedef struct
 #define SELECT_PREV			24
 #define MOVE_RIGHT			25
 #define MOVE_LEFT			26
-
-
-// Configure this to set predefined workspaces to monitors
-// Use xrandr --listactivemonitor to know the order they are sets
-// Make sure to not have a workspaces set for two monitors. 
-static int default_monitor_workspace[10] = { 1, 0, 3, 4, 5, 6, 7, 8, 9, 2 };
-
-static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0" };
-/* static const char *workspace_names[10] = { " ", "󰈹", " ", "4", "5", "6", "7", "8", "9", "0" }; */
-
-// Use xprop on a floating window to get the WM_CLASS name used by a window.
-static const Rules default_floating[] = {
-	{"spectacle"},
-	{"ghidra-Ghidra"},
-	{"spotify"},
-	{"thunar"},
-	{"ymuse"},
-};
-
-static const Rules default_fixed[] = {
-	{"GLava"},
-	{"Conky"},
-};
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
@@ -101,7 +69,7 @@ static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 5%-
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
-static void fluorite_locking() { char prog[255] = "i3lock --color 1e1e1e; systemctl suspend"; fluorite_execute(prog, NOGUI); }
+static void fluorite_locking() { char prog[255] = "~/.lock.sh; systemctl suspend"; fluorite_execute(prog, NOGUI); }
 static void fluorite_toggle_organizer() { fluorite_change_layout(ORGANIZER_TOGGLE); }
 static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT); }
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
@@ -109,7 +77,8 @@ static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT);
 static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar"; fluorite_execute(prog, NOGUI); }
 static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_execute(prog, NOGUI); }
-static void fluorite_full_reload() { fluorite_reload_polybar(); fluorite_reload_fehgb(); fluorite_reload_config(); }
+static void fluorite_bar_background() { fluorite_reload_polybar(); fluorite_reload_fehgb(); }
+static void fluorite_custom_launcher() { char prog[255] = "~/tools/scripts/rofi_custom.sh"; fluorite_execute(prog, GUI); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -162,7 +131,8 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
-	{METAKEY|ShiftMask,		XK_r,						fluorite_full_reload},
+	{METAKEY|ShiftMask,		XK_r,						fluorite_bar_background},
+	{METAKEY|ShiftMask,		XK_d,						fluorite_custom_launcher},
 
 	// Workspaces switching
 	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},
