@@ -1070,6 +1070,14 @@ int fluorite_check_fixed(Window e)
 	unsigned char *p = NULL;
 	Atom da, atom = None;
 
+	if (XGetClassHint(fluorite.display, e, &name))
+	{
+		for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
+		{
+			if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
+				return True;
+		}
+	}
 	if (XGetWindowProperty(fluorite.display, e, XInternAtom(fluorite.display, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
 		atom = *(Atom *)p;
@@ -1077,14 +1085,6 @@ int fluorite_check_fixed(Window e)
 		{
 			XFree(p);
 			return False;
-		}
-	}
-	if (XGetClassHint(fluorite.display, e, &name))
-	{
-		for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
-		{
-			if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
-				return True;
 		}
 	}
 	if (!XGetWMNormalHints(fluorite.display, e, &size, &msize))

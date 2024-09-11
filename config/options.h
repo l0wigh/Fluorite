@@ -30,5 +30,7 @@ static const Rules default_floating[] = {
 	{"force_float"},
 };
 static const Rules default_fixed[] = {
+	{"io.elementary.wingpanel"},
+	{"Io.elementary.wingpanel"},
 	{"Conky"},
 };

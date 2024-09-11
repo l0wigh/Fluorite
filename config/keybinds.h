@@ -47,7 +47,7 @@ void fluorite_focus_next_monitor();
 void fluorite_reload_config();
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
@@ -64,12 +64,12 @@ static void fluorite_fullscreen_toggle() { fluorite_change_layout(FULLSCREEN_TOG
 static void fluorite_swap_focus() { fluorite_change_layout(SWAP_FOCUS); }
 static void fluorite_floating_toggle() { fluorite_change_layout(FLOATING_TOGGLE); }
 static void fluorite_floating_hide_show() { fluorite_change_layout(FLOATING_HIDE_SHOW); }
-static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 5%+"; fluorite_execute(prog, NOGUI); }
-static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 5%-"; fluorite_execute(prog, NOGUI); }
+static void fluorite_brightness_up() { char prog[255] = "brightnessctl set 50+"; fluorite_execute(prog, NOGUI); }
+static void fluorite_brightness_down() { char prog[255] = "brightnessctl set 50-"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; fluorite_execute(prog, NOGUI); }
 static void fluorite_volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; fluorite_execute(prog, NOGUI); }
-static void fluorite_locking() { char prog[255] = "~/.lock.sh; systemctl suspend"; fluorite_execute(prog, NOGUI); }
+static void fluorite_locking() { char prog[255] = "i3lock --color 1E1E1E; systemctl suspend"; fluorite_execute(prog, NOGUI); }
 static void fluorite_toggle_organizer() { fluorite_change_layout(ORGANIZER_TOGGLE); }
 static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT); }
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
@@ -159,9 +159,9 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,				XK_agrave,  				fluorite_appto_workspace_ten},
 
 	// No METAKEY bindings
-	{0,				XK_F5,		fluorite_brightness_up},
-	{0,				XK_F4,		fluorite_brightness_down},
-	{0,				XK_F2,		fluorite_volume_down},
-	{0,				XK_F3,		fluorite_volume_up},
-	{0,				XK_F1,		fluorite_volume_mute},
+	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
+	{0,				XF86XK_MonBrightnessDown,		fluorite_brightness_down},
+	{0,				XF86XK_AudioLowerVolume,		fluorite_volume_down},
+	{0,				XF86XK_AudioRaiseVolume,		fluorite_volume_up},
+	{0,				XF86XK_AudioMute,		fluorite_volume_mute},
 };
