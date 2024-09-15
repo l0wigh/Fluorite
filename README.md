@@ -1,4 +1,4 @@
-# Fluorite 1.0 (RC-1)
+# Fluorite 1.0 (RC-2)
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
@@ -18,7 +18,7 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 - Organizer mode, let you swap windows freely.
 - Works with multiple monitors. XMonad style.
 
-## Why RC-1 ?
+## Why RC (Release Candidate) ?
 
 This version is pretty stable but needs more testing. It's on the master branch because the current code should be really close to be the final release.
 
@@ -35,7 +35,7 @@ You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
 On Archlinux you can type this command to install everything you need.
 
 ``` sh
-sudo pacman -S xorg xdo libxft libxcomposite libxcursor libxrandr
+sudo pacman -S xorg xdotool libxft libxcomposite libxcursor libxrandr
 ```
 
 ## Build and install

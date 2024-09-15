@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include <sys/inotify.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
@@ -615,7 +614,6 @@ void fluorite_change_layout(int mode)
 			break;
 	}
 }
-
 
 void fluorite_show_new_workspace(int new_workspace)
 {

@@ -44,10 +44,9 @@ void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
-void fluorite_reload_config();
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
@@ -75,7 +74,7 @@ static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT);
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
 static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT); }
 static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
-static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar"; fluorite_execute(prog, NOGUI); }
+static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar -q main -c ~/.config/polybar/better_grayblocks/config.ini"; fluorite_execute(prog, NOGUI); }
 static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_execute(prog, NOGUI); }
 static void fluorite_bar_background() { fluorite_reload_polybar(); fluorite_reload_fehgb(); }
 static void fluorite_custom_launcher() { char prog[255] = "~/tools/scripts/rofi_custom.sh"; fluorite_execute(prog, GUI); }
