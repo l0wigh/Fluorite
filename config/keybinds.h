@@ -46,7 +46,7 @@ void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
 
 // User functions (use it or create yours with these examples)
-static void fluorite_terminal() { char prog[255] = "kitty"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
 static void fluorite_dmenu() { char prog[255] = "rofi -show drun"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }

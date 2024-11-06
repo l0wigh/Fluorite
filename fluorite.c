@@ -1290,6 +1290,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
 
 	fluorite_handle_normals(e.window);
+	usleep(90000);
 	fluorite_redraw_windows();
 }
 

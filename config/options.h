@@ -28,6 +28,9 @@ static const Rules default_floating[] = {
 	{"thunar"},
 	{"ymuse"},
 	{"force_float"},
+	{"steam"},
+	{"Steam"},
+	{"steamwebhelper"},
 };
 static const Rules default_fixed[] = {
 	{"io.elementary.wingpanel"},
