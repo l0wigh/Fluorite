@@ -159,7 +159,26 @@ void fluorite_execute(char *argument, int mode)
 	if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && mode == GUI)
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
 	strcat(argument, " &");
-	system(argument);
+	if (system(argument) == -1)
+		printf("Error: can't start %s\n", argument);
+}
+
+void fluorite_next_workspace() {
+	if (fluorite.current_workspace == 9) {
+		fluorite_change_workspace(0, 0);
+	}
+	else {
+		fluorite_change_workspace((fluorite.current_workspace + 1), 0);
+	}
+}
+
+void fluorite_prev_workspace() {
+	if (fluorite.current_workspace == 0) {
+		fluorite_change_workspace(9, 0);
+	}
+	else {
+		fluorite_change_workspace((fluorite.current_workspace - 1), 0);
+	}
 }
 
 void fluorite_close_window()
