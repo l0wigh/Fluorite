@@ -1,4 +1,4 @@
-# Fluorite 1.0 (RC-2)
+# Fluorite 1.0
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
