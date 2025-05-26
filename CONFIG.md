@@ -11,7 +11,7 @@ Everything is commented and should be easy to understand and configure by yourse
 Here you can find programs that I use with Fluorite
 
 - Launcher      : Rofi
-- Compositor    : [Picom](https://github.com/XoDefender/picom) (XoDefender fork)
+- Compositor    : [Picom](https://github.com/XoDefender/picom) (XoDefender fork) (I'm testing the yshui version currently)
 - Taskbar       : Polybar
 - The fishes    : Asciiquarium
 - The matrix    : cmatrix

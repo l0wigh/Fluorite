@@ -177,6 +177,7 @@ void fluorite_reload_xresources()
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
 	fluorite_load_xresources();
+	fluorite_base_master();
 	fluorite_redraw_windows();
 }
 

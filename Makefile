@@ -1,6 +1,6 @@
 # Fluorite Window Manager
-# Version 1.0
-# Master Layout but better
+# Version 1.1
+# Master Layout done right
 
 BLU			= \033[0;34m
 GRN			= \033[0;32m
