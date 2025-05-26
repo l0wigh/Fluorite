@@ -2,6 +2,7 @@
 #include "config/design.h"
 #include "config/keybinds.h"
 #include <X11/X.h>
+#include <X11/Xresource.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
@@ -152,6 +153,7 @@ static void			fluorite_organise_stack(int mode, int offset);
 static void			fluorite_redraw_windows();
 static void			fluorite_change_monitor(int monitor);
 static void			dwm_grabkeys();
+static void			fluorite_load_xresources();
 
 // Bindings functions (defined in config_fluorite.h)
 void fluorite_execute(char *argument, int mode)
@@ -161,6 +163,15 @@ void fluorite_execute(char *argument, int mode)
 	strcat(argument, " &");
 	if (system(argument) == -1)
 		printf("Error: can't start %s\n", argument);
+}
+
+void fluorite_reload_xresources()
+{
+	char prog[255] = "xrdb ~/.Xresources";
+	if (system(prog) == -1)
+		printf("Error: can't start %s\n", prog);
+	fluorite_load_xresources();
+	fluorite_redraw_windows();
 }
 
 void fluorite_next_workspace() {
@@ -872,6 +883,56 @@ void fluorite_load_theme()
 	fluorite.config.default_master_offset = DEFAULT_MASTER_OFFSET;
 }
 
+void fluorite_load_xresources()
+{
+	char *xrm;
+	char *type;
+	XrmDatabase xdb;
+	XrmValue xval;
+	Display *dummy_display;
+
+	fluorite_load_theme();
+
+	dummy_display = XOpenDisplay(NULL);
+	xrm = XResourceManagerString(dummy_display);
+
+	if (!xrm)
+		return ;
+
+	xdb = XrmGetStringDatabase(xrm);
+
+	if (XrmGetResource(xdb, "fluorite.border_width", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.border_width = strtoul(xval.addr, NULL, 10);
+	if (XrmGetResource(xdb, "fluorite.border_focused", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.border_focused = strtoul(xval.addr, NULL, 0);
+	if (XrmGetResource(xdb, "fluorite.border_unfocused", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.border_unfocused = strtoul(xval.addr, NULL, 0);
+	if (XrmGetResource(xdb, "fluorite.border_inactive", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.border_inactive = strtoul(xval.addr, NULL, 0);
+	if (XrmGetResource(xdb, "fluorite.gaps", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.gaps = strtoul(xval.addr, NULL, 10);
+	if (XrmGetResource(xdb, "fluorite.stack_offset", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.stack_offset = strtoul(xval.addr, NULL, 10);
+	if (XrmGetResource(xdb, "fluorite.topbar_gaps", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.topbar_gaps = strtoul(xval.addr, NULL, 10);
+	if (XrmGetResource(xdb, "fluorite.bottombar_gaps", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.bottombar_gaps = strtoul(xval.addr, NULL, 10);
+	if (XrmGetResource(xdb, "fluorite.default_master_offset", "*", &type, &xval))
+		if (xval.addr)
+			fluorite.config.default_master_offset = strtoul(xval.addr, NULL, 10);
+	
+	XrmDestroyDatabase(xdb);
+	free(xrm);
+}
+
 void fluorite_init()
 {
 	XSetWindowAttributes attributes;
@@ -888,7 +949,8 @@ void fluorite_init()
 	fluorite.screen_height = DisplayHeight(fluorite.display, fluorite.screen);
 	fluorite.current_workspace = 0;
 	fluorite.xdo = xdo_new(NULL);
-	fluorite_load_theme();
+	XrmInitialize();
+	fluorite_load_xresources();
 
 	XRRMonitorInfo *infos;
 	infos = XRRGetMonitors(fluorite.display, fluorite.root, 0, &fluorite.monitor_count);
@@ -1309,7 +1371,7 @@ void fluorite_handle_mapping(XMapRequestEvent e)
 		fluorite_change_layout(FULLSCREEN_TOGGLE);
 
 	fluorite_handle_normals(e.window);
-	usleep(90000);
+	// usleep(90000);
 	fluorite_redraw_windows();
 }
 

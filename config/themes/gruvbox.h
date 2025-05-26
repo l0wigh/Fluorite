@@ -6,4 +6,4 @@
 #define STACK_OFFSET			10				/* how the stacked window are separated */
 #define TOPBAR_GAPS				35				/* gaps for the top bar */
 #define BOTTOMBAR_GAPS			0				/* gaps for the bottom bar */
-#define	DEFAULT_MASTER_OFFSET	150				/* master window size by default */
+#define	DEFAULT_MASTER_OFFSET	75				/* master window size by default */

@@ -46,12 +46,13 @@ void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
 void fluorite_next_workspace();
 void fluorite_prev_workspace();
+void fluorite_reload_xresources();
 
 // User functions (use it or create yours with these examples)
 /* static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog, GUI); } */
-static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "selected_st"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
-static void fluorite_dmenu() { char prog[255] = "dmenu_run"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu() { char prog[255] = "rofi -show drun -show-icons"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
 static void fluorite_exit() { fluorite_user_close(); }
 static void fluorite_next_focus() { fluorite_change_layout(FOCUS_TOP); }
@@ -77,10 +78,8 @@ static void fluorite_organizer_next() { fluorite_organizer_mapping(SELECT_NEXT);
 static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV); }
 static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT); }
 static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
-static void fluorite_reload_polybar() { char prog[255] = "killall polybar && polybar -q main -c ~/.config/polybar/better_grayblocks/config.ini"; fluorite_execute(prog, NOGUI); }
-static void fluorite_reload_fehgb() { char prog[255] = "~/.fehbg"; fluorite_execute(prog, NOGUI); }
-static void fluorite_bar_background() { fluorite_reload_polybar(); fluorite_reload_fehgb(); }
 static void fluorite_custom_launcher() { char prog[255] = "~/tools/scripts/rofi_custom.sh"; fluorite_execute(prog, GUI); }
+static void fluorite_print_screen() { char prog[255] = "/home/thomas/tools/suckless_tools/scripts/print_screen.sh"; fluorite_execute(prog, GUI); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -125,6 +124,7 @@ static const Bindings bind[] = {
 	{METAKEY, 				XK_Down,					fluorite_organizer_prev},
 	{METAKEY, 				XK_Right,					fluorite_organizer_right},
 	{METAKEY, 				XK_Left,					fluorite_organizer_left},
+	{METAKEY, 				XK_Print,					fluorite_print_screen},
 
 	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
@@ -133,39 +133,39 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_e,						fluorite_locking},
 	{METAKEY|ShiftMask,		XK_space,					fluorite_floating_hide_show},
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
-	{METAKEY|ShiftMask,		XK_r,						fluorite_bar_background},
+	{METAKEY|ShiftMask,		XK_r,						fluorite_reload_xresources},
 	{METAKEY|ShiftMask,		XK_d,						fluorite_custom_launcher},
-	{METAKEY|ControlMask,		XK_j,						fluorite_prev_workspace},
-	{METAKEY|ControlMask,		XK_m,						fluorite_next_workspace},
+	{METAKEY|ControlMask,	XK_j,						fluorite_prev_workspace},
+	{METAKEY|ControlMask,	XK_m,						fluorite_next_workspace},
 
 	// Workspaces switching
-	{METAKEY,						XK_ampersand, 				fluorite_goto_workspace_one},
-	{METAKEY,						XK_eacute,    				fluorite_goto_workspace_two},
-	{METAKEY,						XK_quotedbl,  				fluorite_goto_workspace_three},
-	{METAKEY,						XK_apostrophe,				fluorite_goto_workspace_four},
-	{METAKEY,						XK_parenleft, 				fluorite_goto_workspace_five},
-	{METAKEY,						XK_minus,     				fluorite_goto_workspace_six},
-	{METAKEY,						XK_egrave,    				fluorite_goto_workspace_seven},
-	{METAKEY,						XK_underscore,				fluorite_goto_workspace_eight},
-	{METAKEY,						XK_ccedilla,  				fluorite_goto_workspace_nine},
-	{METAKEY,						XK_agrave,  				fluorite_goto_workspace_ten},
+	{METAKEY,				XK_ampersand, 				fluorite_goto_workspace_one},
+	{METAKEY,				XK_eacute,    				fluorite_goto_workspace_two},
+	{METAKEY,				XK_quotedbl,  				fluorite_goto_workspace_three},
+	{METAKEY,				XK_apostrophe,				fluorite_goto_workspace_four},
+	{METAKEY,				XK_parenleft, 				fluorite_goto_workspace_five},
+	{METAKEY,				XK_minus,     				fluorite_goto_workspace_six},
+	{METAKEY,				XK_egrave,    				fluorite_goto_workspace_seven},
+	{METAKEY,				XK_underscore,				fluorite_goto_workspace_eight},
+	{METAKEY,				XK_ccedilla,  				fluorite_goto_workspace_nine},
+	{METAKEY,				XK_agrave,  				fluorite_goto_workspace_ten},
 
 	// App Workspaces switching
-	{METAKEY|ShiftMask,				XK_ampersand, 				fluorite_appto_workspace_one},
-	{METAKEY|ShiftMask,				XK_eacute,    				fluorite_appto_workspace_two},
-	{METAKEY|ShiftMask,				XK_quotedbl,  				fluorite_appto_workspace_three},
-	{METAKEY|ShiftMask,				XK_apostrophe,				fluorite_appto_workspace_four},
-	{METAKEY|ShiftMask,				XK_parenleft, 				fluorite_appto_workspace_five},
-	{METAKEY|ShiftMask,				XK_minus,     				fluorite_appto_workspace_six},
-	{METAKEY|ShiftMask,				XK_egrave,    				fluorite_appto_workspace_seven},
-	{METAKEY|ShiftMask,				XK_underscore,				fluorite_appto_workspace_eight},
-	{METAKEY|ShiftMask,				XK_ccedilla,  				fluorite_appto_workspace_nine},
-	{METAKEY|ShiftMask,				XK_agrave,  				fluorite_appto_workspace_ten},
+	{METAKEY|ShiftMask,		XK_ampersand, 				fluorite_appto_workspace_one},
+	{METAKEY|ShiftMask,		XK_eacute,    				fluorite_appto_workspace_two},
+	{METAKEY|ShiftMask,		XK_quotedbl,  				fluorite_appto_workspace_three},
+	{METAKEY|ShiftMask,		XK_apostrophe,				fluorite_appto_workspace_four},
+	{METAKEY|ShiftMask,		XK_parenleft, 				fluorite_appto_workspace_five},
+	{METAKEY|ShiftMask,		XK_minus,     				fluorite_appto_workspace_six},
+	{METAKEY|ShiftMask,		XK_egrave,    				fluorite_appto_workspace_seven},
+	{METAKEY|ShiftMask,		XK_underscore,				fluorite_appto_workspace_eight},
+	{METAKEY|ShiftMask,		XK_ccedilla,  				fluorite_appto_workspace_nine},
+	{METAKEY|ShiftMask,		XK_agrave,  				fluorite_appto_workspace_ten},
 
 	// No METAKEY bindings
-	{0,				XF86XK_MonBrightnessUp,		fluorite_brightness_up},
-	{0,				XF86XK_MonBrightnessDown,		fluorite_brightness_down},
-	{0,				XF86XK_AudioLowerVolume,		fluorite_volume_down},
-	{0,				XF86XK_AudioRaiseVolume,		fluorite_volume_up},
-	{0,				XF86XK_AudioMute,		fluorite_volume_mute},
+	{0,						XF86XK_MonBrightnessUp,		fluorite_brightness_up},
+	{0,						XF86XK_MonBrightnessDown,	fluorite_brightness_down},
+	{0,						XF86XK_AudioLowerVolume,	fluorite_volume_down},
+	{0,						XF86XK_AudioRaiseVolume,	fluorite_volume_up},
+	{0,						XF86XK_AudioMute,			fluorite_volume_mute},
 };
