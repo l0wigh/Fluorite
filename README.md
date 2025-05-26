@@ -21,7 +21,7 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 
 ## Documentation ?
 
-Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. It's a bit outdated so don't follow it blindly.
+Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. It should be mostly updated.
 
 You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
 
