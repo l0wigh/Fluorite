@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <sys/inotify.h>
+#include <errno.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
@@ -36,6 +38,10 @@
 static unsigned int numlockmask = 0;
 #define MODMASK(mask)	(mask & ~(numlockmask | LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define LENGTH(X)		(sizeof X / sizeof X[0])
+
+// inotify bs
+#define EVENT_SIZE		(sizeof(struct inotify_event))
+#define BUF_LEN			(1024 * (EVENT_SIZE + 16))
 
 typedef struct
 {
@@ -931,6 +937,47 @@ void fluorite_load_xresources()
 	
 	XrmDestroyDatabase(xdb);
 	free(xrm);
+}
+
+void *fluorite_inotify_xresources()
+{
+	const char *filename = ".Xresources";
+	char *home = getenv("HOME");
+	char buf[BUF_LEN];
+	int fd;
+
+	if ((fd = inotify_init1(IN_NONBLOCK)) < 0)
+		return NULL;
+	inotify_add_watch(fd, home, IN_CREATE | IN_MODIFY | IN_DELETE);
+
+	while (1145)
+	{
+		ssize_t len = read(fd, buf, BUF_LEN);
+		if (len < 0)
+		{
+			if (errno == EAGAIN || errno == EWOULDBLOCK)
+			{
+				usleep(100000);
+				continue;
+			}
+			break;
+		}
+
+		ssize_t i = 0;
+		while (i < len)
+		{
+			struct inotify_event *event = (struct inotify_event *) &buf[i];
+			if (event->len > 0 && strcmp(event->name, filename) == 0)
+			{
+				if (event->mask & IN_CREATE || event->mask & IN_MODIFY || event->mask & IN_DELETE)
+					fluorite_reload_xresources();
+			}
+			i += EVENT_SIZE + event->len;
+		}
+	}
+
+	close(fd);
+	return NULL;
 }
 
 void fluorite_init()
@@ -1836,7 +1883,12 @@ void fluorite_handle_unmapping(Window e)
 
 int main(void)
 {
+	pthread_t inotify_thread;
 	fluorite_init();
+
+	if (XRESOURCES_AUTO_RELOAD)
+		pthread_create(&inotify_thread, NULL, fluorite_inotify_xresources, NULL);
+
 	fluorite_run();
 	fluorite_clean();
 	return 0;
