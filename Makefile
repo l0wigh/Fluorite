@@ -1,6 +1,6 @@
 # Fluorite Window Manager
-# Version 1.0
-# Master Layout but better
+# Version 1.1
+# Master Layout done right
 
 BLU			= \033[0;34m
 GRN			= \033[0;32m
@@ -17,8 +17,8 @@ OBJS_DIR	= objs/
 OBJS		= $(SRCS:.c=.o)
 OBJECTS_PREFIXED = $(addprefix $(OBJS_DIR), $(OBJS))
 CC			= gcc
-# CC_FLAGS	= -O0 -I/usr/include/freetype2 -fsanitize=address -g3
-CC_FLAGS	= -Wall -Wextra -Werror -O2 -pipe -mtune=native -march=native -I/usr/include/freetype2
+# CC_FLAGS	= -O0 -I/usr/include/freetype2 -fsanitize=address -g3 -pg
+CC_FLAGS	= -Wall -Wextra -Werror -O2 -pipe -mtune=native -march=native -I/usr/include/freetype2 -flto
 LIBS		= -lX11 -lXcursor -lXcomposite -lXft -lXrandr -lxdo
 
 $(OBJS_DIR)%.o : %.c $(PROJECT_H)

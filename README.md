@@ -1,4 +1,4 @@
-# Fluorite 1.0
+# Fluorite 1.1
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
@@ -14,13 +14,10 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 - Keyboard centric.
 - Stacked layout (Monocle layout in DWM).
 - Light floating windows management.
-- Static configuration for bindings, options, and design, compiled with Fluorite.
 - Organizer mode, let you swap windows freely.
 - Works with multiple monitors. XMonad style.
-
-## Why RC (Release Candidate) ?
-
-This version is pretty stable but needs more testing. It's on the master branch because the current code should be really close to be the final release.
+- Static configuration for bindings, options, and design, compiled with Fluorite.
+- Dynamic reconfiguration (overwriting the compiled one) using Xresources.
 
 ## Documentation ?
 
@@ -40,7 +37,7 @@ sudo pacman -S xorg xdotool libxft libxcomposite libxcursor libxrandr
 
 ## Build and install
 
-After doing modifications to the config, just type (WITHOUT sudo). It will remake and copy the Fluorite executable to `/usr/bin/`.
+After doing modifications to the config, just type this (WITHOUT sudo). It will remake and copy the Fluorite executable to `/usr/bin/`.
 
 ``` sh
 make install
@@ -49,6 +46,7 @@ make install
 ## .xinitrc example
 
 ``` sh
+[[ -f ~/.Xresources ]] && xrdb -merge -I$HOME ~/.Xresources # For autoloading your Xresources file
 setxkbmap -layout fr
 polybar &
 picom &
@@ -59,4 +57,4 @@ Keep in mind that the setxkbmap with the proper keyboard layout is *REQUIRED* so
 
 ## Known issues
 
-- If java apps are clunky, you can add `export _JAVA_AWT_WM_NONREPARENTING=1` to you .xinitrc just before Fluorite execution.
+- If java apps are clunky, you can add `export _JAVA_AWT_WM_NONREPARENTING=1` to your .xinitrc just before Fluorite execution.
