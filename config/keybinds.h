@@ -79,7 +79,9 @@ static void fluorite_organizer_prev() { fluorite_organizer_mapping(SELECT_PREV);
 static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT); }
 static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 static void fluorite_custom_launcher() { char prog[255] = "~/tools/scripts/rofi_custom.sh"; fluorite_execute(prog, GUI); }
-static void fluorite_print_screen() { char prog[255] = "/home/thomas/tools/suckless_tools/scripts/print_screen.sh"; fluorite_execute(prog, GUI); }
+static void fluorite_print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu_xresources() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_xresources.sh"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu_theme() { char prog[255] = "~/tools/suckless_tools/scripts/fluorite_theme.sh"; fluorite_execute(prog, GUI); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -125,6 +127,8 @@ static const Bindings bind[] = {
 	{METAKEY, 				XK_Right,					fluorite_organizer_right},
 	{METAKEY, 				XK_Left,					fluorite_organizer_left},
 	{METAKEY, 				XK_Print,					fluorite_print_screen},
+	{METAKEY, 				XK_c,						fluorite_dmenu_xresources},
+	{METAKEY, 				XK_t,						fluorite_dmenu_theme},
 
 	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},

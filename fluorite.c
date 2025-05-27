@@ -949,7 +949,7 @@ void *fluorite_inotify_xresources()
 
 	if ((fd = inotify_init1(IN_NONBLOCK)) < 0)
 		return NULL;
-	inotify_add_watch(fd, home, IN_CREATE | IN_MODIFY | IN_DELETE);
+	inotify_add_watch(fd, home, IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
 
 	while (1145)
 	{
@@ -969,10 +969,7 @@ void *fluorite_inotify_xresources()
 		{
 			struct inotify_event *event = (struct inotify_event *) &buf[i];
 			if (event->len > 0 && strcmp(event->name, filename) == 0)
-			{
-				if (event->mask & IN_CREATE || event->mask & IN_MODIFY || event->mask & IN_DELETE)
 					fluorite_reload_xresources();
-			}
 			i += EVENT_SIZE + event->len;
 		}
 	}
