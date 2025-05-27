@@ -50,9 +50,10 @@ void fluorite_reload_xresources();
 
 // User functions (use it or create yours with these examples)
 /* static void fluorite_terminal() { char prog[255] = "alacritty"; fluorite_execute(prog, GUI); } */
-static void fluorite_terminal() { char prog[255] = "selected_st"; fluorite_execute(prog, GUI); }
+static void fluorite_terminal() { char prog[255] = "st"; fluorite_execute(prog, GUI); }
 static void fluorite_filemanager() { char prog[255] = "thunar"; fluorite_execute(prog, GUI); }
-static void fluorite_dmenu() { char prog[255] = "rofi -show drun -show-icons"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu() { char prog[255] = "dmenu_run_desktop"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu_cmd() { char prog[255] = "dmenu_run"; fluorite_execute(prog, GUI); }
 static void fluorite_webbrowser() { char prog[255] = "firefox"; fluorite_execute(prog, GUI); }
 static void fluorite_exit() { fluorite_user_close(); }
 static void fluorite_next_focus() { fluorite_change_layout(FOCUS_TOP); }
@@ -80,8 +81,8 @@ static void fluorite_organizer_right() { fluorite_organizer_mapping(MOVE_RIGHT);
 static void fluorite_organizer_left() { fluorite_organizer_mapping(MOVE_LEFT); }
 static void fluorite_custom_launcher() { char prog[255] = "~/tools/scripts/rofi_custom.sh"; fluorite_execute(prog, GUI); }
 static void fluorite_print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; fluorite_execute(prog, GUI); }
-static void fluorite_dmenu_xresources() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_xresources.sh"; fluorite_execute(prog, GUI); }
-static void fluorite_dmenu_theme() { char prog[255] = "~/tools/suckless_tools/scripts/fluorite_theme.sh"; fluorite_execute(prog, GUI); }
+static void fluorite_dmenu_xresources() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_xresources.sh"; fluorite_execute(prog, NOGUI); }
+static void fluorite_dmenu_theme() { char prog[255] = "~/tools/suckless_tools/scripts/fluorite_theme.sh"; fluorite_execute(prog, NOGUI); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -139,6 +140,7 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_n,						fluorite_focus_next_monitor},
 	{METAKEY|ShiftMask,		XK_r,						fluorite_reload_xresources},
 	{METAKEY|ShiftMask,		XK_d,						fluorite_custom_launcher},
+	{METAKEY|ShiftMask,		XK_d,						fluorite_dmenu_cmd},
 	{METAKEY|ControlMask,	XK_j,						fluorite_prev_workspace},
 	{METAKEY|ControlMask,	XK_m,						fluorite_next_workspace},
 
