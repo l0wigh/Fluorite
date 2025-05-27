@@ -1,4 +1,8 @@
-# Fluorite 1.1
+# Fluorite 1.1 (Experimental Signal Branch)
+
+This branch is a bit more lightweight than the master one using inotify. Be careful it's buggy.
+
+It works like suckless tools patches that reload Xresources using SIGUSR1.
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 

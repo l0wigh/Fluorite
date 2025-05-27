@@ -8,6 +8,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/extensions/Xcomposite.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <xdo.h>
 #include <X11/Xft/Xft.h>
@@ -19,8 +20,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include <sys/inotify.h>
-#include <errno.h>
 
 #define STACK_NEW		0
 #define STACK_DEL		1
@@ -940,44 +939,6 @@ void fluorite_load_xresources()
 	free(xrm);
 }
 
-void *fluorite_inotify_xresources()
-{
-	const char *filename = ".Xresources";
-	char *home = getenv("HOME");
-	char buf[BUF_LEN];
-	int fd;
-
-	if ((fd = inotify_init1(IN_NONBLOCK)) < 0)
-		return NULL;
-	inotify_add_watch(fd, home, IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
-
-	while (1145)
-	{
-		ssize_t len = read(fd, buf, BUF_LEN);
-		if (len < 0)
-		{
-			if (errno == EAGAIN || errno == EWOULDBLOCK)
-			{
-				usleep(100000);
-				continue;
-			}
-			break;
-		}
-
-		ssize_t i = 0;
-		while (i < len)
-		{
-			struct inotify_event *event = (struct inotify_event *) &buf[i];
-			if (event->len > 0 && strcmp(event->name, filename) == 0)
-					fluorite_reload_xresources();
-			i += EVENT_SIZE + event->len;
-		}
-	}
-
-	close(fd);
-	return NULL;
-}
-
 void fluorite_init()
 {
 	XSetWindowAttributes attributes;
@@ -996,6 +957,7 @@ void fluorite_init()
 	fluorite.xdo = xdo_new(NULL);
 	XrmInitialize();
 	fluorite_load_xresources();
+	signal(SIGUSR1, fluorite_reload_xresources);
 
 	XRRMonitorInfo *infos;
 	infos = XRRGetMonitors(fluorite.display, fluorite.root, 0, &fluorite.monitor_count);
@@ -1881,12 +1843,7 @@ void fluorite_handle_unmapping(Window e)
 
 int main(void)
 {
-	pthread_t inotify_thread;
 	fluorite_init();
-
-	if (XRESOURCES_AUTO_RELOAD)
-		pthread_create(&inotify_thread, NULL, fluorite_inotify_xresources, NULL);
-
 	fluorite_run();
 	fluorite_clean();
 	return 0;
