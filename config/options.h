@@ -32,6 +32,7 @@ static const Rules default_floating[] = {
 	{"steam"},
 	{"Steam"},
 	{"steamwebhelper"},
+	{"st_music"},
 };
 static const Rules default_fixed[] = {
 	{"io.elementary.wingpanel"},

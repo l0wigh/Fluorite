@@ -936,6 +936,9 @@ void fluorite_load_xresources()
 		if (xval.addr)
 			fluorite.config.default_master_offset = strtoul(xval.addr, NULL, 10);
 	
+	fluorite.config.border_focused |= 0xff << 24;
+	fluorite.config.border_unfocused |= 0xff << 24;
+	fluorite.config.border_inactive |= 0xff << 24;
 	XrmDestroyDatabase(xdb);
 	free(xrm);
 }
@@ -1810,9 +1813,9 @@ void fluorite_handle_unmapping(Window e)
 		{
 			if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && fluorite.workspaces[fluorite.current_workspace].current_focus == MASTER_FOCUS)
 				fluorite_change_layout(FULLSCREEN_TOGGLE);
+			XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->fullscreen_frame, fluorite.root, 0, 0);
 			XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->window, fluorite.root, 0, 0);
-			XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].master_winframe->frame);
 			fluorite.workspaces[fluorite.current_workspace].frames_count--;
 			if (fluorite.workspaces[fluorite.current_workspace].slaves_count > 0)
 			{
@@ -1848,9 +1851,9 @@ void fluorite_handle_unmapping(Window e)
 				{
 					if (fluorite.workspaces[fluorite.current_workspace].is_fullscreen && stack_offset == 0 && fluorite.workspaces[fluorite.current_workspace].current_focus == SLAVE_FOCUS)
 						fluorite_change_layout(FULLSCREEN_TOGGLE);
+					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->fullscreen_frame, fluorite.root, 0, 0);
 					XReparentWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->window, fluorite.root, 0, 0);
-					XUnmapWindow(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[stack_offset]->frame);
 					fluorite.workspaces[fluorite.current_workspace].frames_count--;
 					fluorite.workspaces[fluorite.current_workspace].slaves_count--;
 					closed = True;
