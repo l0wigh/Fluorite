@@ -44,8 +44,8 @@ void fluorite_user_close();
 void fluorite_change_workspace(int new_workspace, int mode);
 void fluorite_organizer_mapping(int mode);
 void fluorite_focus_next_monitor();
-void fluorite_next_workspace();
-void fluorite_prev_workspace();
+void fluorite_next_workspace(int mode);
+void fluorite_prev_workspace(int mode);
 void fluorite_reload_xresources();
 
 // User functions (use it or create yours with these examples)
@@ -97,6 +97,8 @@ static void	fluorite_goto_workspace_seven() { fluorite_change_workspace(6, 0); }
 static void	fluorite_goto_workspace_eight() { fluorite_change_workspace(7, 0); }
 static void	fluorite_goto_workspace_nine() { fluorite_change_workspace(8, 0); }
 static void	fluorite_goto_workspace_ten() { fluorite_change_workspace(9, 0); }
+static void fluorite_goto_next_workspace() { fluorite_next_workspace(0); }
+static void fluorite_goto_prev_workspace() { fluorite_prev_workspace(0); }
 
 // App workspaces switch function
 static void	fluorite_appto_workspace_one() { fluorite_change_workspace(0, 1); }
@@ -109,6 +111,8 @@ static void	fluorite_appto_workspace_seven() { fluorite_change_workspace(6, 1); 
 static void	fluorite_appto_workspace_eight() { fluorite_change_workspace(7, 1); }
 static void	fluorite_appto_workspace_nine() { fluorite_change_workspace(8, 1); }
 static void	fluorite_appto_workspace_ten() { fluorite_change_workspace(9, 1); }
+static void fluorite_appto_next_workspace() { fluorite_next_workspace(1); }
+static void fluorite_appto_prev_workspace() { fluorite_prev_workspace(1); }
  
 static const Bindings bind[] = {
 	{METAKEY,				XK_Return,					fluorite_terminal},
@@ -144,8 +148,6 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_d,						fluorite_custom_launcher},
 	{METAKEY|ShiftMask,		XK_d,						fluorite_dmenu_cmd},
 	{METAKEY|ShiftMask,		XK_m,						fluorite_dmenu_music},
-	{METAKEY|ControlMask,	XK_j,						fluorite_prev_workspace},
-	{METAKEY|ControlMask,	XK_m,						fluorite_next_workspace},
 
 	// Workspaces switching
 	{METAKEY,				XK_ampersand, 				fluorite_goto_workspace_one},
@@ -157,7 +159,9 @@ static const Bindings bind[] = {
 	{METAKEY,				XK_egrave,    				fluorite_goto_workspace_seven},
 	{METAKEY,				XK_underscore,				fluorite_goto_workspace_eight},
 	{METAKEY,				XK_ccedilla,  				fluorite_goto_workspace_nine},
-	{METAKEY,				XK_agrave,  				fluorite_goto_workspace_ten},
+	{METAKEY,				XK_agrave,  				  fluorite_goto_workspace_ten},
+	{METAKEY|ControlMask,	XK_j,						fluorite_goto_prev_workspace},
+	{METAKEY|ControlMask,	XK_m,						fluorite_goto_next_workspace},
 
 	// App Workspaces switching
 	{METAKEY|ShiftMask,		XK_ampersand, 				fluorite_appto_workspace_one},
@@ -169,7 +173,9 @@ static const Bindings bind[] = {
 	{METAKEY|ShiftMask,		XK_egrave,    				fluorite_appto_workspace_seven},
 	{METAKEY|ShiftMask,		XK_underscore,				fluorite_appto_workspace_eight},
 	{METAKEY|ShiftMask,		XK_ccedilla,  				fluorite_appto_workspace_nine},
-	{METAKEY|ShiftMask,		XK_agrave,  				fluorite_appto_workspace_ten},
+	{METAKEY|ShiftMask,		XK_agrave,  				  fluorite_appto_workspace_ten},
+	{METAKEY|ControlMask|ShiftMask,	XK_j,				fluorite_appto_prev_workspace},
+	{METAKEY|ControlMask|ShiftMask,	XK_m,				fluorite_appto_next_workspace},
 
 	// No METAKEY bindings
 	{0,						XF86XK_MonBrightnessUp,		fluorite_brightness_up},

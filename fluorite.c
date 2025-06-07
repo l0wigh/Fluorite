@@ -177,25 +177,25 @@ void fluorite_reload_xresources()
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
 	fluorite_load_xresources();
-	fluorite_base_master();
 	fluorite_redraw_windows();
+	fluorite_base_master();
 }
 
-void fluorite_next_workspace() {
+void fluorite_next_workspace(int mode) {
 	if (fluorite.current_workspace == 9) {
-		fluorite_change_workspace(0, 0);
+		fluorite_change_workspace(0, mode);
 	}
 	else {
-		fluorite_change_workspace((fluorite.current_workspace + 1), 0);
+		fluorite_change_workspace((fluorite.current_workspace + 1), mode);
 	}
 }
 
-void fluorite_prev_workspace() {
+void fluorite_prev_workspace(int mode) {
 	if (fluorite.current_workspace == 0) {
-		fluorite_change_workspace(9, 0);
+		fluorite_change_workspace(9, mode);
 	}
 	else {
-		fluorite_change_workspace((fluorite.current_workspace - 1), 0);
+		fluorite_change_workspace((fluorite.current_workspace - 1), mode);
 	}
 }
 
