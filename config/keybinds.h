@@ -29,6 +29,7 @@ typedef struct
 #define SELECT_PREV			24
 #define MOVE_RIGHT			25
 #define MOVE_LEFT			26
+#define RIVER_TOGGLE		27
 
 /*  These definitions are used for the execute command. You need to pass GUI for an app that will open a new window.
  *  Pass NOGUI if it's just a background script or app
@@ -85,6 +86,7 @@ static void fluorite_dmenu_xresources() { char prog[255] = "~/tools/suckless_too
 static void fluorite_dmenu_theme() { char prog[255] = "~/tools/suckless_tools/scripts/fluorite_theme.sh"; fluorite_execute(prog, NOGUI); }
 static void fluorite_st_music() { char prog[255] = "st -c st_music -g 100x30 mocp"; fluorite_execute(prog, NOGUI); }
 static void fluorite_dmenu_music() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_music.sh"; fluorite_execute(prog, NOGUI); }
+static void fluorite_river_toggle() { fluorite_change_layout(RIVER_TOGGLE); }
 
 // Workspaces switch function
 static void	fluorite_goto_workspace_one() { fluorite_change_workspace(0, 0); }
@@ -136,6 +138,7 @@ static const Bindings bind[] = {
 	{METAKEY, 				XK_Print,					fluorite_print_screen},
 	{METAKEY, 				XK_c,						fluorite_dmenu_xresources},
 	{METAKEY, 				XK_t,						fluorite_dmenu_theme},
+	{METAKEY, 				XK_r,						fluorite_river_toggle},
 
 	{METAKEY|ShiftMask, 	XK_p,						fluorite_exit},
 	{METAKEY|ShiftMask,		XK_q,						fluorite_close_window},
