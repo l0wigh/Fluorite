@@ -81,6 +81,7 @@ typedef struct
 	int			organizer_selected;
 	int			floating_hidden;
 	int			current_focus;
+	int			layout;
 } Workspaces;
 
 typedef struct
@@ -135,7 +136,6 @@ typedef struct
 	xdo_t			*xdo;
 	Configuration	config;
 	int				no_unmap;
-	int       layout;
 } Fluorite;
 
 static Fluorite fluorite;
@@ -572,7 +572,7 @@ void fluorite_change_layout(int mode)
 				int revert;
 				XGetInputFocus(fluorite.display, &w, &revert);
 
-				if (w == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window && fluorite.layout == RIVER_TOGGLE && fluorite.workspaces[fluorite.current_workspace].slaves_count > 1)
+				if (w == fluorite.workspaces[fluorite.current_workspace].slaves_winframes[0]->window && fluorite.workspaces[fluorite.current_workspace].layout == RIVER_TOGGLE && fluorite.workspaces[fluorite.current_workspace].slaves_count > 1)
 				{
 					for (int i = 0; i < fluorite.workspaces[fluorite.current_workspace].slaves_count; i++)
 						XSetWindowBorder(fluorite.display, fluorite.workspaces[fluorite.current_workspace].slaves_winframes[i]->window, fluorite.config.border_unfocused);
@@ -676,10 +676,10 @@ void fluorite_change_layout(int mode)
 			fluorite.no_unmap = 0;
 			break;
 		case RIVER_TOGGLE:
-			if (fluorite.layout != RIVER_TOGGLE)
-				fluorite.layout = RIVER_TOGGLE;
+			if (fluorite.workspaces[fluorite.current_workspace].layout != RIVER_TOGGLE)
+				fluorite.workspaces[fluorite.current_workspace].layout = RIVER_TOGGLE;
 			else
-				fluorite.layout = 0;
+				fluorite.workspaces[fluorite.current_workspace].layout = 0;
 			fluorite_redraw_windows();
 			break;
 	}
@@ -1064,9 +1064,6 @@ void fluorite_init()
 	fluorite.screen_height = DisplayHeight(fluorite.display, fluorite.screen);
 	fluorite.current_workspace = 0;
 	fluorite.no_unmap = 0;
-	fluorite.layout = 0;
-	if (STARTING_LAYOUT == 1)
-		fluorite.layout = RIVER_TOGGLE;
 	fluorite.xdo = xdo_new(NULL);
 	XrmInitialize();
 	fluorite_load_xresources();
@@ -1106,6 +1103,9 @@ void fluorite_init()
 		fluorite.workspaces[i].floating_hidden = False;
 		fluorite.workspaces[i].is_organising = False;
 		fluorite.workspaces[i].current_focus = NO_FOCUS;
+		fluorite.workspaces[i].layout = 0;
+		if (STARTING_LAYOUT == 1)
+			fluorite.workspaces[i].layout = RIVER_TOGGLE;
 	}
 
 	fluorite_apply_property();
@@ -1803,7 +1803,7 @@ void fluorite_redraw_windows()
 		fluorite_redraw_stacking();
 	else
 	{
-		if (fluorite.layout == RIVER_TOGGLE)
+		if (fluorite.workspaces[fluorite.current_workspace].layout == RIVER_TOGGLE)
 			fluorite_redraw_river();
 		else
 			fluorite_redraw_tiling();
