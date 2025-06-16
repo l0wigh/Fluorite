@@ -154,6 +154,7 @@ static void			fluorite_handle_motions(XMotionEvent e);
 static void			fluorite_handle_specials(Window e);
 static void			fluorite_handle_normals(Window e);
 static int			fluorite_handle_errors(Display *display, XErrorEvent *e);
+static void			fluorite_handle_message(XClientMessageEvent e);
 static WinFrames	*fluorite_create_winframe();
 static void			fluorite_organise_stack(int mode, int offset);
 static void			fluorite_redraw_windows();
@@ -1097,6 +1098,9 @@ void fluorite_run()
 			case KeyPress:
 				fluorite_handle_keys(ev.xkey);
 				break;
+			case ClientMessage:
+				fluorite_handle_message(ev.xclient);
+				break;
 		}
 	}
 }
@@ -1428,6 +1432,12 @@ void fluorite_handle_keys(XKeyPressedEvent e)
 	for (long unsigned int i = 0; i < LENGTH(bind); i++)
 		if (e.keycode == XKeysymToKeycode(fluorite.display, bind[i].key) && MODMASK(bind[i].mod) == MODMASK(e.state) && bind[i].func)
 				bind[i].func();
+}
+
+void fluorite_handle_message(XClientMessageEvent e)
+{
+	if (e.message_type == XInternAtom(fluorite.display, "_NET_CURRENT_DESKTOP", False))
+		fluorite_change_workspace((int)e.data.l[0], 0);
 }
 
 void fluorite_handle_enternotify(XEvent e)
