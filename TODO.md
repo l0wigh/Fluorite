@@ -1,4 +1,5 @@
 # TODO !
+    - [X] Redraw every monitor when theme is changed !
     - [ ] Issues with border colors when sending windows to another visible workspace
     - [ ] Find a way to fix the fullscreen float window bug
         - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !

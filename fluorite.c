@@ -175,10 +175,16 @@ void fluorite_execute(char *argument, int mode)
 void fluorite_reload_xresources()
 {
 	char prog[255] = "xrdb ~/.Xresources";
+	int keep_monitor = fluorite.current_monitor;
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
 	fluorite_load_xresources();
-	fluorite_redraw_windows();
+	for (int i = 0; i < fluorite.monitor_count; i++)
+	{
+		fluorite_change_monitor(i);
+		fluorite_redraw_windows();
+	}
+	fluorite_change_monitor(keep_monitor);
 	fluorite_base_master();
 }
 
