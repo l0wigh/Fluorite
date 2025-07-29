@@ -1,5 +1,5 @@
 old_fluorite.c
-./config/old_keybinds.h
+config/old_keybinds.h
 V2.md
 Fluorite
-./objs/**
+*.o
