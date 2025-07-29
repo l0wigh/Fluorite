@@ -1,4 +1,8 @@
-# Fluorite 1.1
+# Fluorite EVO 2 (Beta 1)
+
+This is a very early Evolution of Fluorite 1.1
+
+There is still many many things to add (ex: Monitors). Use 1.1 !
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
