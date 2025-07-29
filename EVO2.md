@@ -1,9 +1,10 @@
 # TODO
+- [ ] Add Tags like DWM
+- [ ] Add Monitors
 - [ ] Add EWMH
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
-- [ ] Pavu control open in a weird state just like it create invisible windows and lock Fluorite
 
 # DONE
 - [X] Add Stacking layout
@@ -19,3 +20,5 @@
         - Move the window
 - [X] Fix Fluorite layout
 - [X] Swapping focus use fc variable, but most of the time, focus is set in another way.
+- [X] Pavu control open in a weird state just like it create invisible windows and lock Fluorite
+    - Probably fixed since pid + toplevel check
