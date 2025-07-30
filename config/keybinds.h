@@ -43,6 +43,8 @@ void FChangeLayout(int layout);
 void FTileAllWindows();
 void FFullscreenToggle();
 void FFloatingHideShow();
+void FSendWindowToNextWorkspace();
+void FSendWindowToPrevWorkspace();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -158,6 +160,9 @@ static const Bindings bind[] = {
 
   {METAKEY,				XK_n,				FFocusNext},
   {METAKEY|ShiftMask,	XK_n,				FFocusPrev},
+
+  {METAKEY|ControlMask|ShiftMask,	XK_j,	FSendWindowToPrevWorkspace},
+  {METAKEY|ControlMask|ShiftMask,	XK_m,	FSendWindowToNextWorkspace},
 
   {0,				XF86XK_MonBrightnessUp,		brightness_up},
   {0,				XF86XK_MonBrightnessDown,	brightness_down},

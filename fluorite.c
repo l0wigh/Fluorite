@@ -1233,6 +1233,7 @@ static void FMotionNotify(XEvent ev)
 		hints.width = ddx;
 		hints.height = ddy;
 	}
+
 	XRaiseWindow(fluorite.dpy, target->w);
 	FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
 	target->fc = 1;
@@ -1366,8 +1367,7 @@ next:
 
 void FNextWorkspace()
 {
-	int ws = fluorite.cr_ws;
-	ws++;
+	int ws = fluorite.cr_ws + 1;
 	if (ws == MAX_WS)
 		ws = 0;
 	FShowWorkspace(ws);
@@ -1375,8 +1375,7 @@ void FNextWorkspace()
 
 void FPrevWorkspace()
 {
-	int ws = fluorite.cr_ws;
-	ws--;
+	int ws = fluorite.cr_ws - 1;
 	if (ws < 0)
 		ws = MAX_WS - 1;
 	FShowWorkspace(ws);
@@ -1703,4 +1702,20 @@ void FFloatingHideShow()
 	XSync(fluorite.dpy, True);
 	XUngrabServer(fluorite.dpy);
 	no_unmap = False;
+}
+
+void FSendWindowToNextWorkspace()
+{
+	int ws = fluorite.cr_ws + 1;
+	if (ws == MAX_WS)
+		ws = 0;
+	FSendWindowToWorkspace(ws);
+}
+
+void FSendWindowToPrevWorkspace()
+{
+	int ws = fluorite.cr_ws - 1;
+	if (ws < 0)
+		ws = MAX_WS - 1;
+	FSendWindowToWorkspace(ws);
 }
