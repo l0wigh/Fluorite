@@ -45,6 +45,7 @@ void FFullscreenToggle();
 void FFloatingHideShow();
 void FSendWindowToNextWorkspace();
 void FSendWindowToPrevWorkspace();
+void FFocusNextMonitor();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -160,6 +161,7 @@ static const Bindings bind[] = {
 
   {METAKEY,				XK_n,				FFocusNext},
   {METAKEY|ShiftMask,	XK_n,				FFocusPrev},
+  {METAKEY,				XK_comma,			FFocusNextMonitor},
 
   {METAKEY|ControlMask|ShiftMask,	XK_j,	FSendWindowToPrevWorkspace},
   {METAKEY|ControlMask|ShiftMask,	XK_m,	FSendWindowToNextWorkspace},

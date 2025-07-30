@@ -1,12 +1,18 @@
 # TODO
+- [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
+- [ ] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
 - [ ] Add Tags like DWM
-- [ ] Add Monitors
 - [ ] Add EWMH
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
+- [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Sending windows to a fullscreen workspace might lead to issues
     - Disable fullscreen ?
+
+# CLEAN
+- [ ] Reset borders function
+    - Find function that do loops through stacks and XSetWindowBorder
 
 # DONE
 - [X] Add Stacking layout
@@ -25,3 +31,4 @@
 - [X] Pavu control open in a weird state just like it create invisible windows and lock Fluorite
     - Probably fixed since pid + toplevel check
 - [X] Add FSendWindowsTo(Next/Prev)Workspace
+- [X] Add Monitors
