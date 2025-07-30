@@ -569,7 +569,7 @@ static void FMapRequest(XEvent ev)
 	XSetWindowBorderWidth(fluorite.dpy, nw->w, fluorite.conf.bw);
 	FApplyActiveWindow(nw->w);
 
-	if (is_floating)
+	if ((is_floating && AUTO_FLOATING) || OPEN_IN_FLOAT)
 		FManageFloatingWindow(nw);
 	else
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);;
@@ -1360,6 +1360,8 @@ next:
 
 	FRedrawWindows();
 	FApplyBorders();
+	if (FOLLOW_WINDOWS)
+		FShowWorkspace(ws);
 }
 
 void FNextWorkspace()
@@ -1495,7 +1497,7 @@ void FSwapWithMaster()
 	Windows *w;
 
 	XGetInputFocus(fluorite.dpy, &focused, &revert);
-	if (focused == fluorite.root || focused == fluorite.ws[fluorite.cr_ws].t_wins->w)
+	if (focused == fluorite.root || !fluorite.ws[fluorite.cr_ws].t_wins || focused == fluorite.ws[fluorite.cr_ws].t_wins->w)
 		return;
 
 	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)

@@ -1,4 +1,5 @@
 # TODO
+- [ ] Add FSendWindowsTo(Next/Prev)Workspace
 - [ ] Add Tags like DWM
 - [ ] Add Monitors
 - [ ] Add EWMH
