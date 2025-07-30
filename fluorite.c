@@ -1,3 +1,4 @@
+#include <X11/extensions/randr.h>
 #define FLUORITE_VERSION "Fluorite [EVO 2]"
 
 #include "config/keybinds.h"
@@ -106,6 +107,7 @@ typedef struct
 	int				ct_mon;
 	Mouse			mouse;
 	xdo_t			*xdo;
+	int				xrandr_ev;
 } Fluorite;
 
 /* DEF: functions */
@@ -179,6 +181,7 @@ static void FInit()
 	fluorite.root = RootWindow(fluorite.dpy, fluorite.scr);
 	fluorite.xdo = xdo_new(NULL);
 	fluorite.cr_ws = 0;
+	fluorite.mon = NULL;
 
 	XrmInitialize();
 	XSetErrorHandler(FErrorHandler);
@@ -262,7 +265,26 @@ static void FLoadTheme()
 
 static void FInitMonitors()
 {
+	int hot_plug = False;
 	XRRMonitorInfo *infos;
+
+	if (fluorite.mon != NULL)
+	{
+		free(fluorite.mon);
+		no_unmap = True;
+		XGrabServer(fluorite.dpy);
+		for (int i = 0; i < MAX_WS; i++)
+		{
+			for (Windows *w = fluorite.ws[i].t_wins; w != NULL; w = w->next)
+				XUnmapWindow(fluorite.dpy, w->w);
+			for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
+				XUnmapWindow(fluorite.dpy, w->w);
+		}
+		XSync(fluorite.dpy, True);
+		XUngrabServer(fluorite.dpy);
+		no_unmap = False;
+		hot_plug = True;
+	}
 
 	infos = XRRGetMonitors(fluorite.dpy, fluorite.root, 0, &fluorite.ct_mon);
 	fluorite.mon = (Monitors *) calloc(fluorite.ct_mon, sizeof(Monitors));
@@ -284,6 +306,28 @@ static void FInitMonitors()
 		}
 	}
 
+	if (hot_plug)
+	{
+		int primary;
+		for (int i = 0; i < fluorite.ct_mon; i++)
+		{
+			if (fluorite.mon[i].primary)
+				primary = i;
+			fluorite.cr_ws = fluorite.mon[i].ws;
+			fluorite.cr_mon = i;
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+				XMapWindow(fluorite.dpy, w->w);
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+				XMapWindow(fluorite.dpy, w->w);
+			FRedrawWindows();
+			FApplyBorders();
+		}
+		fluorite.cr_mon = primary;
+		fluorite.cr_ws = fluorite.mon[fluorite.cr_mon].ws;
+		FRedrawWindows();
+		FApplyBorders();
+		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+	}
 }
 
 static void FInitWorkspaces()
@@ -307,7 +351,12 @@ static void FApplyProps()
 	XSetWindowAttributes attributes;
 	int num_work_atom = MAX_WS;
 	Atom supported[1];
+	int rr_error_base;
 
+	if (!XRRQueryExtension(fluorite.dpy, &fluorite.xrandr_ev, &rr_error_base)) {
+		fprintf(stderr, "RandR extension not available\n");
+		exit(1);
+	}
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_WM_NAME", False), XInternAtom(fluorite.dpy, "UTF8_STRING", False), 8, PropModeReplace, (const unsigned char *) FLUORITE_VERSION, strlen(FLUORITE_VERSION));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.root, 1);
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False), XA_CARDINAL, 32, PropModeReplace, (const unsigned char *)&num_work_atom, 1);
@@ -319,6 +368,7 @@ static void FApplyProps()
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
 	XSelectInput(fluorite.dpy, fluorite.root, attributes.event_mask);
 	XDefineCursor(fluorite.dpy, fluorite.root, XcursorLibraryLoadCursor(fluorite.dpy, "arrow"));
+	XRRSelectInput(fluorite.dpy, fluorite.root, RROutputChangeNotifyMask | RRCrtcChangeNotifyMask | RRScreenChangeNotifyMask);
 	XSync(fluorite.dpy, True);
 }
 
@@ -414,6 +464,11 @@ static void FRun()
 	while (fluorite.run)
 	{
 		XNextEvent(fluorite.dpy, &ev);
+		if (ev.type == fluorite.xrandr_ev + RRScreenChangeNotify)
+		{
+			XRRUpdateConfiguration(&ev);
+			FInitMonitors();
+		}
 		switch (ev.type)
 		{
 			case ConfigureRequest:
@@ -1187,6 +1242,9 @@ static void FButtonPress(XEvent ev)
 	Screen *scr;
 	Window target;
 
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return ;
+
 	target = FGetToplevel(ev.xbutton.window);
 	fluorite.mouse.spx = ev.xbutton.x_root;
 	fluorite.mouse.spy = ev.xbutton.y_root;
@@ -1224,6 +1282,9 @@ static void FMotionNotify(XEvent ev)
 	long lhints;
 	XSizeHints hints;
 	Windows *target;
+
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return ;
 
 	if (!XGetWMNormalHints(fluorite.dpy, ev.xmotion.window, &hints, &lhints))
 		return ;
@@ -1450,6 +1511,7 @@ next:
 			break;
 		}
 	}
+	FRedrawWindows();
 
 	if (FOLLOW_WINDOWS)
 		FShowWorkspace(ws);
@@ -1766,8 +1828,8 @@ exit:
 void FFloatingHideShow()
 {
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
-	XGrabServer(fluorite.dpy);
 	no_unmap = True;
+	XGrabServer(fluorite.dpy);
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 	{
 		if (fluorite.ws[fluorite.cr_ws].fl_hdn)

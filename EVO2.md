@@ -6,6 +6,7 @@
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
+- [ ] No refocus of fullscreen monitors when moving mouse
 - [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Sending windows to a fullscreen workspace might lead to issues
     - Disable fullscreen ?
