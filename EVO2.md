@@ -6,6 +6,8 @@
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
+- [ ] Find a way to verify certains values
+    - fl_hdn
 - [ ] No refocus of fullscreen monitors when moving mouse
 - [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Sending windows to a fullscreen workspace might lead to issues

@@ -146,6 +146,7 @@ static void 	FClientMessage(XEvent ev);
 static void 	FMotionNotify(XEvent ev);
 static void 	FWarpCursor(Window w);
 static void 	FSetWindowOpacity(Window w, double opacity);
+static void		FUpdateClientList();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -350,7 +351,6 @@ static void FApplyProps()
 	XTextProperty text;
 	XSetWindowAttributes attributes;
 	int num_work_atom = MAX_WS;
-	Atom supported[1];
 	int rr_error_base;
 
 	if (!XRRQueryExtension(fluorite.dpy, &fluorite.xrandr_ev, &rr_error_base)) {
@@ -363,8 +363,8 @@ static void FApplyProps()
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
-	supported[0] = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
-	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 1);
+	Atom supported[6] = { XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False), XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False), XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False), XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False) };
+	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 4);
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
 	XSelectInput(fluorite.dpy, fluorite.root, attributes.event_mask);
 	XDefineCursor(fluorite.dpy, fluorite.root, XcursorLibraryLoadCursor(fluorite.dpy, "arrow"));
@@ -631,8 +631,11 @@ static void FMapRequest(XEvent ev)
 		FManageFloatingWindow(nw);
 	else
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);;
+
+	XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 	FRedrawWindows();
 	FWarpCursor(nw->w);
+	FUpdateClientList();
 }
 
 static void FManageFloatingWindow(Windows *nw)
@@ -1084,6 +1087,7 @@ static void FUnmapNotify(XEvent ev)
 	}
 
 redraw:
+	FUpdateClientList();
 	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
 	FRedrawWindows();
 	FApplyBorders();
@@ -1349,6 +1353,21 @@ static void FSetWindowOpacity(Window w, double opacity)
     XChangeProperty(fluorite.dpy, w, atom, XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&op, 1);
 }
 
+static void FUpdateClientList()
+{
+	Window list[(MAX_WINDOWS * 2) * MAX_WS];
+	int list_idx = 0;
+
+	for (int i = 0; i < MAX_WS; i++)
+	{
+		for (Windows *w = fluorite.ws[i].t_wins; w != NULL; w = w->next, list_idx++)
+			list[list_idx] = w->w;
+		for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next, list_idx++)
+			list[list_idx] = w->w;
+	}
+	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False), XA_WINDOW, 32, PropModeReplace, (unsigned char *)list, list_idx);
+}
+
 static void FResetWindowOpacity(Window w)
 {
 	Atom atom = XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_OPACITY", False);
@@ -1511,6 +1530,9 @@ next:
 			break;
 		}
 	}
+
+	XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+	FUpdateClientList();
 	FRedrawWindows();
 
 	if (FOLLOW_WINDOWS)
@@ -1828,6 +1850,10 @@ exit:
 void FFloatingHideShow()
 {
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
+
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return; 
+	
 	no_unmap = True;
 	XGrabServer(fluorite.dpy);
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
