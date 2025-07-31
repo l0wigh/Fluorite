@@ -1236,7 +1236,8 @@ static void FFocusWindowUnderCursor()
 			w->fc = 0;
 	}
 
-	FApplyBorders();
+	if (!fluorite.ws[fluorite.cr_ws].fs)
+		FApplyBorders();
 	no_warp = False;
 }
 
