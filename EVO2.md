@@ -6,10 +6,10 @@
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
+- [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] No refocus of fullscreen monitors when moving mouse
-- [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Sending windows to a fullscreen workspace might lead to issues
     - Disable fullscreen ?
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
