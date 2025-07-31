@@ -363,8 +363,13 @@ static void FApplyProps()
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
-	Atom supported[6] = { XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False), XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False), XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False), XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False) };
-	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 4);
+	Atom supported[8] = {
+		XInternAtom(fluorite.dpy, "_NET_WM_NAME", False),			XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False),
+		XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False),		XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False),
+		XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False),	XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False)
+	};
+	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 7);
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
 	XSelectInput(fluorite.dpy, fluorite.root, attributes.event_mask);
 	XDefineCursor(fluorite.dpy, fluorite.root, XcursorLibraryLoadCursor(fluorite.dpy, "arrow"));
@@ -866,14 +871,14 @@ static void FApplyBorders()
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w; w = w->next)
 	{
-		if (w->w == focused)
+		if (focused == w->w)
 			FApplyActiveWindow(focused);
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w; w = w->next)
 	{
-		if (w->w == focused)
+		if (focused == w->w)
 			FApplyActiveWindow(focused);
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
@@ -1863,6 +1868,8 @@ void FFloatingHideShow()
 			XMapWindow(fluorite.dpy, w->w);
 			XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 			FWarpCursor(w->w);
+			FApplyActiveWindow(w->w);
+			FApplyBorders();
 		}
 		else
 		{
@@ -1872,9 +1879,9 @@ void FFloatingHideShow()
 			{
 				Windows *w = fluorite.ws[fluorite.cr_ws].t_wins;
 				XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
-				FApplyBorders();
-				FApplyActiveWindow(w->w);
 				FWarpCursor(w->w);
+				FApplyActiveWindow(w->w);
+				FApplyBorders();
 			}
 			else
 				XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);

@@ -25,7 +25,7 @@ static const char *workspace_names[10] = { "1", "2", "3", "4", "5", "6", "7", "8
 // Use xprop on a to get the WM_CLASS name used by a window.
 static const Rules default_floating[] = {
 	{"spectacle"},
-	{"ghidra-Ghidra"},
+	// {"ghidra-Ghidra"},
 	{"spotify"},
 	{"thunar"},
 	{"ymuse"},
