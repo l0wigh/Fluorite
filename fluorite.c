@@ -883,6 +883,7 @@ static void FApplyBorders()
 	{
 		if (focused == w->w)
 			FApplyActiveWindow(focused);
+		XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
 
@@ -890,6 +891,7 @@ static void FApplyBorders()
 	{
 		if (focused == w->w)
 			FApplyActiveWindow(focused);
+		XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
 

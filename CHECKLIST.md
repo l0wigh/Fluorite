@@ -18,8 +18,7 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] New windows are correctly managed (not floating unless needed)
 - [X] Windows are placed in correct positions (master/stack or grid/tiled)
 - [X] Windows resize as expected when layout changes
-- [!] Gaps, borders, and paddings are rendered consistently
-    - Borders aren't actualized when Xresources are reloaded
+- [X] Gaps, borders, and paddings are rendered consistently
 - [X] Floating windows remain on top when expected
 
 ---
