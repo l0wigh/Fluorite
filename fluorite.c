@@ -466,6 +466,7 @@ static void FRun()
 	while (fluorite.run)
 	{
 		XNextEvent(fluorite.dpy, &ev);
+		FGetMonitorFromMouse();
 		if (ev.type == fluorite.xrandr_ev + RRScreenChangeNotify)
 		{
 			XRRUpdateConfiguration(&ev);
@@ -489,7 +490,6 @@ static void FRun()
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
-				FGetMonitorFromMouse();
 				FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
@@ -549,7 +549,9 @@ static int FCheckWindowToplevel(Window nw)
 				FResetFocus(fluorite.ws[i].t_wins);
 				FResetFocus(fluorite.ws[i].f_wins);
 				w->fc = 1;
-				goto show_ws;
+				if (JUMP_TO_URGENT)
+					goto show_ws;
+				return True;
 			}
 		}
 		for (w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
@@ -561,7 +563,9 @@ static int FCheckWindowToplevel(Window nw)
 				FResetFocus(fluorite.ws[i].f_wins);
 				w->fc = 1;
 				FWarpCursor(w->w);
-				goto show_ws;
+				if (JUMP_TO_URGENT)
+					goto show_ws;
+				return True;
 			}
 		}
 	}
@@ -593,7 +597,16 @@ static void FMapRequest(XEvent ev)
 		return;
 
 	if (FCheckWindowToplevel(ev.xmaprequest.window))
+	{
+		if (JUMP_TO_URGENT)
+			return;
+		XWMHints *hints = XGetWMHints(fluorite.dpy, ev.xmaprequest.window);
+		hints->flags |= XUrgencyHint;
+		XSetWMHints(fluorite.dpy, ev.xmaprequest.window, hints);
+		XChangeProperty(fluorite.dpy, fluorite.root, XA_WM_HINTS, XA_WM_HINTS, 32, PropModeAppend, (unsigned char *) NULL, 0);
+		XFree(hints);
 		return;
+	}
 
 	if (wa.override_redirect || wa.width <= 0 || wa.width <= 0)
 	{
@@ -1924,6 +1937,7 @@ void FFocusNextMonitor()
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
 	FApplyBorders();
 }
+
 void FResetMasterOffset()
 {
 	fluorite.ws[fluorite.cr_ws].mo = fluorite.conf.mo;

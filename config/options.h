@@ -6,8 +6,9 @@
 #define OPEN_IN_FLOAT			False			/* When True, windows will be opened in floating be default. Not applied on fixed windows */
 #define PRIMARY_BAR_ONLY		True			/* When True, Fluorite will considere that only the primary monitor is having a bar. When false Fluorite will assume that every monitor have one */
 #define XRESOURCES_AUTO_RELOAD	True			/* When True, monitor if the ~/.Xresources file is modified and reload the config if so */
-#define STARTING_LAYOUT			FLUORITE
-#define WARP_CURSOR				True
+#define STARTING_LAYOUT			FLUORITE		/* FLUORITE / DWM */
+#define WARP_CURSOR				True			/* When True, move the cursor to the newly focused window */
+#define JUMP_TO_URGENT			True			/* When True, move to the workspaces where a window need attention */
 
 typedef struct
 {
