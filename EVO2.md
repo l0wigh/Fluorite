@@ -12,6 +12,7 @@
 - [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Sending windows to a fullscreen workspace might lead to issues
     - Disable fullscreen ?
+- [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
 - [ ] Reset borders function
