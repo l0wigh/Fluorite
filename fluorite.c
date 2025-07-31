@@ -1,5 +1,4 @@
-#include <X11/extensions/randr.h>
-#define FLUORITE_VERSION "Fluorite [EVO 2]"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 2)"
 
 #include "config/keybinds.h"
 #include "config/design.h"
@@ -1923,5 +1922,11 @@ void FFocusNextMonitor()
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].f_wins->w, RevertToPointerRoot, CurrentTime);
 	if (fluorite.ws[fluorite.cr_ws].t_wins)
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+	FApplyBorders();
+}
+void FResetMasterOffset()
+{
+	fluorite.ws[fluorite.cr_ws].mo = fluorite.conf.mo;
+	FRedrawWindows();
 	FApplyBorders();
 }

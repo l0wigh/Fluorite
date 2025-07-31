@@ -46,6 +46,7 @@ void FFloatingHideShow();
 void FSendWindowToNextWorkspace();
 void FSendWindowToPrevWorkspace();
 void FFocusNextMonitor();
+void FResetMasterOffset();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -142,6 +143,7 @@ static const Bindings bind[] = {
   {METAKEY,				XK_underscore,		workspace_eight},
   {METAKEY,				XK_ccedilla,  		workspace_nine},
   {METAKEY,				XK_agrave,			workspace_ten},
+  {METAKEY,				XK_equal,			FResetMasterOffset},
 
   {METAKEY|ShiftMask,	XK_ampersand, 		window_workspace_one},
   {METAKEY|ShiftMask,	XK_eacute,    		window_workspace_two},
