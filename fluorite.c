@@ -1171,7 +1171,7 @@ redraw:
 	if (w)
 	{
 		XSetInputFocus(fluorite.dpy, w, RevertToPointerRoot, CurrentTime);
-		XSetWindowBorder(fluorite.dpy, w, fluorite.conf.bf);
+		FApplyBorders();
 		FWarpCursor(w);
 	}
 }
