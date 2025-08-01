@@ -29,7 +29,7 @@ void FExecute(char *argument);
 void FQuit();
 void FCloseWindow();
 void FRotateWindows(int mode);
-void FRotateSlavesWindows(int mode);
+void FRotateStackWindows(int mode);
 void FChangeMasterOffset(int mode);
 void FSwapWithMaster();
 void FFocusNext();
@@ -70,8 +70,8 @@ static void print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/pr
 // Fluorite based user defined function
 static void rotate_windows_up() { FRotateWindows(UP); }
 static void rotate_windows_down() { FRotateWindows(DOWN); }
-static void rotate_slaves_windows_up() { FRotateSlavesWindows(UP); }
-static void rotate_slaves_windows_down() { FRotateSlavesWindows(DOWN); }
+static void rotate_slaves_windows_up() { FRotateStackWindows(UP); }
+static void rotate_slaves_windows_down() { FRotateStackWindows(DOWN); }
 static void master_offset_up() { FChangeMasterOffset(UP); }
 static void master_offset_down() { FChangeMasterOffset(DOWN); }
 static void master_offset_reset() { FChangeMasterOffset(RESET); }
