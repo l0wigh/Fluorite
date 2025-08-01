@@ -468,7 +468,6 @@ static void FRun()
 	while (fluorite.run)
 	{
 		XNextEvent(fluorite.dpy, &ev);
-		FGetMonitorFromMouse();
 		if (ev.type == fluorite.xrandr_ev + RRScreenChangeNotify)
 		{
 			XRRUpdateConfiguration(&ev);
@@ -492,6 +491,7 @@ static void FRun()
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
+				FGetMonitorFromMouse();
 				FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
@@ -1206,32 +1206,33 @@ static Windows *FAddWindow(Windows *cw, Windows *nw)
 }
 
 static Windows *FDelWindow(Windows *cw, Windows *i)
+static Windows *FDelWindow(Windows *cw, Windows *w)
 {
-	if (!i->next && i == cw)
+	if (!w->next && w == cw)
 	{
 		cw = NULL;
 		XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
 	}
-	else if (i->next && i == cw)
+	else if (w->next && w == cw)
 	{
-		i->next->prev = NULL;
-		cw = i->next;
+		w->next->prev = NULL;
+		cw = w->next;
 		cw->fc = 1;
 		XSetInputFocus(fluorite.dpy, cw->w, RevertToPointerRoot, CurrentTime);
 	}
 	else
 	{
-		if (i->prev)
+		if (w->prev)
 		{
-			i->prev->next = i->next;
-			i->prev->fc = 1;
-			XSetInputFocus(fluorite.dpy, i->prev->w, RevertToPointerRoot, CurrentTime);
+			w->prev->next = w->next;
+			w->prev->fc = 1;
+			XSetInputFocus(fluorite.dpy, w->prev->w, RevertToPointerRoot, CurrentTime);
 		}
-		if (i->next)
+		if (w->next)
 		{
-			i->next->prev = i->prev;
-			i->next->fc = 1;
-			XSetInputFocus(fluorite.dpy, i->next->w, RevertToPointerRoot, CurrentTime);
+			w->next->prev = w->prev;
+			w->next->fc = 1;
+			XSetInputFocus(fluorite.dpy, w->next->w, RevertToPointerRoot, CurrentTime);
 		}
 	}
 	return cw;
