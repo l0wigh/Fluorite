@@ -1162,6 +1162,8 @@ static void FDestroyNotify(XEvent ev)
 	{
 		if (w->w == ev.xunmap.window)
 		{
+			if (fluorite.ws[ws].fs && w->fs)
+				fluorite.ws[ws].fs = 0;
 			FResetFocus(fluorite.ws[ws].t_wins);
 			fluorite.ws[ws].t_wins = FDelWindow(fluorite.ws[ws].t_wins, w);
 			free(w);
@@ -1172,6 +1174,8 @@ static void FDestroyNotify(XEvent ev)
 	{
 		if (w->w == ev.xunmap.window)
 		{
+			if (fluorite.ws[ws].fs && w->fs)
+				fluorite.ws[ws].fs = 0;
 			FResetFocus(fluorite.ws[ws].f_wins);
 			fluorite.ws[ws].f_wins = FDelWindow(fluorite.ws[ws].f_wins, w);
 			free(w);
