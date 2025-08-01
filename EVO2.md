@@ -1,5 +1,5 @@
 # TEST
-- [ ] Fullscreen app on ws 1, kill a window on ws 1 from another ws, does it reset nicely ?
+- Nothing
 
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
@@ -9,13 +9,8 @@
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
-- [ ] Cursor Warp doesn't occur when coming from an empty monitor
-- [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Find a way to verify certains values
     - fl_hdn
-- [ ] No refocus of fullscreen monitors when moving mouse
-- [ ] Sending windows to a fullscreen workspace might lead to issues
-    - Disable fullscreen ?
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
@@ -43,3 +38,7 @@
     - Probably fixed since pid + toplevel check
 - [X] Add FSendWindowsTo(Next/Prev)Workspace
 - [X] Add Monitors
+- [X] Cursor Warp doesn't occur when coming from an empty monitor
+- [X] Floating windows doesn't move to the right spot when swapping monitors
+- [X] No refocus of fullscreen monitors when moving mouse
+- [X] Sending windows to a fullscreen workspace might lead to issues
