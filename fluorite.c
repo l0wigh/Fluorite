@@ -2017,9 +2017,11 @@ void FChangeLayout(int layout)
 
 	FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
 	FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
-	fluorite.ws[fluorite.cr_ws].t_wins->fc = 1;
-	XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
-	// XSetWindowBorder(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, fluorite.conf.bf);
+	if (fluorite.ws[fluorite.cr_ws].t_wins)
+	{
+		fluorite.ws[fluorite.cr_ws].t_wins->fc = 1;
+		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+	}
 
 	FRedrawWindows();
 	FApplyBorders();
