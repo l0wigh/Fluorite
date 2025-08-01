@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
-#define MAX_WINDOWS				15				/* number of windows per workspaces */
+// #define MAX_WINDOWS				15				/* number of windows per workspaces */
 #define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
 #define OPEN_IN_FLOAT			False			/* When True, windows will be opened in floating be default. Not applied on fixed windows */
 #define PRIMARY_BAR_ONLY		True			/* When True, Fluorite will considere that only the primary monitor is having a bar. When false Fluorite will assume that every monitor have one */

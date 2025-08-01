@@ -600,8 +600,8 @@ static void FMapRequest(XEvent ev)
 	int is_floating = False;
 	int is_fixed = False;
 
-	if (FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) >= MAX_WINDOWS)
-		return;
+	// if (FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) >= MAX_WINDOWS)
+	// 	return;
 
 	if (!XGetWindowAttributes(fluorite.dpy, ev.xmaprequest.window, &wa))
 		return;
@@ -1614,7 +1614,8 @@ static void FSetWindowOpacity(Window w, double opacity)
 
 static void FUpdateClientList()
 {
-	Window list[(MAX_WINDOWS * 2) * MAX_WS];
+	int magic_number = 1145;
+	Window list[magic_number];
 	int list_idx = 0;
 
 	for (int i = 0; i < MAX_WS; i++)
