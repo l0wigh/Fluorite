@@ -491,8 +491,7 @@ static void FRun()
 				break;
 			case MotionNotify:
 				FGetMonitorFromMouse();
-				// if (WARP_CURSOR)
-				// 	FFocusWindowUnderCursor();
+				// FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
 			case EnterNotify:
@@ -1027,6 +1026,7 @@ static int FCheckWindowIsFixed(Window w)
 
 static void FChangeMonitor(int mon)
 {
+	no_warp = True;
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -1053,6 +1053,8 @@ static void FChangeMonitor(int mon)
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
 	}
 	FApplyBorders();
+	XSync(fluorite.dpy, True);
+	no_warp = False;
 }
 
 static void FConfigureRequest(XEvent ev)
