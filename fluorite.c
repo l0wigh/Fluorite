@@ -839,18 +839,13 @@ found:
 		);
 	XRaiseWindow(fluorite.dpy, w->w);
 	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+	FFocusWindowUnderCursor();
 }
 
 static void FRedrawWindows()
 {
 	if (!fluorite.ws[fluorite.cr_ws].t_wins)
 		return ;
-
-	if (fluorite.ws[fluorite.cr_ws].fs)
-	{
-		FRedrawFullscreen();
-		return ;
-	}
 
 	no_refocus = True;
 	
@@ -885,6 +880,9 @@ static void FRedrawWindows()
 		XRaiseWindow(fluorite.dpy, w->w);
 		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 	}
+
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		FRedrawFullscreen();
 
 	XSync(fluorite.dpy, True);
 	no_refocus = False;
