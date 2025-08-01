@@ -147,6 +147,7 @@ static void 	FWarpCursor(Window w);
 static void 	FSetWindowOpacity(Window w, double opacity);
 static void		FUpdateClientList();
 static void		FResetWindowOpacity(Window w);
+static void		FRemoveActiveWindow();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -499,6 +500,7 @@ static void FRun()
 				FMotionNotify(ev);
 				break;
 			case EnterNotify:
+				FGetMonitorFromMouse();
 				FFocusWindowUnderCursor();
 				break;
 			case ClientMessage:
@@ -1143,7 +1145,6 @@ static int FCheckWindowIsFixed(Window w)
 static void FChangeMonitor(int mon)
 {
 	no_warp = True;
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
@@ -1155,7 +1156,7 @@ static void FChangeMonitor(int mon)
 		w->fc = 0;
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
-	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+	FRemoveActiveWindow();
 	XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
 	fluorite.cr_mon = mon;
 	fluorite.cr_ws = fluorite.mon[mon].ws;
@@ -1237,7 +1238,6 @@ static Window FFindFocusedWindow()
 static void FUnmapNotify(XEvent ev)
 {
 	int ws;
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 
 	if (no_unmap)
 		return;
@@ -1273,7 +1273,7 @@ static void FUnmapNotify(XEvent ev)
 
 redraw:
 	FUpdateClientList();
-	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+	FRemoveActiveWindow();
 
 	int keep_ws = fluorite.cr_ws;
 	int keep_mon = fluorite.cr_mon;
@@ -1432,12 +1432,11 @@ Window FWindowUnderCursor()
 static void FFocusWindowUnderCursor()
 {
 	Window target = FWindowUnderCursor();
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 
 	no_warp = True;
 	if (target == None || target == fluorite.root)
 	{
-		XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+		FRemoveActiveWindow();
 		return ;
 	}
 
@@ -1634,10 +1633,14 @@ static void FResetWindowOpacity(Window w)
 	XDeleteProperty(fluorite.dpy, w, atom);
 }
 
+static void FRemoveActiveWindow()
+{
+	Atom atom = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
+	XDeleteProperty(fluorite.dpy, fluorite.root, atom);
+}
+
 static void FSwapMonitorWorkspace(int ws, int mon)
 {
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
-
 	int swap_mon = fluorite.cr_mon;
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -1651,7 +1654,7 @@ static void FSwapMonitorWorkspace(int ws, int mon)
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
 
-	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+	FRemoveActiveWindow();
 	fluorite.mon[mon].ws = fluorite.cr_ws;
 	fluorite.cr_mon = mon;
 	FRedrawWindows();
@@ -1671,8 +1674,6 @@ static void FSwapMonitorWorkspace(int ws, int mon)
 
 void FShowWorkspace(int ws)
 {
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
-
 	if (ws == fluorite.cr_ws)
 		return ;
 
@@ -1700,7 +1701,7 @@ void FShowWorkspace(int ws)
 	fluorite.cr_ws = ws;
 	fluorite.mon[fluorite.cr_mon].ws = ws;
 	XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
-	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+	FRemoveActiveWindow();
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 		XMapWindow(fluorite.dpy, w->w);
@@ -1731,7 +1732,6 @@ void FShowWorkspace(int ws)
 
 void FSendWindowToWorkspace(int ws)
 {
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 	Window focused;
 	int revert;
 	Windows *w;
@@ -1809,7 +1809,7 @@ next:
 		}
 	}
 
-	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+	FRemoveActiveWindow();
 	XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&ws, 1);
 	FUpdateClientList();
 	FRedrawWindows();
@@ -2194,8 +2194,6 @@ exit:
 
 void FFloatingHideShow()
 {
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
-
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		return; 
 	
@@ -2224,7 +2222,7 @@ void FFloatingHideShow()
 				FApplyBorders();
 			}
 			else
-				XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
+				FRemoveActiveWindow();
 		}
 	}
 	fluorite.ws[fluorite.cr_ws].fl_hdn = !fluorite.ws[fluorite.cr_ws].fl_hdn;
