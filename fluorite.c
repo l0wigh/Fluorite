@@ -1189,7 +1189,7 @@ update:
 	FFocusWindowUnderCursor();
 }
 
-static Windows *FAddWindow(Windows *cw, Windows *nw)
+static Windows *FAddWindow(Windows *cw, Windows *w)
 {
 	for (Windows *i = cw; i != NULL; i = i->next)
 		i->fc = 0;
@@ -1198,11 +1198,11 @@ static Windows *FAddWindow(Windows *cw, Windows *nw)
 	{
 		cw->fc = 0;
 		cw->fs = 0;
-		cw->prev = nw;
-		nw->next = cw;
-		nw->prev = NULL;
+		cw->prev = w;
+		w->next = cw;
+		w->prev = NULL;
 	}
-	return nw;
+	return w;
 }
 
 static Windows *FDelWindow(Windows *cw, Windows *i)
