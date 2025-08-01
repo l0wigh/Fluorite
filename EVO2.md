@@ -10,7 +10,6 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Sometime you'll loose the ability to change ws based on mouse position and monitor
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...

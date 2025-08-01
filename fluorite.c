@@ -494,7 +494,7 @@ static void FRun()
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
-				// FGetMonitorFromMouse();
+				FGetMonitorFromMouse();
 				// FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
