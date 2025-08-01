@@ -19,7 +19,8 @@ enum MODE {
 enum LAYOUT {
 	FLUORITE,
 	DWM,
-	STACKED
+	STACKED,
+	CENTERED
 };
 
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
@@ -97,6 +98,7 @@ static void window_workspace_nine() { FSendWindowToWorkspace(8); }
 static void window_workspace_ten() { FSendWindowToWorkspace(9); }
 static void layout_fluorite() { FChangeLayout(FLUORITE); }
 static void layout_dwm() { FChangeLayout(DWM); }
+static void layout_centered() { FChangeLayout(CENTERED); }
 static void layout_auto()
 {
 	if (STARTING_LAYOUT == DWM)
@@ -133,6 +135,7 @@ static const Bindings bind[] = {
   {METAKEY|ShiftMask,	XK_m,				dmenu_music},
   {METAKEY|ShiftMask, 	XK_c,				dmenu_font},
   {METAKEY|ShiftMask,	XK_space,			FFloatingHideShow},
+  {METAKEY|ShiftMask,	XK_r,	   			layout_centered},
 
 
   {METAKEY,				XK_ampersand, 		workspace_one},

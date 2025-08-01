@@ -677,6 +677,116 @@ static void FManageFloatingWindow(Windows *nw)
 	fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(cw, nw);
 }
 
+static void FRedrawCenteredMaster()
+{
+	Windows *w;
+	int n = 0;
+
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w; w = w->next, n++);
+	int mo = fluorite.ws[fluorite.cr_ws].mo;
+	int gap = fluorite.conf.gp;
+	int bw = fluorite.conf.bw;
+	int tb = fluorite.conf.tb;
+	int bb = fluorite.conf.bb;
+	int mon_x = fluorite.mon[fluorite.cr_mon].mx;
+	int mon_y = fluorite.mon[fluorite.cr_mon].my;
+	int mon_w = fluorite.mon[fluorite.cr_mon].mw;
+	int mon_h = fluorite.mon[fluorite.cr_mon].mh;
+	int content_y = mon_y + gap;
+	int content_h = mon_h - 2 * gap;
+	if (!PRIMARY_BAR_ONLY || fluorite.mon[fluorite.cr_mon].primary)
+	{
+		content_y += tb;
+		content_h -= (tb + bb);
+	}
+
+	int base_mw = mon_w / 2;
+	int mw = base_mw + mo;
+	if (mw > mon_w - 2 * gap)
+		mw = mon_w - 2 * gap;
+	int mx = mon_x + (mon_w - mw) / 2;
+	int sw = (mon_w - mw) / 2;
+
+	w = fluorite.ws[fluorite.cr_ws].t_wins;
+	XMoveResizeWindow(
+		fluorite.dpy, w->w,
+		mx + gap,
+		content_y,
+		mw - 2 * bw - 2 * gap,
+		content_h - 2 * bw
+	);
+	w->wx = mx + gap;
+	w->wy = content_y;
+	w->ww = mw - 2 * bw - 2 * gap;
+	w->wh = content_h - 2 * bw;
+
+	int stack_n = n - 1;
+	int left_n = (stack_n + 1) / 2;
+	int right_n = stack_n / 2;
+	int total_gap_left = (left_n - 1) * gap;
+	int total_gap_right = (right_n - 1) * gap;
+	int left_h = (content_h - total_gap_left) / (left_n > 0 ? left_n : 1);
+	int right_h = (content_h - total_gap_right) / (right_n > 0 ? right_n : 1);
+	int left_y = content_y;
+	int right_y = content_y;
+
+	w = w->next;
+	int i = 0;
+	Windows *last_left = NULL, *last_right = NULL;
+	while (w)
+	{
+		if (i % 2 == 0)
+		{
+			XMoveResizeWindow(
+				fluorite.dpy, w->w,
+				mon_x + gap,
+				left_y,
+				sw - 2 * bw - 2 * gap,
+				left_h - 2 * bw
+			);
+			w->wx = mon_x + gap;
+			w->wy = left_y;
+			w->ww = sw - 2 * bw - 2 * gap;
+			w->wh = left_h - 2 * bw;
+			last_left = w;
+			left_y += left_h + gap;
+		}
+		else
+		{
+			XMoveResizeWindow(
+				fluorite.dpy, w->w,
+				mx + mw + gap,
+				right_y,
+				sw - 2 * bw - 2 * gap,
+				right_h - 2 * bw
+			);
+			w->wx = mx + mw + gap;
+			w->wy = right_y;
+			w->ww = sw - 2 * bw - 2 * gap;
+			w->wh = right_h - 2 * bw;
+			last_right = w;
+			right_y += right_h + gap;
+		}
+		i++;
+		w = w->next;
+	}
+	if (stack_n % 2 == 0)
+	{
+		if (right_n < left_n && last_right)
+		{
+			int extra = (content_y + content_h) - (last_right->wy + last_right->wh + 2 * bw);
+			last_right->wh += extra;
+			XResizeWindow(fluorite.dpy, last_right->w, last_right->ww, last_right->wh);
+		}
+		else if (left_n < right_n && last_left)
+		{
+			int extra = (content_y + content_h) - (last_left->wy + last_left->wh + 2 * bw);
+			last_left->wh += extra;
+			XResizeWindow(fluorite.dpy, last_left->w, last_left->ww, last_left->wh);
+		}
+	}
+}
+
 static void FRedrawStackedLayout()
 {
 	Windows *raise;
@@ -856,6 +966,8 @@ static void FRedrawWindows()
 		FRedrawStackedLayout();
 	else if (fluorite.ws[fluorite.cr_ws].layout == DWM)
 		FRedrawDWMLayout();
+	else if (fluorite.ws[fluorite.cr_ws].layout == CENTERED && fluorite.ws[fluorite.cr_ws].t_wins->next->next)
+		FRedrawCenteredMaster();
 	else
 		FRedrawFluoriteLayout();
 
