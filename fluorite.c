@@ -860,9 +860,29 @@ static void FRedrawWindows()
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 	{
+		int from = -1;
+		for (int i = 0; i < fluorite.ct_mon; ++i)
+		{
+			if (w->wx >= fluorite.mon[i].mx && w->wx < fluorite.mon[i].mx + fluorite.mon[i].mw &&
+					w->wy >= fluorite.mon[i].my && w->wy < fluorite.mon[i].my + fluorite.mon[i].mh)
+			{
+				from = i;
+				break;
+			}
+		}
+
+		if (from != -1 && from != fluorite.cr_mon)
+		{
+			float rel_x = (float)(w->wx - fluorite.mon[from].mx) / fluorite.mon[from].mw;
+			float rel_y = (float)(w->wy - fluorite.mon[from].my) / fluorite.mon[from].mh;
+			w->wx = fluorite.mon[fluorite.cr_mon].mx + (int)(rel_x * fluorite.mon[fluorite.cr_mon].mw);
+			w->wy = fluorite.mon[fluorite.cr_mon].my + (int)(rel_y * fluorite.mon[fluorite.cr_mon].mh);
+		}
+
 		XRaiseWindow(fluorite.dpy, w->w);
 		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 	}
+
 }
 
 static void FApplyActiveWindow(Window w)
