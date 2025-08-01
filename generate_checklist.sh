@@ -34,6 +34,7 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [ ] Focus follows mouse
 - [ ] Focus is restored to previous window on close
 - [ ] Cursor warping (if used) positions pointer correctly
+- [ ] Focus still works nicely without cursor warping
 
 ---
 

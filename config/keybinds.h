@@ -24,7 +24,7 @@ enum LAYOUT {
 
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
 
-// Fluorite Core User Functions
+// Fluorite Core Functions
 void FExecute(char *argument);
 void FQuit();
 void FCloseWindow();
@@ -65,8 +65,9 @@ static void st_music() { char prog[255] = "st -c st_music -g 100x30 mocp"; FExec
 static void dmenu_music() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_music.sh"; FExecute(prog); }
 static void dmenu_font() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh font"; FExecute(prog); }
 static void dmenu_font_size() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh"; FExecute(prog); }
+static void print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; FExecute(prog); }
 
-
+// Fluorite based user defined function
 static void rotate_windows_up() { FRotateWindows(UP); }
 static void rotate_windows_down() { FRotateWindows(DOWN); }
 static void rotate_slaves_windows_up() { FRotateSlavesWindows(UP); }
@@ -120,6 +121,7 @@ static const Bindings bind[] = {
   {METAKEY,     		XK_c,				dmenu_xresources},
   {METAKEY,				XK_d,	   			runner_app},
   {METAKEY,				XK_r,	   			layout_auto},
+  {METAKEY, 			XK_Print,			print_screen},
 
   {METAKEY|ShiftMask,	XK_Return,			FSwapWithMaster},
   {METAKEY|ShiftMask, 	XK_q,				FCloseWindow},

@@ -1,3 +1,6 @@
+# TEST
+- [ ] Fullscreen app on ws 1, kill a window on ws 1 from another ws, does it reset nicely ?
+
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [ ] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
@@ -15,6 +18,9 @@
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
+- [ ] Check for memory leaks
+    - Might not leak but in btop at startup 4M and after a while 6M
+    - This might be caused because I'm managing more windows and be normal then
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 
