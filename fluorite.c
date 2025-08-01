@@ -2030,9 +2030,15 @@ void FFocusNextMonitor()
 		fluorite.mon[mon].my + fluorite.mon[mon].mh / 2
 	);
 	if (fluorite.ws[fluorite.cr_ws].f_wins)
+	{
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].f_wins->w, RevertToPointerRoot, CurrentTime);
+		FWarpCursor(fluorite.ws[fluorite.cr_ws].f_wins->w);
+	}
 	if (fluorite.ws[fluorite.cr_ws].t_wins)
+	{
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+		FWarpCursor(fluorite.ws[fluorite.cr_ws].t_wins->w);
+	}
 
 	if (!fluorite.ws[fluorite.cr_ws].fs)
 		FApplyBorders();
