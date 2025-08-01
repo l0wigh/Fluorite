@@ -1385,23 +1385,31 @@ static void FButtonPress(XEvent ev)
 	fluorite.mouse.spx = ev.xbutton.x_root;
 	fluorite.mouse.spy = ev.xbutton.y_root;
 	XGetGeometry(fluorite.dpy, target, &fluorite.root, &fluorite.mouse.swx, &fluorite.mouse.swy, &fluorite.mouse.sww, &fluorite.mouse.swh, &b_w, &d);
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+	{
+		if (target != w->w)
+			continue;
+		fluorite.ws[fluorite.cr_ws].f_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
+		fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
+		XRaiseWindow(fluorite.dpy, w->w);
+	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
-		if (target == w->w)
-		{
-			fluorite.ws[fluorite.cr_ws].t_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
-			w->next = NULL;
-			w->prev = NULL;
-			FManageFloatingWindow(w);
-			xdo_get_window_size(fluorite.xdo, w->w, &xdo_w, &xdo_h);
-			xdo_get_window_location(fluorite.xdo, w->w, &w->wx, &w->wy, &scr);
-			w->ww = xdo_w;
-			w->wh = xdo_h;
-			XResizeWindow(fluorite.dpy, w->w, w->ww, w->wh);
-			XMoveWindow(fluorite.dpy, w->w, w->wx, w->wy);
-		}
+		if (target != w->w)
+			continue;
+
+		fluorite.ws[fluorite.cr_ws].t_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+		w->next = NULL;
+		w->prev = NULL;
+		fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
+		xdo_get_window_size(fluorite.xdo, w->w, &xdo_w, &xdo_h);
+		xdo_get_window_location(fluorite.xdo, w->w, &w->wx, &w->wy, &scr);
+		w->ww = xdo_w;
+		w->wh = xdo_h;
+		XResizeWindow(fluorite.dpy, w->w, w->ww, w->wh);
+		XMoveWindow(fluorite.dpy, w->w, w->wx, w->wy);
+		FRedrawWindows();
 	}
-	FRedrawWindows();
 }
 
 static void FClientMessage(XEvent ev)
