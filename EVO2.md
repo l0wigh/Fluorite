@@ -9,6 +9,7 @@
     - https://specifications.freedesktop.org/wm-spec/1.3/
 
 # BUG
+- [ ] Cursor Warp doesn't occur when coming from an empty monitor
 - [ ] Floating windows doesn't move to the right spot when swapping monitors
 - [ ] Find a way to verify certains values
     - fl_hdn
