@@ -1709,69 +1709,99 @@ void FPrevWorkspace()
 
 void FRotateStackWindows(int mode)
 {
-	Windows *first;
-	Windows *last;
-	Windows *ws_head;
-	Windows *master;
-	Windows *moved;
+    Windows *first;
+    Windows *last;
+    Windows *ws_head;
+    Windows *master;
+    Windows *moved;
+    Window focused = FFindFocusedWindow();
+	Windows *w;
 
     ws_head = fluorite.ws[fluorite.cr_ws].t_wins;
-    if (!ws_head || !ws_head->next)  // Si pas assez de fenêtres à empiler
+    if (!ws_head || !ws_head->next)
         return;
 
-    master = ws_head;    // La première fenêtre est la master, elle reste fixe
-    first = master->next; // La liste stackée commence à partir du deuxième élément
+    master = ws_head;
+    first = master->next;
 
-    switch (mode)
+	switch (mode)
+	{
+		case UP:
+			ws_head = fluorite.ws[fluorite.cr_ws].t_wins;
+			if (!ws_head || !ws_head->next)
+				return;
+			master = ws_head;
+			first = master->next;
+			last = first;
+			while (last->next)
+				last = last->next;
+			moved = first;
+			master->next = moved->next;
+			if (moved->next)
+				moved->next->prev = master;
+			last->next = moved;
+			moved->prev = last;
+			moved->next = NULL;
+			break;
+		case DOWN:
+			ws_head = fluorite.ws[fluorite.cr_ws].t_wins;
+			if (!ws_head || !ws_head->next)
+				return;
+			master = ws_head;
+			first = master->next;
+			last = first;
+			while (last->next)
+				last = last->next;
+			if (last->prev)
+				last->prev->next = NULL;
+			last->prev = master;
+			last->next = first;
+			first->prev = last;
+			master->next = last;
+			break;
+	}
+
+    FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+    first = master->next;
+    if (!first)
+        return;
+    last = first;
+    while (last->next)
+        last = last->next;
+    for (w = first; w; w = w->next)
     {
-        case UP:
-            last = first;
-            while (last->next)
-                last = last->next;
-
-            // On décolle la première fenêtre stackée
-            moved = first;
-            master->next = moved->next;
-            if (moved->next)
-                moved->next->prev = master;
-
-            // On place moved à la fin de la stack
-            last->next = moved;
-            moved->prev = last;
-            moved->next = NULL;
-            break;
-
-        case DOWN:
-            last = first;
-            while (last->next)
-                last = last->next;
-
-            // On décolle la dernière fenêtre stackée
-            if (last->prev)
-                last->prev->next = NULL;
-
-            last->prev = master;
-            last->next = first;
-            first->prev = last;
-            master->next = last;
-            break;
-
-        default:
-            return;
+        if (w->w == focused)
+        {
+            if (mode == UP)
+                w = (w->next) ? w->next : first;
+            else
+                w = (w->prev && w->prev != master) ? w->prev : last;
+            XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+            w->fc = 1;
+			goto redraw;
+        }
     }
 
+not_found:
+	XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+	fluorite.ws[fluorite.cr_ws].t_wins->fc = 1;
+
+redraw:
+    FApplyBorders();
+    FRedrawWindows();
+	FWarpCursor(w->w);
 }
 
 void FRotateWindows(int mode)
 {
-	Windows *first;
-	Windows *last;
+	Windows *first, *last;
+	Window focused = FFindFocusedWindow();
 
 	switch (mode)
 	{
 		case UP:
 			if (!fluorite.ws[fluorite.cr_ws].t_wins || !fluorite.ws[fluorite.cr_ws].t_wins->next)
-				break;
+				return;
 			first = fluorite.ws[fluorite.cr_ws].t_wins;
 			last = first;
 			while (last->next)
@@ -1784,7 +1814,7 @@ void FRotateWindows(int mode)
 			break;
 		case DOWN:
 			if (!fluorite.ws[fluorite.cr_ws].t_wins || !fluorite.ws[fluorite.cr_ws].t_wins->next)
-				break;
+				return;
 			last = fluorite.ws[fluorite.cr_ws].t_wins;
 			while (last->next)
 				last = last->next;
@@ -1796,11 +1826,30 @@ void FRotateWindows(int mode)
 			first->prev = last;
 			fluorite.ws[fluorite.cr_ws].t_wins = last;
 			break;
-		default:
+	}
+
+	FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+	first = fluorite.ws[fluorite.cr_ws].t_wins;
+	last = first;
+	while (last->next)
+		last = last->next;
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w; w = w->next)
+	{
+		if (w->w == focused)
+		{
+			if (mode == UP)
+				w = (w->next) ? w->next : fluorite.ws[fluorite.cr_ws].t_wins;
+			else
+				w = (w->prev) ? w->prev : last;
+			XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+			w->fc = 1;
 			break;
+		}
 	}
 	FRedrawWindows();
+	FApplyBorders();
 }
+
 
 void FChangeMasterOffset(int mode)
 {
@@ -1965,6 +2014,12 @@ void FChangeLayout(int layout)
 		fluorite.ws[fluorite.cr_ws].layout = STARTING_LAYOUT;
 	else
 		fluorite.ws[fluorite.cr_ws].layout = layout;
+
+	FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+	FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
+	fluorite.ws[fluorite.cr_ws].t_wins->fc = 1;
+	XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+	// XSetWindowBorder(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, fluorite.conf.bf);
 
 	FRedrawWindows();
 	FApplyBorders();
