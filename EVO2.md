@@ -14,6 +14,7 @@
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
+- [ ] Add function FRemoveActiveWindow and search for net_active_window
 - [ ] Check for memory leaks
     - Might not leak but in btop at startup 4M and after a while 6M
     - This might be caused because I'm managing more windows and be normal then

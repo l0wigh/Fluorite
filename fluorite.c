@@ -1514,6 +1514,8 @@ static void FResetWindowOpacity(Window w)
 
 static void FSwapMonitorWorkspace(int ws, int mon)
 {
+	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
+
 	int swap_mon = fluorite.cr_mon;
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -1527,6 +1529,7 @@ static void FSwapMonitorWorkspace(int ws, int mon)
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
 
+	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
 	fluorite.mon[mon].ws = fluorite.cr_ws;
 	fluorite.cr_mon = mon;
 	FRedrawWindows();
