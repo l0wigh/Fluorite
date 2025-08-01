@@ -1,8 +1,8 @@
-# Fluorite EVO 2 (Beta 2)
+# Fluorite EVO 2 (Beta 3)
 
 This is a very early Evolution of Fluorite 1.1
 
-There is still many many things to add (ex: Monitors). Use 1.1 !
+There is still many many things to fix ! Use 1.1 !
 
 ## Things that changed in EVO 2
 

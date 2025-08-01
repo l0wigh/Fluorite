@@ -455,8 +455,12 @@ static void FReloadXresources()
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
 	FLoadXresources();
-	FRedrawWindows();
-	FApplyBorders();
+	for (int i = 0; i < fluorite.ct_mon; i++)
+	{
+		FFocusNextMonitor();
+		FRedrawWindows();
+		FApplyBorders();
+	}
 }
 
 static void FRun()
@@ -490,7 +494,7 @@ static void FRun()
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
-				FGetMonitorFromMouse();
+				// FGetMonitorFromMouse();
 				// FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
@@ -1448,6 +1452,7 @@ static void FMotionNotify(XEvent ev)
 		target->wy = ddy;
 		hints.x = ddx;
 		hints.y = ddy;
+		goto pressed;
 	}
 	else if (ev.xmotion.state & Button3Mask)
 	{
@@ -1458,8 +1463,13 @@ static void FMotionNotify(XEvent ev)
 		target->wh = ddy;
 		hints.width = ddx;
 		hints.height = ddy;
+		goto pressed;
 	}
 
+	no_warp = False;
+	return;
+
+pressed:
 	XRaiseWindow(fluorite.dpy, target->w);
 	FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
 	target->fc = 1;
