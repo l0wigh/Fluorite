@@ -1205,7 +1205,6 @@ static Windows *FAddWindow(Windows *cw, Windows *w)
 	return w;
 }
 
-static Windows *FDelWindow(Windows *cw, Windows *i)
 static Windows *FDelWindow(Windows *cw, Windows *w)
 {
 	if (!w->next && w == cw)
