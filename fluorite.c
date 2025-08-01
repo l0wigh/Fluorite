@@ -1701,6 +1701,7 @@ next:
 	XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&ws, 1);
 	FUpdateClientList();
 	FRedrawWindows();
+	FApplyBorders();
 
 	if (FOLLOW_WINDOWS)
 		FShowWorkspace(ws);
