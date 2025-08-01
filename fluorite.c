@@ -1572,6 +1572,15 @@ void FSendWindowToWorkspace(int ws)
 	XGrabServer(fluorite.dpy);
 	XGetInputFocus(fluorite.dpy, &focused, &revert);
 
+	if (fluorite.ws[ws].fs)
+	{
+		fluorite.ws[ws].fs = 0;
+		for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
+		{ FResetWindowOpacity(w->w); XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw); w->fs = 0; }
+		for (Windows *w = fluorite.ws[ws].f_wins; w != NULL; w = w->next)
+		{ FResetWindowOpacity(w->w); XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw); w->fs = 0; }
+	}
+
 	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
 		if (focused == w->w)
