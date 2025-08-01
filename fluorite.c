@@ -136,6 +136,7 @@ static void 	FKeyPress(XEvent ev);
 static int  	FFindWorkspaceFromWindow(Window w);
 static void		FResetFocus(Windows *w);
 static void 	FUnmapNotify(XEvent ev);
+static void 	FDestroyNotify(XEvent ev);
 static Windows	*FAddWindow(Windows *cw, Windows *nw);
 static Windows	*FDelWindow(Windows *cw, Windows *nw);
 static void		FFocusWindowUnderCursor();
@@ -498,6 +499,9 @@ static void FRun()
 				break;
 			case ClientMessage:
 				FClientMessage(ev);
+				break;
+			case DestroyNotify:
+				FDestroyNotify(ev);
 				break;
 		}
 	}
@@ -1072,7 +1076,6 @@ static void FResetFocus(Windows *w)
 static void FUnmapNotify(XEvent ev)
 {
 	int ws;
-	int found = 0;
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 
 	if (no_unmap)
@@ -1082,23 +1085,26 @@ static void FUnmapNotify(XEvent ev)
 	if (ws == -1)
 		return;
 
-	for (Windows *i = fluorite.ws[ws].t_wins; i && found != 1; i = i->next)
+	if (ws != fluorite.cr_ws)
+		fprintf(stderr, "Not on the current WS !\n");
+
+	for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
 	{
-		if (i->w == ev.xunmap.window)
+		if (w->w == ev.xunmap.window)
 		{
-			FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
-			fluorite.ws[ws].t_wins = FDelWindow(fluorite.ws[ws].t_wins, i);
-			free(i);
+			FResetFocus(fluorite.ws[ws].t_wins);
+			fluorite.ws[ws].t_wins = FDelWindow(fluorite.ws[ws].t_wins, w);
+			free(w);
 			goto redraw;
 		}
 	}
-	for (Windows *i = fluorite.ws[ws].f_wins; i; i = i->next)
+	for (Windows *w = fluorite.ws[ws].f_wins; w; w = w->next)
 	{
-		if (i->w == ev.xunmap.window)
+		if (w->w == ev.xunmap.window)
 		{
-			FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
-			fluorite.ws[ws].f_wins = FDelWindow(fluorite.ws[ws].f_wins, i);
-			free(i);
+			FResetFocus(fluorite.ws[ws].f_wins);
+			fluorite.ws[ws].f_wins = FDelWindow(fluorite.ws[ws].f_wins, w);
+			free(w);
 			goto redraw;
 		}
 	}
@@ -1108,6 +1114,45 @@ redraw:
 	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
 	FRedrawWindows();
 	FApplyBorders();
+}
+
+static void FDestroyNotify(XEvent ev)
+{
+	int ws;
+
+	fprintf(stderr, "DestroyNotify !\n");
+
+	ws = FFindWorkspaceFromWindow(ev.xunmap.window);
+	if (ws == -1)
+		return;
+
+	if (ws != fluorite.cr_ws)
+		fprintf(stderr, "Not on the current WS !\n");
+
+	for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->w == ev.xunmap.window)
+		{
+			FResetFocus(fluorite.ws[ws].t_wins);
+			fluorite.ws[ws].t_wins = FDelWindow(fluorite.ws[ws].t_wins, w);
+			free(w);
+			goto update;
+		}
+	}
+	for (Windows *w = fluorite.ws[ws].f_wins; w; w = w->next)
+	{
+		if (w->w == ev.xunmap.window)
+		{
+			FResetFocus(fluorite.ws[ws].f_wins);
+			fluorite.ws[ws].f_wins = FDelWindow(fluorite.ws[ws].f_wins, w);
+			free(w);
+			goto update;
+		}
+	}
+
+update:
+	FUpdateClientList();
+	FFocusWindowUnderCursor();
 }
 
 static Windows *FAddWindow(Windows *cw, Windows *nw)
@@ -1209,7 +1254,7 @@ static void FFocusWindowUnderCursor()
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 
 	no_warp = True;
-	if (target == None)
+	if (target == None || target == fluorite.root)
 	{
 		XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
 		return ;
@@ -1481,6 +1526,7 @@ void FShowWorkspace(int ws)
 
 void FSendWindowToWorkspace(int ws)
 {
+	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 	Window focused;
 	int revert;
 	Windows *w;
@@ -1549,6 +1595,7 @@ next:
 		}
 	}
 
+	XDeleteProperty(fluorite.dpy, fluorite.root, net_active_window);
 	XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&ws, 1);
 	FUpdateClientList();
 	FRedrawWindows();
