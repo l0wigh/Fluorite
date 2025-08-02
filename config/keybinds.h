@@ -121,10 +121,10 @@ static const Bindings bind[] = {
   {METAKEY,     		XK_s,				layout_stacked},
   {METAKEY,     		XK_t,				themes},
   {METAKEY,     		XK_f,				FFullscreenToggle},
-  {METAKEY,     		XK_c,				dmenu_xresources},
   {METAKEY,				XK_d,	   			runner_app},
   {METAKEY,				XK_r,	   			layout_auto},
   {METAKEY, 			XK_Print,			print_screen},
+  {METAKEY,				XK_c,	   			layout_centered},
 
   {METAKEY|ShiftMask,	XK_Return,			FSwapWithMaster},
   {METAKEY|ShiftMask, 	XK_q,				FCloseWindow},
@@ -134,9 +134,10 @@ static const Bindings bind[] = {
   {METAKEY|ShiftMask, 	XK_l,	   			rotate_slaves_windows_up},
   {METAKEY|ShiftMask, 	XK_e,	   			locking},
   {METAKEY|ShiftMask,	XK_m,				dmenu_music},
-  {METAKEY|ShiftMask, 	XK_c,				dmenu_font},
+  {METAKEY|ShiftMask, 	XK_f,				dmenu_font},
   {METAKEY|ShiftMask,	XK_space,			FFloatingHideShow},
   {METAKEY|ShiftMask,	XK_r,	   			layout_centered},
+  {METAKEY|ShiftMask, 	XK_t,				dmenu_xresources},
 
 
   {METAKEY,				XK_ampersand, 		workspace_one},
@@ -165,7 +166,7 @@ static const Bindings bind[] = {
   {METAKEY|ControlMask,	XK_j,				FPrevWorkspace},
   {METAKEY|ControlMask,	XK_m,				FNextWorkspace},
   {METAKEY|ControlMask,	XK_space,			FTileAllWindows},
-  {METAKEY|ControlMask,	XK_c,				dmenu_font_size},
+  {METAKEY|ControlMask,	XK_f,				dmenu_font_size},
 
   {METAKEY,				XK_n,				FFocusNext},
   {METAKEY|ShiftMask,	XK_n,				FFocusPrev},

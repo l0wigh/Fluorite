@@ -1355,7 +1355,7 @@ static void FUnmapNotify(XEvent ev)
 				FResetWindowOpacity(w->w);
 				if (fluorite.ws[ws].fs)
 				{
-					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
 					FSetWindowOpacity(w->w, 100);
 				}
 				w->sw = 0;
@@ -1381,7 +1381,7 @@ static void FUnmapNotify(XEvent ev)
 				FResetWindowOpacity(w->w);
 				if (fluorite.ws[ws].fs)
 				{
-					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
 					FSetWindowOpacity(w->w, 100);
 				}
 				w->sw = 0;
@@ -1438,7 +1438,7 @@ static void FDestroyNotify(XEvent ev)
 				FResetWindowOpacity(w->w);
 				if (fluorite.ws[ws].fs)
 				{
-					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
 					FSetWindowOpacity(w->w, 100);
 				}
 				w->sw = 0;
@@ -1463,7 +1463,7 @@ static void FDestroyNotify(XEvent ev)
 				FResetWindowOpacity(w->w);
 				if (fluorite.ws[ws].fs)
 				{
-					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
 					FSetWindowOpacity(w->w, 100);
 				}
 				w->sw = 0;
