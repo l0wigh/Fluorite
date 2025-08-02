@@ -11,12 +11,13 @@
 
 # BUG
 - [ ] Going to a fullscreen monitor does not reapply active window name
+- [ ] Switching ws sometimes does not reapply active window name doesn't warp cursor
+    - Reproduce by putting your cursor on polybar, switch to another ws, and then goback
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
-- [ ] Add function FRemoveActiveWindow and search for net_active_window
 - [ ] Check for memory leaks
     - Might not leak but in btop at startup 4M and after a while 6M
     - This might be caused because I'm managing more windows and be normal then
@@ -45,3 +46,4 @@
 - [X] Floating windows doesn't move to the right spot when swapping monitors
 - [X] No refocus of fullscreen monitors when moving mouse
 - [X] Sending windows to a fullscreen workspace might lead to issues
+- [X] Add function FRemoveActiveWindow and search for net_active_window
