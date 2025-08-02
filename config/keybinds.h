@@ -48,6 +48,7 @@ void FSendWindowToNextWorkspace();
 void FSendWindowToPrevWorkspace();
 void FFocusNextMonitor();
 void FResetMasterOffset();
+void FReloadXresources();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }

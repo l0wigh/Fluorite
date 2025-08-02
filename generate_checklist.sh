@@ -24,17 +24,18 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [ ] Windows are placed in correct positions (master/stack or grid/tiled)
 - [ ] Windows resize as expected when layout changes
 - [ ] Gaps, borders, and paddings are rendered consistently
-- [ ] Floating windows remain on top when expected
+- [ ] Default layout is respected
 
 ---
 
 ## 🖱️ Mouse & Input Focus
 
-- [ ] Hover-to-focus works
-- [ ] Focus follows mouse
-- [ ] Focus is restored to previous window on close
-- [ ] Cursor warping (if used) positions pointer correctly
-- [ ] Focus still works nicely without cursor warping
+- [ ] Enter-to-focus works
+- [ ] Cursor warp on focused windows when option is True
+- [ ] Cursor does not warp when option is False
+- [ ] Moving cursor already inside an unfocused window doesn't change focus
+- [ ] Focus is restored to the next window in the stack
+- [ ] Focus still works without cursor warping
 
 ---
 
@@ -45,6 +46,7 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [ ] Windows do not leak across workspaces
 - [ ] Indicators (bar, HUD, etc.) reflect the active workspace
 - [ ] Empty workspaces can be navigated to and from
+- [ ] Workspaces keeps their currently selected layout
 
 ---
 
@@ -60,10 +62,16 @@ This checklist helps ensure your window manager is functioning correctly across 
 ## 🖥️ Multi-Monitor Support
 
 - [ ] All monitors are detected
-- [ ] Workspaces can be assigned independently per monitor
+- [ ] Monitors have a different default workspace based on user config
+- [ ] Workspaces are uniquely attributed to monitors
 - [ ] New windows appear on the correct monitor
-- [ ] Dragging or moving windows between monitors works
-- [ ] Plugging/unplugging monitors updates layouts properly
+- [!] Dragging or moving windows between monitors works
+	- Not implemented yet
+- [ ] Plugging/unplugging monitors
+	- [ ] Go to default workspace on every monitors
+	- [ ] Redraw occurs
+	- [ ] Layout stay the same
+	- [ ] No ghost windows
 - [ ] Status bars appear per monitor (if configured)
 
 ---
@@ -80,17 +88,23 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 ## 🔐 Floating and Special Windows
 
-- [ ] Dialogs, modals, and splash windows are centered
-- [ ] Windows with \`WM_TRANSIENT_FOR\` are grouped correctly
-- [ ] Windows with \`SKIP_TASKBAR\` are not shown in the bar
-- [ ] Input-less windows (e.g., tooltips) are not focused
+- [ ] Normal floating windows are centered by default
+- [ ] Actions
+	- [ ] Move
+	- [ ] Resize
+- [ ] Can extract windows from tiling by dragging or resizing
+- [ ] Windows keeps their tiled properties (size/positions) when extracted
+- [ ] Can be retiled with bindings
+- [ ] Clicking on a floating window put it in top of the stack
+- [ ] Floating windows remain on top when expected
 
 ---
 
 ## 📦 Application Compatibility
 
 - [ ] GUI apps (e.g. browser, IDE, video player) display correctly
-- [ ] Games or fullscreen apps go fullscreen without issue
+- [!] Games or fullscreen apps go fullscreen without issue
+	- Not automatically (it's meh !)
 - [ ] Notifications are not blocked or misplaced
 - [ ] Clipboard works between apps
 - [ ] Drag-and-drop behaves normally
@@ -105,12 +119,37 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 ---
 
+## 👄 Window Swallowing
+
+- [ ] Opening
+	- [ ] Tiled swallowers
+	- [ ] Floating swallowers
+- [ ] Closing
+	- [ ] Tiled swallowers
+	- [ ] Floating swallowers
+- [ ] Apps not present in default_swallowing **can't** swallow apps
+- [ ] Floating actions
+	- [ ] Move
+	- [ ] Resize
+
+---
+
+## 🖌️ Dynamic Theming
+
+- [ ] Xresources modifications are monitored if True in options
+- [ ] Reloading redraw every monitors
+- [ ] If an option is unselected it use the compiled value
+
+---
+
+
 ## ⚠️ Edge Cases
 
 - [ ] Closing the last window does not crash the WM
 - [ ] Reopening closed apps works as expected
 - [ ] Rapid workspace switching does not break rendering
-- [ ] High-DPI scaling (if applicable) works
+- [!] High-DPI scaling (if applicable) works
+	- Not tested
 
 ---
 

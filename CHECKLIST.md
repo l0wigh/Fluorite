@@ -19,16 +19,18 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] Windows are placed in correct positions (master/stack or grid/tiled)
 - [X] Windows resize as expected when layout changes
 - [X] Gaps, borders, and paddings are rendered consistently
-- [X] Floating windows remain on top when expected
+- [X] Default layout is respected
 
 ---
 
 ## 🖱️ Mouse & Input Focus
 
-- [X] Hover-to-focus works
-- [X] Focus follows mouse (if configured)
-- [X] Focus is restored to previous window on close
-- [X] Cursor warping (if used) positions pointer correctly
+- [X] Enter-to-focus works
+- [X] Cursor warp on focused windows when option is True
+- [X] Cursor does not warp when option is False
+- [X] Moving cursor already inside an unfocused window doesn't change focus
+- [X] Focus is restored to the next window in the stack
+- [X] Focus still works without cursor warping
 
 ---
 
@@ -39,6 +41,7 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] Windows do not leak across workspaces
 - [X] Indicators (bar, HUD, etc.) reflect the active workspace
 - [X] Empty workspaces can be navigated to and from
+- [X] Workspaces keeps their currently selected layout
 
 ---
 
@@ -54,11 +57,18 @@ This checklist helps ensure your window manager is functioning correctly across 
 ## 🖥️ Multi-Monitor Support
 
 - [X] All monitors are detected
-- [X] Workspaces can be assigned independently per monitor
+- [X] Monitors have a different default workspace based on user config
+- [X] Workspaces are uniquely attributed to monitors
 - [X] New windows appear on the correct monitor
 - [!] Dragging or moving windows between monitors works
-    - Not implemented yet
-- [X] Plugging/unplugging monitors updates layouts properly
+	- Not implemented yet
+- [!] Plugging/unplugging monitors
+	- [X] Go to default workspace on every monitors
+	- [!] Redraw occurs
+        - When monitors goes to 2 -> 1 another XEvent needs to occurs to see windows
+        - Maybe add a little sleep
+	- [X] Layout stay the same
+	- [X] No ghost windows
 - [X] Status bars appear per monitor (if configured)
 
 ---
@@ -68,8 +78,6 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] `_NET_CLIENT_LIST` is updated when windows open/close
 - [X] `_NET_WM_DESKTOP` tracks the workspace a window is on
 - [X] `_NET_ACTIVE_WINDOW` updates when focus changes
-- [!] `_NET_WM_STATE_DEMANDS_ATTENTION` triggers urgency
-    - Not Implemented
 - [X] `_NET_WM_NAME` and `WM_NAME` are displayed correctly
 - [X] `_NET_WM_WINDOW_TYPE` is handled (normal, dialog, dock, etc.)
 
@@ -77,12 +85,15 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 ## 🔐 Floating and Special Windows
 
-- [X] Dialogs, modals, and splash windows are centered
-- [!] Windows with `WM_TRANSIENT_FOR` are grouped correctly
-    - Maybe, maybe not
-- [X] Windows with `SKIP_TASKBAR` are not shown in the bar
-- [!] Input-less windows (e.g., tooltips) are not focused
-    - Maybe, maybe not
+- [X] Normal floating windows are centered by default
+- [X] Actions
+	- [X] Move
+	- [X] Resize
+- [X] Can extract windows from tiling by dragging or resizing
+- [X] Windows keeps their tiled properties (size/positions) when extracted
+- [X] Can be retiled with bindings
+- [X] Clicking on a floating window put it in top of the stack
+- [X] Floating windows remain on top when expected
 
 ---
 
@@ -90,7 +101,7 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 - [X] GUI apps (e.g. browser, IDE, video player) display correctly
 - [!] Games or fullscreen apps go fullscreen without issue
-    - Not automatically, but can be put in this state
+	- Not automatically (it's meh !)
 - [X] Notifications are not blocked or misplaced
 - [X] Clipboard works between apps
 - [X] Drag-and-drop behaves normally
@@ -105,14 +116,38 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 ---
 
+## 👄 Window Swallowing
+
+- [X] Opening
+	- [X] Tiled swallowers
+	- [X] Floating swallowers
+- [X] Closing
+	- [X] Tiled swallowers
+	- [X] Floating swallowers
+- [X] Apps not present in default_swallowing **can't** swallow apps
+- [X] Floating actions
+	- [X] Move
+	- [X] Resize
+
+---
+
+## 🖌️ Dynamic Theming
+
+- [X] Xresources modifications are monitored if True in options
+- [X] Reloading redraw every monitors
+- [X] If an option is unselected it use the compiled value
+
+---
+
+
 ## ⚠️ Edge Cases
 
 - [X] Closing the last window does not crash the WM
 - [X] Reopening closed apps works as expected
 - [X] Rapid workspace switching does not break rendering
 - [!] High-DPI scaling (if applicable) works
-    - Untested
+    - Not tested
 
 ---
 
-_Last updated: jeu. 31 juil. 2025 13:51:54 CEST_
+_Last updated: sam. 02 août 2025 13:24:05 CEST_
