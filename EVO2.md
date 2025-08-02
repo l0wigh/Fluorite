@@ -10,7 +10,7 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Going to a fullscreen monitor does not reapply active window name
+- [ ] Swallowing a window when in fullscreen quit the fullscreen visually, but not in the variables
 - [ ] Switching ws sometimes does not reapply active window name doesn't warp cursor
     - Reproduce by putting your cursor on polybar, switch to another ws, and then goback
 - [ ] Find a way to verify certains values
@@ -47,3 +47,5 @@
 - [X] No refocus of fullscreen monitors when moving mouse
 - [X] Sending windows to a fullscreen workspace might lead to issues
 - [X] Add function FRemoveActiveWindow and search for net_active_window
+- [X] Still having issues with fullscreen from time to time
+- [X] Going to a fullscreen monitor does not reapply active window name
