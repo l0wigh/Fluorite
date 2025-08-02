@@ -456,12 +456,27 @@ static void FReloadXresources()
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
 	FLoadXresources();
+	// int keep_ws = fluorite.cr_ws;
+	int keep_mon = fluorite.cr_mon;
 	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
-		FFocusNextMonitor();
+		if (keep_mon == i)
+			continue;
+		// fluorite.cr_mon = i;
+		// fluorite.cr_ws = fluorite.mon[i].ws;
+		FChangeMonitor(i);
 		FRedrawWindows();
 		FApplyBorders();
 	}
+	FChangeMonitor(keep_mon);
+	XWarpPointer(
+		fluorite.dpy, None, fluorite.root,
+		0, 0, 0, 0,
+		fluorite.mon[keep_mon].mx + fluorite.mon[keep_mon].mw / 2,
+		fluorite.mon[keep_mon].my + fluorite.mon[keep_mon].mh / 2
+	);
+	FRedrawWindows();
+	FApplyBorders();
 }
 
 static void FRun()

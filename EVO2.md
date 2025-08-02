@@ -10,6 +10,7 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Going to a fullscreen monitor does not reapply active window name
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
