@@ -1600,32 +1600,28 @@ static void FFocusWindowUnderCursor()
 {
 	Window target = FWindowUnderCursor();
 
-	if (target == None || target == fluorite.root)
-	{
-		FRemoveActiveWindow();
-		return;
-	}
+	// if (target == None || target == fluorite.root)
+	// {
+	// 	FRemoveActiveWindow();
+	// 	return;
+	// }
 
 	no_warp = True;
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
-		if (w->w == target)
-		{
-			w->fc = 1;
-			XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
-		}
-		else
-			w->fc = 0;
+		if (w->w != target)
+			continue;
+		FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
+		w->fc = 1;
 	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 	{
-		if (w->w == target)
-		{
-			w->fc = 1;
-			XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
-		}
-		else
-			w->fc = 0;
+		if (w->w != target)
+			continue;
+		FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
+		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
+		w->fc = 1;
 	}
 
 	FApplyBorders();

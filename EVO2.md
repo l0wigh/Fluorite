@@ -10,17 +10,12 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Switching ws sometimes does not reapply active window name and doesn't warp cursor
-    - Reproduce by putting your cursor on polybar, switch to another ws, and then goback
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 - [ ] Centered layout needs to have move horizontal gaps space between windows in columns
 
 # CLEAN
-- [ ] Check for memory leaks
-    - Might not leak but in btop at startup 4M and after a while 6M
-    - This might be caused because I'm managing more windows and be normal then
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 
@@ -50,3 +45,6 @@
 - [X] Still having issues with fullscreen from time to time
 - [X] Going to a fullscreen monitor does not reapply active window name
 - [X] Swallowing a window when in fullscreen quit the fullscreen visually, but not in the variables
+- [X] Switching ws sometimes does not reapply active window name and doesn't warp cursor
+- [X] Check for memory leaks
+    - Seems fine now. I needed to free useless nw in Map function
