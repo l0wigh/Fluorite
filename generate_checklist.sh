@@ -47,6 +47,8 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [ ] Indicators (bar, HUD, etc.) reflect the active workspace
 - [ ] Empty workspaces can be navigated to and from
 - [ ] Workspaces keeps their currently selected layout
+- [ ] You can send windows to other workspaces
+	- [ ] Atoms are updated and reflected into polybar
 
 ---
 
