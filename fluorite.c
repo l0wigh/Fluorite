@@ -817,9 +817,9 @@ static void FRedrawCenteredMaster()
 	w = fluorite.ws[fluorite.cr_ws].t_wins;
 	XMoveResizeWindow(
 		fluorite.dpy, w->w,
-		mx + gap,
+		mx + gap * 2,
 		content_y,
-		mw - 2 * bw - 2 * gap,
+		mw - 2 * bw - 4 * gap,
 		content_h - 2 * bw
 	);
 	w->wx = mx + gap;
@@ -846,7 +846,7 @@ static void FRedrawCenteredMaster()
 		{
 			XMoveResizeWindow(
 				fluorite.dpy, w->w,
-				mon_x + gap,
+				mon_x + gap * 2,
 				left_y,
 				sw - 2 * bw - 2 * gap,
 				left_h - 2 * bw
@@ -862,7 +862,7 @@ static void FRedrawCenteredMaster()
 		{
 			XMoveResizeWindow(
 				fluorite.dpy, w->w,
-				mx + mw + gap,
+				mx + mw - (gap / 2),
 				right_y,
 				sw - 2 * bw - 2 * gap,
 				right_h - 2 * bw

@@ -16,6 +16,7 @@
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
+- [ ] Centered layout needs to have move horizontal gaps space between windows in columns
 
 # CLEAN
 - [ ] Check for memory leaks
