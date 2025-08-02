@@ -797,8 +797,8 @@ static void FRedrawCenteredMaster()
 	int mon_y = fluorite.mon[fluorite.cr_mon].my;
 	int mon_w = fluorite.mon[fluorite.cr_mon].mw;
 	int mon_h = fluorite.mon[fluorite.cr_mon].mh;
-	int content_y = mon_y + gap;
-	int content_h = mon_h - 2 * gap;
+	int content_y = mon_y + 2 * gap;
+	int content_h = mon_h - 4 * gap;
 	if (!PRIMARY_BAR_ONLY || fluorite.mon[fluorite.cr_mon].primary)
 	{
 		content_y += tb;
