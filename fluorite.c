@@ -1856,7 +1856,6 @@ void FShowWorkspace(int ws)
 	}
 
 	no_unmap = True;
-	XGrabServer(fluorite.dpy);
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 		XUnmapWindow(fluorite.dpy, w->w);
@@ -1867,6 +1866,7 @@ void FShowWorkspace(int ws)
 	fluorite.mon[fluorite.cr_mon].ws = ws;
 	XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
 	FRemoveActiveWindow();
+	XSync(fluorite.dpy, True);
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 		XMapWindow(fluorite.dpy, w->w);
@@ -1887,8 +1887,6 @@ void FShowWorkspace(int ws)
 	}
 
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
-	XUngrabServer(fluorite.dpy);
-	XSync(fluorite.dpy, True);
 	no_unmap = False;
 
 	FRedrawWindows();
