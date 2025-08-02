@@ -1262,6 +1262,7 @@ static void FChangeMonitor(int mon)
 		FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
 		fluorite.ws[fluorite.cr_ws].t_wins->fc = 1;
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+		FApplyActiveWindow(fluorite.ws[fluorite.cr_ws].t_wins->w);
 	}
 	FApplyBorders();
 	no_warp = False;
@@ -1350,7 +1351,10 @@ static void FUnmapNotify(XEvent ev)
 				w->w = w->sw;
 				XMapWindow(fluorite.dpy, w->w);
 				if (!fluorite.ws[ws].fs)
+				{
 					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					FSetWindowOpacity(w->w, 100);
+				}
 				w->sw = 0;
 				goto redraw;
 			}
@@ -1372,7 +1376,10 @@ static void FUnmapNotify(XEvent ev)
 				w->w = w->sw;
 				XMapWindow(fluorite.dpy, w->w);
 				if (!fluorite.ws[ws].fs)
+				{
 					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					FSetWindowOpacity(w->w, 100);
+				}
 				w->sw = 0;
 				goto redraw;
 			}
@@ -1425,7 +1432,10 @@ static void FDestroyNotify(XEvent ev)
 				w->w = w->sw;
 				XMapWindow(fluorite.dpy, w->w);
 				if (!fluorite.ws[ws].fs)
+				{
 					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					FSetWindowOpacity(w->w, 100);
+				}
 				w->sw = 0;
 				goto update;
 			}
@@ -1446,7 +1456,10 @@ static void FDestroyNotify(XEvent ev)
 				w->w = w->sw;
 				XMapWindow(fluorite.dpy, w->w);
 				if (!fluorite.ws[ws].fs)
+				{
 					XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+					FSetWindowOpacity(w->w, 100);
+				}
 				w->sw = 0;
 				goto update;
 			}
