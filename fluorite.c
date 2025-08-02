@@ -656,16 +656,16 @@ static int FCheckDescProcess(pid_t p, pid_t c)
 static int FCheckWindowNeedsSwallowing(Windows *nw)
 {
 	Windows *w;
-	int ws;
+	int mon;
 
 	if (!nw->pid || nw->can_sw)
 		return False;
-	for (ws = 0; ws < fluorite.ct_mon; ws++)
+	for (mon = 0; mon < fluorite.ct_mon; mon++)
 	{
-		for (w = fluorite.ws[fluorite.mon[ws].ws].t_wins; w != NULL; w = w->next)
+		for (w = fluorite.ws[fluorite.mon[mon].ws].t_wins; w != NULL; w = w->next)
 			if (w->can_sw && !w->sw && w->pid && FCheckDescProcess(w->pid, nw->pid))
 				goto found;
-		for (w = fluorite.ws[fluorite.mon[ws].ws].f_wins; w != NULL; w = w->next)
+		for (w = fluorite.ws[fluorite.mon[mon].ws].f_wins; w != NULL; w = w->next)
 			if (w->can_sw && !w->sw && w->pid && FCheckDescProcess(w->pid, nw->pid))
 				goto found;
 	}
@@ -680,16 +680,16 @@ found:
 	w->w = nw->w;
 	XMapWindow(fluorite.dpy, w->w);
 	XRaiseWindow(fluorite.dpy, w->w);
-	XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+	XMoveResizeWindow(fluorite.dpy, w->w, fluorite.mon[mon].mx, fluorite.mon[mon].my, fluorite.mon[mon].mw, fluorite.mon[mon].mh);
 	XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
-	if (fluorite.cr_ws == ws && w->fc)
+	if (fluorite.cr_ws == mon && w->fc)
 	{
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		FRedrawWindows();
 		FApplyBorders();
 	}
-	if (fluorite.ws[ws].fs && w->fs)
+	if (fluorite.ws[mon].fs && w->fs)
 		XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
 	return True;
 }
