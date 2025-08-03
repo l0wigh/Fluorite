@@ -2075,6 +2075,7 @@ void FRotateWindows(int mode)
 	Windows *first, *last;
 	Window focused = FFindFocusedWindow();
 
+	no_refocus = True;
 	switch (mode)
 	{
 		case UP:
@@ -2128,6 +2129,8 @@ void FRotateWindows(int mode)
 	}
 	FRedrawWindows();
 	FApplyBorders();
+	XSync(fluorite.dpy, True);
+	no_refocus = False;
 }
 
 
@@ -2158,6 +2161,7 @@ void FSwapWithMaster()
 	XEvent ev;
 	Windows *w;
 
+	no_refocus = True;
 	XGetInputFocus(fluorite.dpy, &focused, &revert);
 	if (focused == fluorite.root || !fluorite.ws[fluorite.cr_ws].t_wins || focused == fluorite.ws[fluorite.cr_ws].t_wins->w)
 		return;
@@ -2169,6 +2173,8 @@ void FSwapWithMaster()
 	fluorite.ws[fluorite.cr_ws].t_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 	ev.xmaprequest.window = focused;
 	FMapRequest(ev);
+	XSync(fluorite.dpy, True);
+	no_refocus = False;
 }
 
 void FFocusNext()
