@@ -3,24 +3,19 @@
 #include "config/keybinds.h"
 #include "config/design.h"
 #include <X11/X.h>
-#include <X11/Xresource.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#include <X11/Xresource.h>
 #include <X11/Xcursor/Xcursor.h>
-#include <X11/extensions/Xcomposite.h>
+#include <X11/extensions/Xrandr.h>
+#include <xdo.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <xdo.h>
-#include <X11/Xft/Xft.h>
-#include <X11/extensions/Xrandr.h>
 #include <err.h>
-#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
-#include <unistd.h>
 #include <fcntl.h>
-#include <pwd.h>
 #include <sys/inotify.h>
 #include <errno.h>
 
