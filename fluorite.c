@@ -2005,7 +2005,7 @@ void FRotateStackWindows(int mode)
 	Windows *w;
 
     ws_head = fluorite.ws[fluorite.cr_ws].t_wins;
-    if (!ws_head || !ws_head->next)
+    if (!ws_head || !ws_head->next || !ws_head->next->next)
         return;
 
     master = ws_head;
@@ -2066,7 +2066,6 @@ redraw:
 	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
     FRedrawWindows();
     FApplyBorders();
-
 }
 
 
