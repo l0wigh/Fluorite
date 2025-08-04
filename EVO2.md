@@ -1,6 +1,3 @@
-# TEST
-- Nothing
-
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [ ] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
@@ -10,10 +7,10 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
-- [ ] Centered layout needs to have move horizontal gaps space between windows in columns
 
 # CLEAN
 - [ ] Reset borders function
@@ -48,3 +45,4 @@
 - [X] Switching ws sometimes does not reapply active window name and doesn't warp cursor
 - [X] Check for memory leaks
     - Seems fine now. I needed to free useless nw in Map function
+- [X] Centered layout needs to have vertical gap on the left side of the master window

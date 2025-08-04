@@ -857,7 +857,7 @@ static void FRedrawCenteredMaster()
 		{
 			XMoveResizeWindow(
 				fluorite.dpy, w->w,
-				mx + mw - (gap / 2),
+				mx + mw - (gap / 4),
 				right_y,
 				sw - 2 * bw - 2 * gap,
 				right_h - 2 * bw
