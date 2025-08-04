@@ -675,7 +675,6 @@ found:
 	w->w = nw->w;
 	XMapWindow(fluorite.dpy, w->w);
 	XRaiseWindow(fluorite.dpy, w->w);
-	XMoveResizeWindow(fluorite.dpy, w->w, fluorite.mon[mon].mx, fluorite.mon[mon].my, fluorite.mon[mon].mw, fluorite.mon[mon].mh);
 	XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	if (fluorite.cr_ws == mon && w->fc)
@@ -684,8 +683,13 @@ found:
 		FRedrawWindows();
 		FApplyBorders();
 	}
-	if (fluorite.ws[mon].fs && w->fs)
+	if (fluorite.ws[fluorite.mon[mon].ws].fs && w->fs)
+	{
+		XMoveResizeWindow(fluorite.dpy, w->w, fluorite.mon[mon].mx, fluorite.mon[mon].my, fluorite.mon[mon].mw, fluorite.mon[mon].mh);
 		XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
+	}
+	else
+		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 	return True;
 }
 
@@ -1328,6 +1332,12 @@ static Window FFindFocusedWindow()
 	return -1;
 }
 
+static int FWindowExists(Display *dpy, Window win)
+{
+    XWindowAttributes attr;
+    return XGetWindowAttributes(dpy, win, &attr) != 0;
+}
+
 static void FUnmapNotify(XEvent ev)
 {
 	int ws;
@@ -1341,10 +1351,9 @@ static void FUnmapNotify(XEvent ev)
 
 	for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
 	{
-		w->w = (w->sw == ev.xunmap.window) ? w->sw : w->w;
 		if (w->w == ev.xunmap.window)
 		{
-			if (w->sw)
+			if (w->sw && FWindowExists(fluorite.dpy, w->sw))
 			{
 				w->w = w->sw;
 				XMapWindow(fluorite.dpy, w->w);
@@ -1357,6 +1366,7 @@ static void FUnmapNotify(XEvent ev)
 				w->sw = 0;
 				goto redraw;
 			}
+force_unmap:
 			if (fluorite.ws[ws].fs && w->fs)
 				fluorite.ws[ws].fs = False;
 			FResetFocus(fluorite.ws[ws].t_wins);
@@ -1367,10 +1377,10 @@ static void FUnmapNotify(XEvent ev)
 	}
 	for (Windows *w = fluorite.ws[ws].f_wins; w; w = w->next)
 	{
-		w->w = (w->sw == ev.xunmap.window) ? w->sw : w->w;
+		if (w->sw == ev.xunmap.window) goto force_unmap;
 		if (w->w == ev.xunmap.window)
 		{
-			if (w->sw)
+			if (w->sw && FWindowExists(fluorite.dpy, w->sw))
 			{
 				w->w = w->sw;
 				XMapWindow(fluorite.dpy, w->w);
@@ -1419,18 +1429,18 @@ static void FDestroyNotify(XEvent ev)
 {
 	int ws;
 
-	ws = FFindWorkspaceFromWindow(ev.xunmap.window);
+	ws = FFindWorkspaceFromWindow(ev.xdestroywindow.window);
 	if (ws == -1)
 		return;
 
 	for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
 	{
-		if (w->w == ev.xunmap.window)
+		if (w->sw == ev.xdestroywindow.window) goto force_destroy;
+		if (w->w == ev.xdestroywindow.window)
 		{
-			if (w->sw)
+			if (w->sw && FWindowExists(fluorite.dpy, w->sw))
 			{
 				w->w = w->sw;
-				XMapWindow(fluorite.dpy, w->w);
 				FResetWindowOpacity(w->w);
 				if (fluorite.ws[ws].fs)
 				{
@@ -1440,6 +1450,7 @@ static void FDestroyNotify(XEvent ev)
 				w->sw = 0;
 				goto update;
 			}
+force_destroy:
 			if (fluorite.ws[ws].fs && w->fs)
 				fluorite.ws[ws].fs = False;
 			FResetFocus(fluorite.ws[ws].t_wins);
@@ -1450,12 +1461,12 @@ static void FDestroyNotify(XEvent ev)
 	}
 	for (Windows *w = fluorite.ws[ws].f_wins; w; w = w->next)
 	{
-		if (w->w == ev.xunmap.window)
+		if (w->sw == ev.xdestroywindow.window) goto force_destroy;
+		if (w->w == ev.xdestroywindow.window)
 		{
-			if (w->sw)
+			if (w->sw && FWindowExists(fluorite.dpy, w->sw))
 			{
 				w->w = w->sw;
-				XMapWindow(fluorite.dpy, w->w);
 				FResetWindowOpacity(w->w);
 				if (fluorite.ws[ws].fs)
 				{

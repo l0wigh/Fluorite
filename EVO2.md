@@ -7,9 +7,6 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Some swallowed windows will not be resized properly
-    - Maybe force another xmoveresize or something like that
-    - Test it with Zed
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
@@ -53,3 +50,4 @@
 - [X] Check for memory leaks
     - Seems fine now. I needed to free useless nw in Map function
 - [X] Centered layout needs to have vertical gap on the right side of the master window
+- [X] Swallowed windows seems to open in fullscreen for some reason
