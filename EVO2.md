@@ -7,6 +7,9 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Some swallowed windows will not be resized properly
+    - Maybe force another xmoveresize or something like that
+    - Test it with Zed
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
@@ -15,6 +18,10 @@
 # CLEAN
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
+
+# IDEAS
+- Find a way to determine if a new window is linked to another one already present.
+    - if yes, I might be able to make them float on top of the "toplevel" window
 
 # DONE
 - [X] Add Stacking layout
