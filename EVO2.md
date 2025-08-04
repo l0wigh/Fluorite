@@ -45,4 +45,4 @@
 - [X] Switching ws sometimes does not reapply active window name and doesn't warp cursor
 - [X] Check for memory leaks
     - Seems fine now. I needed to free useless nw in Map function
-- [X] Centered layout needs to have vertical gap on the left side of the master window
+- [X] Centered layout needs to have vertical gap on the right side of the master window
