@@ -2387,18 +2387,21 @@ void FFloatingHideShow()
 		{
 			XUnmapWindow(fluorite.dpy, w->w);
 			XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
-			if (fluorite.ws[fluorite.cr_ws].t_wins)
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 			{
-				Windows *w = fluorite.ws[fluorite.cr_ws].t_wins;
+				if (!w->fc)
+					continue;
 				XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 				FWarpCursor(w->w);
 				FApplyActiveWindow(w->w);
 				FApplyBorders();
+				goto next;
 			}
-			else
-				FRemoveActiveWindow();
+			FRemoveActiveWindow();
 		}
 	}
+
+next:
 	fluorite.ws[fluorite.cr_ws].fl_hdn = !fluorite.ws[fluorite.cr_ws].fl_hdn;
 	XSync(fluorite.dpy, True);
 	XUngrabServer(fluorite.dpy);
