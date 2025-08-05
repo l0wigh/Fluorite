@@ -359,6 +359,7 @@ static void FApplyProps()
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.root, 1);
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False), XA_CARDINAL, 32, PropModeReplace, (const unsigned char *)&num_work_atom, 1);
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
+	XFree(text.value);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 	Atom supported[8] = {
@@ -618,8 +619,14 @@ static int FCheckCanSwallow(Window w)
 		{
 			if (strcmp(default_swallowing[i].wm_class, name.res_class) == 0 ||
 					strcmp(default_swallowing[i].wm_class, name.res_name) == 0)
+			{
+				XFree(name.res_name);
+				XFree(name.res_class);
 				return True;
+			}
 		}
+		XFree(name.res_name);
+		XFree(name.res_class);
 	}
 	return False;
 }
@@ -1165,8 +1172,14 @@ static int FCheckWindowIsFloating(Window w)
 		{
 			if (strcmp(default_floating[i].wm_class, name.res_class) == 0 ||
 					strcmp(default_floating[i].wm_class, name.res_name) == 0)
+			{
+				XFree(name.res_name);
+				XFree(name.res_class);
 				return True;
+			}
 		}
+		XFree(name.res_name);
+		XFree(name.res_class);
 	}
 
 	if (XGetWindowProperty(fluorite.dpy, w, XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
@@ -1210,8 +1223,14 @@ static int FCheckWindowIsFixed(Window w)
 		for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
 		{
 			if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
+			{
+				XFree(name.res_name);
+				XFree(name.res_class);
 				return True;
+			}
 		}
+		XFree(name.res_name);
+		XFree(name.res_class);
 	}
 	if (XGetWindowProperty(fluorite.dpy, w, XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
