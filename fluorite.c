@@ -676,7 +676,7 @@ found:
 	XMapWindow(fluorite.dpy, w->w);
 	XRaiseWindow(fluorite.dpy, w->w);
 	XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
-	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bf);
 	if (fluorite.cr_ws == mon && w->fc)
 	{
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);

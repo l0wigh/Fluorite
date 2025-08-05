@@ -7,6 +7,7 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Refocus the previous tiled focus window when hiding floating (or FResetFocus)
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
