@@ -13,6 +13,7 @@
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
+- [ ] Leak is coming from the fact that I'm not freeing Xlib struct sometimes (or maybe xdo)
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 

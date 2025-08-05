@@ -674,7 +674,12 @@ found:
 	w->sw = w->w;
 	w->w = nw->w;
 	XMapWindow(fluorite.dpy, w->w);
-	XLowerWindow(fluorite.dpy, w->w);
+	if (fluorite.ws[fluorite.cr_ws].layout == DWM || fluorite.ws[fluorite.cr_ws].layout == CENTERED)
+		XRaiseWindow(fluorite.dpy, w->w);
+	else if (w == fluorite.ws[fluorite.cr_ws].t_wins || w == fluorite.ws[fluorite.cr_ws].t_wins->next)
+		XRaiseWindow(fluorite.dpy, w->w);
+	else
+		XLowerWindow(fluorite.dpy, w->w);
 	XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	if (w->fc)
