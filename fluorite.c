@@ -65,8 +65,8 @@ typedef struct Windows
 	Window w;
 	int wx;
 	int wy;
-	int ww;
-	int wh;
+	unsigned int ww;
+	unsigned int wh;
 	pid_t pid;
 	int fc;
 	int fs;
@@ -674,22 +674,23 @@ found:
 	w->sw = w->w;
 	w->w = nw->w;
 	XMapWindow(fluorite.dpy, w->w);
-	XRaiseWindow(fluorite.dpy, w->w);
+	XLowerWindow(fluorite.dpy, w->w);
 	XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
-	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bf);
+	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+	if (w->fc)
+		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bf);
 	if (fluorite.cr_ws == mon && w->fc)
 	{
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		FRedrawWindows();
 		FApplyBorders();
 	}
+	XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 	if (fluorite.ws[fluorite.mon[mon].ws].fs && w->fs)
 	{
 		XMoveResizeWindow(fluorite.dpy, w->w, fluorite.mon[mon].mx, fluorite.mon[mon].my, fluorite.mon[mon].mw, fluorite.mon[mon].mh);
 		XSetWindowBorderWidth(fluorite.dpy, w->w, 0);
 	}
-	else
-		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 	return True;
 }
 
@@ -704,7 +705,7 @@ static void FMapRequest(XEvent ev)
 	// 	return;
 
 	if (!XGetWindowAttributes(fluorite.dpy, ev.xmaprequest.window, &wa))
-		return free(nw);
+		goto freeing;
 
 	if (FCheckWindowToplevel(ev.xmaprequest.window))
 	{
@@ -715,13 +716,13 @@ static void FMapRequest(XEvent ev)
 		XSetWMHints(fluorite.dpy, ev.xmaprequest.window, hints);
 		XChangeProperty(fluorite.dpy, fluorite.root, XA_WM_HINTS, XA_WM_HINTS, 32, PropModeAppend, (unsigned char *) NULL, 0);
 		XFree(hints);
-		return;
+		goto freeing;
 	}
 
 	if (wa.override_redirect || wa.width <= 0 || wa.width <= 0)
 	{
 		XMapWindow(fluorite.dpy, ev.xmaprequest.window);
-		return free(nw);
+		goto freeing;
 	}
 
 	is_floating = FCheckWindowIsFloating(ev.xmaprequest.window);
@@ -741,13 +742,13 @@ static void FMapRequest(XEvent ev)
 	XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 
 	if (FCheckWindowNeedsSwallowing(nw))
-		return free(nw);
+		goto freeing;
 
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		FFullscreenToggle();
 
 	if (is_fixed)
-		return free(nw);
+		goto freeing;
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
@@ -766,6 +767,10 @@ static void FMapRequest(XEvent ev)
 	FWarpCursor(nw->w);
 	FApplyBorders();
 	FUpdateClientList();
+	return;
+
+freeing:
+	free(nw);
 }
 
 static void FManageFloatingWindow(Windows *nw)
@@ -2391,10 +2396,12 @@ void FFloatingHideShow()
 			{
 				if (!w->fc)
 					continue;
+				no_refocus = True;
 				XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 				FWarpCursor(w->w);
 				FApplyActiveWindow(w->w);
 				FApplyBorders();
+				no_refocus = False;
 				goto next;
 			}
 			FRemoveActiveWindow();
