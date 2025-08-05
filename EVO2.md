@@ -7,7 +7,6 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Refocus the previous tiled focus window when hiding floating (or FResetFocus)
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
@@ -52,3 +51,4 @@
     - Seems fine now. I needed to free useless nw in Map function
 - [X] Centered layout needs to have vertical gap on the right side of the master window
 - [X] Swallowed windows seems to open in fullscreen for some reason
+- [X] Refocus the previous tiled focus window when hiding floating (or FResetFocus)
