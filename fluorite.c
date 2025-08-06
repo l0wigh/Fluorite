@@ -1186,6 +1186,18 @@ void fluorite_set_winframe_name(Window e)
 
 void fluorite_handle_configuration(XConfigureRequestEvent e)
 {
+	for (int i = 0; i < MAX_WORKSPACES; i++)
+	{
+		for (int j = 0; j < fluorite.workspaces[i].slaves_count; j++)
+			if (e.window == fluorite.workspaces[i].slaves_winframes[j]->window)
+				return;
+		for (int j = 0; j < fluorite.workspaces[i].floating_count; j++)
+			if (e.window == fluorite.workspaces[i].floating_windows[j]->window)
+				return;
+		if (e.window == fluorite.workspaces[i].master_winframe->window)
+				return;
+	}
+
 	XWindowChanges changes;
 	changes.x = e.x;
 	changes.y = e.y;
