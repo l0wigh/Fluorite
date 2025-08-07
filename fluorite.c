@@ -248,7 +248,10 @@ static void FLoadXresources()
 	fluorite.conf.bf |= 0xff << 24;
 	fluorite.conf.bu |= 0xff << 24;
 	XrmDestroyDatabase(xdb);
-	free(xrm);
+	XFree(xrm);
+	XFree(dummy_display);
+	// if (xval.addr)
+	// 	XFree(xval.addr);
 }
 
 static void FLoadTheme()
@@ -2214,8 +2217,10 @@ void FSwapWithMaster()
 
 	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 		if (w->w == focused)
-			break;
+			goto found;
+	return ;
 
+found:
 	fluorite.ws[fluorite.cr_ws].t_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 	ev.xmaprequest.window = focused;
 	FMapRequest(ev);

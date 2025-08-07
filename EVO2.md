@@ -7,13 +7,16 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Hiding floating windows, only hide the first one
+- [ ] Floating windows still doesn't appaers when a new one is opened
+    - probably linked to the previous issue
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
-- [ ] Leak is coming from the fact that I'm not freeing Xlib struct sometimes (or maybe xdo)
+- [ ] Memory leak coming from Xresources I guess.
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 
@@ -53,3 +56,4 @@
 - [X] Centered layout needs to have vertical gap on the right side of the master window
 - [X] Swallowed windows seems to open in fullscreen for some reason
 - [X] Refocus the previous tiled focus window when hiding floating (or FResetFocus)
+- [X] Crash when swapping master with a floating window

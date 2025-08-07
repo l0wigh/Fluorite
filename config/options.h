@@ -36,6 +36,7 @@ static const Rules default_floating[] = {
 	{"Steam"},
 	{"steamwebhelper"},
 	{"st_music"},
+	{"spacefm"},
 };
 static const Rules default_fixed[] = {
 	{"Conky"},
