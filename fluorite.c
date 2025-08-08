@@ -248,10 +248,7 @@ static void FLoadXresources()
 	fluorite.conf.bf |= 0xff << 24;
 	fluorite.conf.bu |= 0xff << 24;
 	XrmDestroyDatabase(xdb);
-	XFree(xrm);
-	XFree(dummy_display);
-	// if (xval.addr)
-	// 	XFree(xval.addr);
+	XCloseDisplay(dummy_display);
 }
 
 static void FLoadTheme()

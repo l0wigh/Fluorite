@@ -7,16 +7,12 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Hiding floating windows, only hide the first one
-- [ ] Floating windows still doesn't appaers when a new one is opened
-    - probably linked to the previous issue
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
-- [ ] Memory leak coming from Xresources I guess.
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 
@@ -57,3 +53,7 @@
 - [X] Swallowed windows seems to open in fullscreen for some reason
 - [X] Refocus the previous tiled focus window when hiding floating (or FResetFocus)
 - [X] Crash when swapping master with a floating window
+- [X] Hiding floating windows, only hide the first one
+- [X] Floating windows still doesn't appaers when a new one is opened
+- [X] Memory leak coming from Xresources I guess.
+    - Seems corrected
