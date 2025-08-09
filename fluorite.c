@@ -1137,7 +1137,11 @@ floating:
 		goto fullscreen;
 
 	Scratchpads *p = fluorite.pads[fluorite.hpads];
-	for (Windows *w = p->s_wins; w != NULL; w = w->next)
+	if (!p->s_wins)
+		goto fullscreen;
+	Windows *w;
+	for (w = p->s_wins; w->next != NULL; w = w->next);
+	for (; w != NULL; w = w->prev)
 	{
 		FMoveWindowBasedOnMonitor(w);
 		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
@@ -2657,6 +2661,7 @@ void FAddWindowToScratchpad()
 	Window focused;
 	int revert;
 	KeySym key;
+	int hkey;
 	Windows *w;
 
 	XGrabServer(fluorite.dpy);
@@ -2668,6 +2673,7 @@ void FAddWindowToScratchpad()
 		if (ev.type == KeyPress)
 		{
 			key = XLookupKeysym(&ev.xkey, 0);
+			hkey = FHashKey(key);
 			break;
 		}
 	}
@@ -2700,10 +2706,18 @@ next:
 	XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&key, sizeof(key));
 
 	Scratchpads *p = FCreateOrGetScratchpad(key);
+	for (Windows *w = p->s_wins; w != NULL; w = w->next)
+		XMapWindow(fluorite.dpy, w->w);
+	no_unmap = True;
+	if (fluorite.hpads != -1 && fluorite.hpads != hkey)
+		for (Windows *w = fluorite.pads[fluorite.hpads]->s_wins; w != NULL; w = w->next)
+			XUnmapWindow(fluorite.dpy, w->w);
+	XSync(fluorite.dpy, True);
+	no_unmap = False;
 	w->next = NULL;
 	w->prev = NULL;
 	p->s_wins = FAddWindow(p->s_wins, w);
-	fluorite.hpads = FHashKey(key);
+	fluorite.hpads = hkey;
 	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 	FRedrawWindows();
 	FApplyBorders();

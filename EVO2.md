@@ -7,6 +7,8 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Scratchpads will sometimes go all in tiled when using FDelWindowFromScratchpad
+    - Hard to fix, I can't reproduce it on demand
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Find a way to verify certains values
     - fl_hdn
