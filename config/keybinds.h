@@ -49,6 +49,9 @@ void FSendWindowToPrevWorkspace();
 void FFocusNextMonitor();
 void FResetMasterOffset();
 void FReloadXresources();
+void FAddWindowToScratchpad();
+void FDelWindowFromScratchpad();
+void FScratchpadHideShow();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -125,6 +128,7 @@ static const Bindings bind[] = {
   {METAKEY,				XK_r,	   			layout_auto},
   {METAKEY, 			XK_Print,			print_screen},
   {METAKEY,				XK_c,	   			layout_centered},
+  {METAKEY,				XK_ugrave,	   		FScratchpadHideShow},
 
   {METAKEY|ShiftMask,	XK_Return,			FSwapWithMaster},
   {METAKEY|ShiftMask, 	XK_q,				FCloseWindow},
@@ -138,7 +142,7 @@ static const Bindings bind[] = {
   {METAKEY|ShiftMask,	XK_space,			FFloatingHideShow},
   {METAKEY|ShiftMask,	XK_r,	   			layout_centered},
   {METAKEY|ShiftMask, 	XK_t,				dmenu_xresources},
-
+  {METAKEY|ShiftMask,	XK_ugrave,	   		FAddWindowToScratchpad},
 
   {METAKEY,				XK_ampersand, 		workspace_one},
   {METAKEY,				XK_eacute,    		workspace_two},
@@ -167,6 +171,7 @@ static const Bindings bind[] = {
   {METAKEY|ControlMask,	XK_m,				FNextWorkspace},
   {METAKEY|ControlMask,	XK_space,			FTileAllWindows},
   {METAKEY|ControlMask,	XK_f,				dmenu_font_size},
+  {METAKEY|ControlMask,	XK_ugrave,	   		FDelWindowFromScratchpad},
 
   {METAKEY,				XK_n,				FFocusNext},
   {METAKEY|ShiftMask,	XK_n,				FFocusPrev},
