@@ -2048,6 +2048,13 @@ void FShowWorkspace(int ws)
 			if (w->fc)
 				XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 	}
+	else if (fluorite.hpads != -1)
+	{
+		Scratchpads	*p = fluorite.pads[fluorite.hpads];
+		for (Windows *w = p->s_wins; w != NULL; w = w->next)
+			if (w->fc)
+				XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+	}
 
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 	no_unmap = False;
@@ -2723,6 +2730,7 @@ void FDelWindowFromScratchpad()
 		FRedrawWindows();
 		FApplyBorders();
 		XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		FWarpCursor(w->w);
 		break;
 	}
