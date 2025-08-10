@@ -800,7 +800,12 @@ static void FMapRequest(XEvent ev)
 	FApplyBorders();
 	FUpdateClientList();
 	if (fluorite.ws[fluorite.cr_ws].fs && is_floating)
+	{
 		XRaiseWindow(fluorite.dpy, nw->w);
+		XSetWindowBorder(fluorite.dpy, nw->w, fluorite.conf.bf);
+		XSetInputFocus(fluorite.dpy, nw->w, RevertToPointerRoot, CurrentTime);
+		FWarpCursor(nw->w);
+	}
 	return;
 
 freeing:
@@ -1822,6 +1827,7 @@ static void FButtonPress(XEvent ev)
 		p->s_wins = FAddWindow(p->s_wins, w);
 		XRaiseWindow(fluorite.dpy, w->w);
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+		FApplyBorders();
 		return;
 	}
 
@@ -1834,6 +1840,7 @@ next:
 		fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
 		XRaiseWindow(fluorite.dpy, w->w);
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+		FApplyBorders();
 		return;
 	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -1860,6 +1867,7 @@ next:
 			fluorite.ws[fluorite.cr_ws].fl_hdn = False;
 		}
 		FRedrawWindows();
+		FApplyBorders();
 		no_warp = False;
 		no_refocus = False;
 		return;
