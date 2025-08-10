@@ -136,6 +136,33 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 ---
 
+## 📝 Scratchpads
+
+- [ ] Add a window to scratchpad
+	- [ ] Fluorite waits for a user key
+	- [ ] Window is removed from tiling if it's in
+	- [ ] Window is resized and placed in the middle of the monitor
+	- [ ] Focus is put on it
+- [ ] Floating actions
+	- [ ] Move
+	- [ ] Resize
+- [ ] Multiple scratchpad
+	- [ ] Hide previous windows if opened
+	- [ ] Works as normal
+- [ ] Hiding scratchpad
+	- [ ] Simple closing hide everything and focus is set on master
+	- [ ] Switching to another scratchpad
+		- [ ] Hide previous windows
+		- [ ] Show new windows
+- [ ] Delete window from scratchpad
+	- [ ] Put in master
+	- [ ] Retiled and redrawed in the appropriate place
+- [ ] Closing window from scratchpad
+	- [ ] The window is unmapped
+	- [ ] Other scratchpad windows are unaffected
+
+---
+
 ## 🖌️ Dynamic Theming
 
 - [ ] Xresources modifications are monitored if True in options

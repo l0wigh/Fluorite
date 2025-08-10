@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 6)"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 7)"
 
 #include "config/keybinds.h"
 #include "config/design.h"
@@ -129,7 +129,7 @@ static void 	FGetMonitorFromMouse();
 static int		FCheckWindowToplevel(Window nw);
 static void 	FMapRequest(XEvent ev);
 static void 	FManageFloatingWindow(Windows *nw);
-static void		FRedrawFluoriteLayout();
+static void		FRedrawCascadeLayout();
 static void 	FRedrawWindows();
 static void 	FApplyActiveWindow(Window w);
 static void 	FApplyBorders();
@@ -616,7 +616,12 @@ show_ws:
 		FShowWorkspace(i);
 	if (is_floating == True)
 	{
-		FFloatingHideShow();
+		if (fluorite.ws[fluorite.cr_ws].fl_hdn)
+		{
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+				XMapWindow(fluorite.dpy, w->w);
+			fluorite.ws[fluorite.cr_ws].fl_hdn = False;
+		}
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		FApplyBorders();
 	}
@@ -703,7 +708,7 @@ found:
 	{
 		XLowerWindow(fluorite.dpy, w->w);
 		if (fluorite.cr_ws == fluorite.mon[mon].ws)
-			FRedrawFluoriteLayout();
+			FRedrawCascadeLayout();
 	}
 	XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 	XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
@@ -771,7 +776,7 @@ static void FMapRequest(XEvent ev)
 	if (FCheckWindowNeedsSwallowing(nw))
 		goto freeing;
 
-	if (fluorite.ws[fluorite.cr_ws].fs)
+	if (fluorite.ws[fluorite.cr_ws].fs && !is_floating)
 		FFullscreenToggle();
 
 	if (is_fixed)
@@ -794,6 +799,7 @@ static void FMapRequest(XEvent ev)
 	FWarpCursor(nw->w);
 	FApplyBorders();
 	FUpdateClientList();
+	XRaiseWindow(fluorite.dpy, nw->w);
 	return;
 
 freeing:
@@ -812,7 +818,11 @@ static void FManageFloatingWindow(Windows *nw)
 	nw->wh = wh;
 	nw->fs = False;
 	if (fluorite.ws[fluorite.cr_ws].fl_hdn)
-		FFloatingHideShow();
+	{
+		for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+			XMapWindow(fluorite.dpy, w->w);
+		fluorite.ws[fluorite.cr_ws].fl_hdn = False;
+	}
 	XMoveResizeWindow(fluorite.dpy, nw->w, nw->wx, nw->wy, nw->ww, nw->wh);
 	fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(cw, nw);
 }
@@ -1004,7 +1014,7 @@ static void FRedrawDWMLayout()
 	}
 }
 
-static void FRedrawFluoriteLayout()
+static void FRedrawCascadeLayout()
 {
 	int position_offset = 0;
 	int stack_count = 0;
@@ -1123,7 +1133,7 @@ static void FRedrawWindows()
 	else if (fluorite.ws[fluorite.cr_ws].layout == CENTERED && fluorite.ws[fluorite.cr_ws].t_wins->next->next)
 		FRedrawCenteredMaster();
 	else
-		FRedrawFluoriteLayout();
+		FRedrawCascadeLayout();
 
 floating:
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
@@ -1436,6 +1446,8 @@ static void FUnmapNotify(XEvent ev)
 		w->next = NULL;
 		w->prev = NULL;
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+		if (!p->s_wins)
+			fluorite.hpads = -1;
 		break;
 	}
 
@@ -1841,7 +1853,11 @@ next:
 		no_warp = True;
 		no_refocus = True;
 		if (fluorite.ws[fluorite.cr_ws].fl_hdn)
-			FFloatingHideShow();
+		{
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+				XMapWindow(fluorite.dpy, w->w);
+			fluorite.ws[fluorite.cr_ws].fl_hdn = False;
+		}
 		FRedrawWindows();
 		no_warp = False;
 		no_refocus = False;
@@ -2366,7 +2382,7 @@ void FFocusNext()
 			fluorite.ws[fluorite.cr_ws].layout == STACKED)
 		return;
 
-	if (fluorite.ws[fluorite.cr_ws].layout == FLUORITE)
+	if (fluorite.ws[fluorite.cr_ws].layout == CASCADE)
 	{
 		FFocusPrev();
 		return;
@@ -2419,7 +2435,7 @@ void FFocusPrev()
 			}
 			else
 			{
-				if (fluorite.ws[fluorite.cr_ws].layout == FLUORITE)
+				if (fluorite.ws[fluorite.cr_ws].layout == CASCADE)
 				{
 					fluorite.ws[fluorite.cr_ws].t_wins->next->fc = True;
 					XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->next->w, RevertToPointerRoot, CurrentTime);
@@ -2738,6 +2754,8 @@ void FDelWindowFromScratchpad()
 		if (focused != w->w)
 			continue;
 		p->s_wins = FDelWindow(p->s_wins, w);
+		w->next = NULL;
+		w->prev = NULL;
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 		if (!p->s_wins)
 			fluorite.hpads = -1;
@@ -2774,7 +2792,7 @@ void FScratchpadHideShow()
 
 	hkey = FHashKey(key);
 	p = fluorite.pads[hkey];
-	if (!p || p->key != key)
+	if (!p || p->key != key || !p->s_wins)
 		return;
 
 	op = (fluorite.hpads != -1) ? fluorite.pads[fluorite.hpads] : NULL;
@@ -2788,6 +2806,7 @@ void FScratchpadHideShow()
 		no_unmap = False;
 	}
 
+	FRemoveActiveWindow();
 	if (fluorite.hpads != hkey || fluorite.hpads == -1)
 	{
 		for (Windows *w = p->s_wins; w != NULL; w = w->next)

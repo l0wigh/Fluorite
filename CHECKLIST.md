@@ -18,7 +18,8 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] New windows are correctly managed (not floating unless needed)
 - [X] Windows are placed in correct positions (master/stack or grid/tiled)
 - [X] Windows resize as expected when layout changes
-- [X] Gaps, borders, and paddings are rendered consistently
+- [?] Gaps, borders, and paddings are rendered consistently
+    - Centered still have a slight gap issue on columns (nothing too bad)
 - [X] Default layout is respected
 
 ---
@@ -42,6 +43,8 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] Indicators (bar, HUD, etc.) reflect the active workspace
 - [X] Empty workspaces can be navigated to and from
 - [X] Workspaces keeps their currently selected layout
+- [X] You can send windows to other workspaces
+	- [X] Atoms are updated and reflected into polybar
 
 ---
 
@@ -62,11 +65,9 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] New windows appear on the correct monitor
 - [!] Dragging or moving windows between monitors works
 	- Not implemented yet
-- [!] Plugging/unplugging monitors
+- [X] Plugging/unplugging monitors
 	- [X] Go to default workspace on every monitors
-	- [!] Redraw occurs
-        - When monitors goes to 2 -> 1 another XEvent needs to occurs to see windows
-        - Maybe add a little sleep
+	- [X] Redraw occurs
 	- [X] Layout stay the same
 	- [X] No ghost windows
 - [X] Status bars appear per monitor (if configured)
@@ -131,6 +132,33 @@ This checklist helps ensure your window manager is functioning correctly across 
 
 ---
 
+## 📝 Scratchpads
+
+- [X] Add a window to scratchpad
+	- [X] Fluorite waits for a user key
+	- [X] Window is removed from tiling if it's in
+	- [X] Window is resized and placed in the middle of the monitor
+	- [X] Focus is put on it
+- [X] Floating actions
+	- [X] Move
+	- [X] Resize
+- [ ] Multiple scratchpad
+	- [X] Hide previous windows if opened
+	- [X] Works as normal
+- [X] Hiding scratchpad
+	- [X] Simple closing hide everything and focus is set on master
+	- [X] Switching to another scratchpad
+		- [X] Hide previous windows
+		- [X] Show new windows
+- [X] Delete window from scratchpad
+	- [X] Put in master
+	- [X] Retiled and redrawed in the appropriate place
+- [X] Closing window from scratchpad
+	- [X] The window is unmapped
+	- [X] Other scratchpad windows are unaffected
+
+---
+
 ## 🖌️ Dynamic Theming
 
 - [X] Xresources modifications are monitored if True in options
@@ -146,8 +174,8 @@ This checklist helps ensure your window manager is functioning correctly across 
 - [X] Reopening closed apps works as expected
 - [X] Rapid workspace switching does not break rendering
 - [!] High-DPI scaling (if applicable) works
-    - Not tested
+	- Not tested
 
 ---
 
-_Last updated: sam. 02 août 2025 13:24:05 CEST_
+_Last updated: dim. 10 août 2025 12:15:14 CEST_

@@ -17,7 +17,7 @@ enum MODE {
 };
 
 enum LAYOUT {
-	FLUORITE,
+	CASCADE,
 	DWM,
 	STACKED,
 	CENTERED
@@ -100,7 +100,7 @@ static void window_workspace_seven() { FSendWindowToWorkspace(6); }
 static void window_workspace_eight() { FSendWindowToWorkspace(7); }
 static void window_workspace_nine() { FSendWindowToWorkspace(8); }
 static void window_workspace_ten() { FSendWindowToWorkspace(9); }
-static void layout_fluorite() { FChangeLayout(FLUORITE); }
+static void layout_fluorite() { FChangeLayout(CASCADE); }
 static void layout_dwm() { FChangeLayout(DWM); }
 static void layout_centered() { FChangeLayout(CENTERED); }
 static void layout_auto()
