@@ -799,7 +799,8 @@ static void FMapRequest(XEvent ev)
 	FWarpCursor(nw->w);
 	FApplyBorders();
 	FUpdateClientList();
-	XRaiseWindow(fluorite.dpy, nw->w);
+	if (fluorite.ws[fluorite.cr_ws].fs && is_floating)
+		XRaiseWindow(fluorite.dpy, nw->w);
 	return;
 
 freeing:
