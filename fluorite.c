@@ -1827,7 +1827,9 @@ static void FButtonPress(XEvent ev)
 		p->s_wins = FAddWindow(p->s_wins, w);
 		XRaiseWindow(fluorite.dpy, w->w);
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+		no_warp = True;
 		FApplyBorders();
+		no_warp = False;
 		return;
 	}
 
@@ -1840,7 +1842,9 @@ next:
 		fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
 		XRaiseWindow(fluorite.dpy, w->w);
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+		no_warp = True;
 		FApplyBorders();
+		no_warp = False;
 		return;
 	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
