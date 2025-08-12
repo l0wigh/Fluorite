@@ -1,3 +1,6 @@
+# Workflow bugs
+- [ ] Handle focus properly and force everything to focus the last focused window
+
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [ ] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in

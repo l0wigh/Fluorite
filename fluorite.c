@@ -2845,9 +2845,11 @@ void FScratchpadHideShow()
 		fluorite.hpads = -1;
 		if (fluorite.ws[fluorite.cr_ws].t_wins)
 		{
-			FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
-			fluorite.ws[fluorite.cr_ws].t_wins->fc = True;
-			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+			Windows *w;
+			for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+				if (w->fc)
+					break;
+			XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		}
 	}
 	FApplyBorders();

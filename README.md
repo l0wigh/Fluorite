@@ -2,16 +2,29 @@
 
 This is a very early Evolution of Fluorite 1.1
 
-There is still many many things to fix ! Use 1.1 !
+It's close to a Relase Candidate but still need some battle testing to see if it fits the fluorite mentality
 
-## Things that changed in EVO 2
+There is still "workflow" bugs that might bother me after a while. I'm thinking of unpredictable behaviors that break zone state.
+
+
+## Things that changed in [EVO 2]
 
 - No more reparenting (just like DWM or SXWM)
 - Fixed long time bug with Firefox (unwanted move/resize of some windows)
-- More layout possibilities (DWM one is implemented along side the default ones)
+- More layout possibilities (DWM, and Centered are implemented along side the Cascade one from Fluorite [EVO 1])
 - Seamlessly go from Tiled to Floating window with a simple drag and drop
 - No more hacky stuff to handle Fullscreen windows
+- Dynamic Scratchpads
+- Better EWMH handling, leading to a better integration with other X11 tools like Polybar
+- Cursor Warp options
+- Window swallowing
 - ...
+
+## Things that didn't changed in [EVO 2]
+
+- It's still light, functionnal, predictable and beautiful
+- Also the whole codebase has changed and is more robust and less clunky
+- Might also be even more performant with more features
 
 ## Old README
 
