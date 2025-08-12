@@ -799,7 +799,7 @@ static void FMapRequest(XEvent ev)
 	FWarpCursor(nw->w);
 	FApplyBorders();
 	FUpdateClientList();
-	if (fluorite.ws[fluorite.cr_ws].fs && is_floating)
+	if ((fluorite.ws[fluorite.cr_ws].fs && is_floating) || (fluorite.hpads != 1 && is_floating))
 	{
 		XRaiseWindow(fluorite.dpy, nw->w);
 		XSetWindowBorder(fluorite.dpy, nw->w, fluorite.conf.bf);
@@ -2833,6 +2833,7 @@ void FScratchpadHideShow()
 			}
 		}
 		fluorite.hpads = hkey;
+		FRedrawWindows();
 	}
 	else
 	{
@@ -2849,7 +2850,5 @@ void FScratchpadHideShow()
 			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
 		}
 	}
-
-	FRedrawWindows();
 	FApplyBorders();
 }
