@@ -1,5 +1,8 @@
 # Workflow bugs
 - [ ] Handle focus properly and force everything to focus the last focused window
+    - [X] Switching monitors using binding should keep track of which window was focused
+    - [ ] Cursor warping should never refocus !
+        - Easy, just put a no_refocus inside the function and XSync if necessary
 
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
@@ -10,6 +13,8 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Scratchpads that die while hidden, will create ghosting issues
+    - Start gemini, put in scratchpad, hide it, kill node
 - [-] Scratchpads will sometimes go all in tiled when using FDelWindowFromScratchpad
     - Hard to fix, I can't reproduce it on demand
     - Might be fixed

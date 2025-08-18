@@ -467,18 +467,19 @@ static void *FInotifyXresources(void *useless)
 
 void FReloadXresources()
 {
+	Window focused;
+	int revert;
+
+	XGetInputFocus(fluorite.dpy, &focused, &revert);
 	char prog[255] = "xrdb ~/.Xresources";
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
 	FLoadXresources();
-	// int keep_ws = fluorite.cr_ws;
 	int keep_mon = fluorite.cr_mon;
 	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
 		if (keep_mon == i)
 			continue;
-		// fluorite.cr_mon = i;
-		// fluorite.cr_ws = fluorite.mon[i].ws;
 		FChangeMonitor(i);
 		FRedrawWindows();
 		FApplyBorders();
@@ -490,8 +491,10 @@ void FReloadXresources()
 		fluorite.mon[keep_mon].mx + fluorite.mon[keep_mon].mw / 2,
 		fluorite.mon[keep_mon].my + fluorite.mon[keep_mon].mh / 2
 	);
-	FRedrawWindows();
+	XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
+	FWarpCursor(focused);
 	FApplyBorders();
+	FRedrawWindows();
 }
 
 static void FRun()
@@ -1337,29 +1340,16 @@ static void FChangeMonitor(int mon)
 	no_warp = True;
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
-	{
-		w->fc = False;
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
-	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
-	{
-		w->fc = False;
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
-	}
 	FRemoveActiveWindow();
 	XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
 	fluorite.cr_mon = mon;
 	fluorite.cr_ws = fluorite.mon[mon].ws;
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 
-	if (fluorite.ws[fluorite.cr_ws].t_wins)
-	{
-		FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
-		FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
-		fluorite.ws[fluorite.cr_ws].t_wins->fc = True;
-		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
-		FApplyActiveWindow(fluorite.ws[fluorite.cr_ws].t_wins->w);
-	}
+	FRedrawWindows();
 	FApplyBorders();
 	no_warp = False;
 }
@@ -2627,27 +2617,42 @@ void FSendWindowToPrevWorkspace()
 
 void FFocusNextMonitor()
 {
+	Windows *w;
 	int mon = fluorite.cr_mon + 1;
 	if (mon == fluorite.ct_mon)
 		mon = 0;
 	FChangeMonitor(mon);
+	for (w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+	{
+		if (!w->fc)
+			continue;
+		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+		FWarpCursor(w->w);
+		goto next;
+	}
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (!w->fc)
+			continue;
+		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+		FWarpCursor(w->w);
+		goto next;
+	}
+
 	XWarpPointer(
 		fluorite.dpy, None, fluorite.root,
 		0, 0, 0, 0,
 		fluorite.mon[mon].mx + fluorite.mon[mon].mw / 2,
 		fluorite.mon[mon].my + fluorite.mon[mon].mh / 2
 	);
-	if (fluorite.ws[fluorite.cr_ws].f_wins)
-	{
-		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].f_wins->w, RevertToPointerRoot, CurrentTime);
-		FWarpCursor(fluorite.ws[fluorite.cr_ws].f_wins->w);
-	}
 	if (fluorite.ws[fluorite.cr_ws].t_wins)
 	{
+		fluorite.ws[fluorite.cr_ws].t_wins->fc = True;
 		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
 		FWarpCursor(fluorite.ws[fluorite.cr_ws].t_wins->w);
 	}
 
+next:
 	if (!fluorite.ws[fluorite.cr_ws].fs)
 		FApplyBorders();
 }
@@ -2727,6 +2732,13 @@ void FAddWindowToScratchpad()
 	return;
 
 next:
+	if (w->fs || fluorite.ws[fluorite.cr_ws].fs)
+	{
+		fluorite.ws[fluorite.cr_ws].fs = False;
+		w->fs = False;
+		FResetWindowOpacity(w->w);
+		XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
+	}
 	w->ww = fluorite.mon[fluorite.cr_mon].mw / 2;
 	w->wh = fluorite.mon[fluorite.cr_mon].mh / 2;
 	w->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.mon[fluorite.cr_mon].mw - w->ww) / 2;
@@ -2853,4 +2865,25 @@ void FScratchpadHideShow()
 		}
 	}
 	FApplyBorders();
+}
+
+void FCenterScratchpadWindow()
+{
+	Window focused;
+	int revert;
+	Windows *w;
+
+	if (fluorite.hpads == -1)
+		return;
+
+	XGetInputFocus(fluorite.dpy, &focused, &revert);
+	for (w = fluorite.pads[fluorite.hpads]->s_wins; w != NULL; w = w->next)
+		if (focused == w->w)
+			goto found;
+	return;
+
+found:
+	w->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.mon[fluorite.cr_mon].mw - w->ww) / 2;
+	w->wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.mon[fluorite.cr_mon].mh - w->wh) / 2;
+    XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 }

@@ -52,6 +52,7 @@ void FReloadXresources();
 void FAddWindowToScratchpad();
 void FDelWindowFromScratchpad();
 void FScratchpadHideShow();
+void FCenterScratchpadWindow();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -179,6 +180,8 @@ static const Bindings bind[] = {
 
   {METAKEY|ControlMask|ShiftMask,	XK_j,	FSendWindowToPrevWorkspace},
   {METAKEY|ControlMask|ShiftMask,	XK_m,	FSendWindowToNextWorkspace},
+
+  {METAKEY|Mod1Mask,	XK_ugrave,	   		FCenterScratchpadWindow},
 
   {0,				XF86XK_MonBrightnessUp,		brightness_up},
   {0,				XF86XK_MonBrightnessDown,	brightness_down},
