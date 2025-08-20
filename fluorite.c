@@ -154,6 +154,7 @@ static void 	FSetWindowOpacity(Window w, double opacity);
 static void		FUpdateClientList();
 static void		FResetWindowOpacity(Window w);
 static void		FRemoveActiveWindow();
+static void		FSearchAndDestoryGhostWindows();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -1130,6 +1131,8 @@ static void FMoveWindowBasedOnMonitor(Windows *w)
 
 static void FRedrawWindows()
 {
+	FSearchAndDestoryGhostWindows();
+
 	if (!fluorite.ws[fluorite.cr_ws].t_wins)
 		goto floating;
 
@@ -1949,8 +1952,11 @@ static void FWarpCursor(Window w)
 	if (!WARP_CURSOR || no_warp)
 		return;
 
+	no_refocus = True;
 	XGetGeometry(fluorite.dpy, w, &dummy, &x, &y, (unsigned int *)&ww, (unsigned int *)&wh, (unsigned int *)&x, (unsigned int *)&y);
 	XWarpPointer(fluorite.dpy, None, w, 0, 0, 0, 0, ww / 2, wh / 2);
+	XSync(fluorite.dpy, True);
+	no_refocus = False;
 }
 
 static void FSetWindowOpacity(Window w, double opacity)
@@ -2886,4 +2892,20 @@ found:
 	w->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.mon[fluorite.cr_mon].mw - w->ww) / 2;
 	w->wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.mon[fluorite.cr_mon].mh - w->wh) / 2;
     XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+}
+
+static void FSearchAndDestoryGhostWindows()
+{
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+		if (!FWindowExists(fluorite.dpy, w->w))
+			fluorite.ws[fluorite.cr_ws].t_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+		if (!FWindowExists(fluorite.dpy, w->w))
+			fluorite.ws[fluorite.cr_ws].f_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
+	// for (int i = 0; i < HASH_SIZE; i++)
+	// {
+	// 	for (Windows *w = fluorite.pads[i]->s_wins; w != NULL; w = w->next)
+	// 		if (!FWindowExists(fluorite.dpy, w->w))
+	// 			fluorite.pads[i]->s_wins = FDelWindow(fluorite.pads[i]->s_wins, w);
+	// }
 }

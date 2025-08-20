@@ -1,23 +1,16 @@
 # Workflow bugs
 - [ ] Handle focus properly and force everything to focus the last focused window
     - [X] Switching monitors using binding should keep track of which window was focused
-    - [ ] Cursor warping should never refocus !
-        - Easy, just put a no_refocus inside the function and XSync if necessary
+    - [X] Cursor warping should never refocus !
 
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
-- [ ] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
 - [ ] Add Tags like DWM
 - [ ] Add EWMH
     - https://specifications.freedesktop.org/wm-spec/1.3/
 - [ ] Add Organizer back !
 
 # BUG
-- [ ] Scratchpads that die while hidden, will create ghosting issues
-    - Start gemini, put in scratchpad, hide it, kill node
-- [-] Scratchpads will sometimes go all in tiled when using FDelWindowFromScratchpad
-    - Hard to fix, I can't reproduce it on demand
-    - Might be fixed
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
@@ -66,3 +59,14 @@
 - [X] Floating windows still doesn't appaers when a new one is opened
 - [X] Memory leak coming from Xresources I guess.
     - Seems corrected
+- [X] Scratchpads will sometimes go all in tiled when using FDelWindowFromScratchpad
+    - Hard to fix, I can't reproduce it on demand
+    - Seems to be fixed
+- [X] Open scratchpad terminal, open feh, kill the scratchpad terminal, ghost window in tilling
+    - Seems fix now
+- [X] Scratchpads that die while hidden, will create ghosting issues (can't reproduce)
+    - Start gemini, put in scratchpad, hide it, kill node
+- [X] Switching monitors using binding should keep track of which window was focused
+- [X] Cursor warping should never refocus !
+- [X] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
+     - Kinda done I think ?

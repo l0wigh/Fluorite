@@ -62,9 +62,9 @@ static void runner_cmd()   { char prog[255] = "dmenu_run"; FExecute(prog); }
 static void themes()   { char prog[255] = "~/tools/suckless_tools/scripts/fluorite_theme.sh"; FExecute(prog); }
 static void brightness_up() { char prog[255] = "brightnessctl set 5%+"; FExecute(prog);};
 static void brightness_down() { char prog[255] = "brightnessctl set 5%-"; FExecute(prog);};
-static void volume_mute() { char prog[255] = "pactl set-sink-mute 0 toggle"; FExecute(prog);};
-static void volume_up() { char prog[255] = "pactl set-sink-volume 0 +5%"; FExecute(prog);};
-static void volume_down() { char prog[255] = "pactl set-sink-volume 0 -5%"; FExecute(prog);};
+static void volume_mute() { char prog[255] = "pactl set-sink-mute @DEFAULT_SINK@ toggle"; FExecute(prog);};
+static void volume_up() { char prog[255] = "pactl set-sink-volume @DEFAULT_SINK@ +5%"; FExecute(prog);};
+static void volume_down() { char prog[255] = "pactl set-sink-volume @DEFAULT_SINK@ -5%"; FExecute(prog);};
 static void locking() { char prog[255] = "elogind-inhibit --what=sleep xsecurelock"; FExecute(prog); }
 static void dmenu_xresources() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_xresources.sh"; FExecute(prog); }
 static void st_music() { char prog[255] = "st -c st_music -g 100x30 mocp"; FExecute(prog); }
@@ -72,6 +72,7 @@ static void dmenu_music() { char prog[255] = "~/tools/suckless_tools/scripts/dme
 static void dmenu_font() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh font"; FExecute(prog); }
 static void dmenu_font_size() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh"; FExecute(prog); }
 static void print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; FExecute(prog); }
+static void toggle_mic() { char prog[255] = "pactl set-source-mute 1 toggle && pactl set-source-mute 2 toggle"; FExecute(prog); }
 
 // Fluorite based user defined function
 static void rotate_windows_up() { FRotateWindows(UP); }
@@ -189,4 +190,5 @@ static const Bindings bind[] = {
   {0,				XF86XK_AudioRaiseVolume,	volume_up},
   {0,				XF86XK_AudioLowerVolume,	volume_down},
   {0,				XF86XK_Favorites,			st_music},
+  {0,				XF86XK_AudioMicMute,		toggle_mic},
 };
