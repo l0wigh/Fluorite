@@ -1533,6 +1533,29 @@ redraw:
 		XSync(fluorite.dpy, True);
 		no_refocus = False;
 	}
+	else
+	{
+		if (fluorite.ws[fluorite.cr_ws].t_wins)
+		{
+			no_refocus = True;
+			fluorite.ws[fluorite.cr_ws].t_wins->fc = 1;
+			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+			FApplyBorders();
+			FWarpCursor(fluorite.ws[fluorite.cr_ws].t_wins->w);
+			XSync(fluorite.dpy, True);
+			no_refocus = False;
+		}
+		else if (fluorite.ws[fluorite.cr_ws].f_wins)
+		{
+			no_refocus = True;
+			fluorite.ws[fluorite.cr_ws].f_wins->fc = 1;
+			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].f_wins->w, RevertToPointerRoot, CurrentTime);
+			FApplyBorders();
+			FWarpCursor(fluorite.ws[fluorite.cr_ws].f_wins->w);
+			XSync(fluorite.dpy, True);
+			no_refocus = False;
+		}
+	}
 }
 
 static void FDestroyNotify(XEvent ev)
@@ -2892,6 +2915,7 @@ found:
 	w->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.mon[fluorite.cr_mon].mw - w->ww) / 2;
 	w->wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.mon[fluorite.cr_mon].mh - w->wh) / 2;
     XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+	FWarpCursor(w->w);
 }
 
 static void FSearchAndDestoryGhostWindows()

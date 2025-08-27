@@ -11,6 +11,13 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Swallowing and/or swallowed windows might not be link to the good workspace
+    - Add a function that just go through all ws and put the windows correctly
+- [-] Closing a floating windows does not give focus back on the tiled windows
+    - Also test with DestroyNotify
+- [ ] Reloading Xresources apply borders but not the InputFocus
+    - Strange since it seems to be handled correctly
+- [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
