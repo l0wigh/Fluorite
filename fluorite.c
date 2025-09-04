@@ -2243,6 +2243,9 @@ void FPrevWorkspace()
 
 void FRotateStackWindows(int mode)
 {
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return;
+
     Windows *first;
     Windows *last;
     Windows *ws_head;
@@ -2318,6 +2321,9 @@ redraw:
 
 void FRotateWindows(int mode)
 {
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return;
+
 	Windows *first, *last;
 	Window focused = FFindFocusedWindow();
 
@@ -2511,6 +2517,9 @@ void FTileWindow()
 	Window focused;
 	int revert;
 
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return;
+
 	XGetInputFocus(fluorite.dpy, &focused, &revert);
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 	{
@@ -2535,6 +2544,9 @@ void FTileAllWindows()
 	Windows *w;
 	Windows *prev;
 
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return;
+
 	for (w = fluorite.ws[fluorite.cr_ws].f_wins; w->next != NULL; w = w->next);
 	prev = w->prev;
 	fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
@@ -2549,6 +2561,9 @@ void FTileAllWindows()
 
 void FChangeLayout(int layout)
 {
+	if (fluorite.ws[fluorite.cr_ws].fs)
+		return;
+
 	if (fluorite.ws[fluorite.cr_ws].layout == layout)
 		fluorite.ws[fluorite.cr_ws].layout = STARTING_LAYOUT;
 	else
