@@ -11,20 +11,19 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [!] Swapping workspace between monitors doesnt give focus properly which makes the FSwapFocus fail
-    - It affects greatly stacked layout since focus isn't changed when swapping windows !
 - [!] There is some unexpected crashes with scratchpads
     - Can't reproduce good luck
-- [ ] Swallowing and/or swallowed windows might not be link to the good workspace
-    - Add a function that just go through all ws and put the windows correctly
 - [-] Closing a floating windows does not give focus back on the tiled windows
     - Also test with DestroyNotify
-- [ ] Reloading Xresources apply nothing I guess (Input or Borders)?
 - [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it
     - Can't reproduce
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
-- [ ] Borders not applied when switching theme
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
+- [?] Swallowing and/or swallowed windows might not be link to the good workspace
+    - Add a function that just go through all ws and put the windows correctly
+- [?] Swapping workspace between monitors doesnt give focus properly which makes the FSwapFocus fail
+    - It affects greatly stacked layout since focus isn't changed when swapping windows !
+    - might be fixed, but still take a look at that
 
 # CLEAN
 - [ ] Reset borders function
