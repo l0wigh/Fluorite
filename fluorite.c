@@ -2578,6 +2578,7 @@ void FChangeLayout(int layout)
 	}
 
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 }
 

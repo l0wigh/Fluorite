@@ -68,7 +68,7 @@ static void volume_down() { char prog[255] = "pactl set-sink-volume @DEFAULT_SIN
 static void locking() { char prog[255] = "elogind-inhibit --what=sleep xsecurelock"; FExecute(prog); }
 static void dmenu_xresources() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_xresources.sh"; FExecute(prog); }
 static void st_music() { char prog[255] = "st -c st_music -g 100x30 mocp"; FExecute(prog); }
-static void dmenu_music() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_music.sh"; FExecute(prog); }
+// static void dmenu_music() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_music.sh"; FExecute(prog); }
 static void dmenu_font() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh font"; FExecute(prog); }
 static void dmenu_font_size() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh"; FExecute(prog); }
 static void print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; FExecute(prog); }
@@ -119,8 +119,8 @@ static const Bindings bind[] = {
   {METAKEY,     		XK_w,				browser},
   {METAKEY,     		XK_k,				rotate_windows_up},
   {METAKEY,     		XK_l,				rotate_windows_down},
-  {METAKEY,     		XK_j,				master_offset_down},
-  {METAKEY,     		XK_m,				master_offset_up},
+  {METAKEY|ShiftMask,     		XK_j,				master_offset_down},
+  {METAKEY|ShiftMask,     		XK_m,				master_offset_up},
   {METAKEY,     		XK_equal,			master_offset_reset},
   {METAKEY,     		XK_space,			FTileWindow},
   {METAKEY,     		XK_s,				layout_stacked},
@@ -139,7 +139,7 @@ static const Bindings bind[] = {
   {METAKEY|ShiftMask,	XK_k,	   			rotate_slaves_windows_up},
   {METAKEY|ShiftMask, 	XK_l,	   			rotate_slaves_windows_down},
   {METAKEY|ShiftMask, 	XK_e,	   			locking},
-  {METAKEY|ShiftMask,	XK_m,				dmenu_music},
+  // {METAKEY|ShiftMask,	XK_m,				dmenu_music},
   {METAKEY|ShiftMask, 	XK_f,				dmenu_font},
   {METAKEY|ShiftMask,	XK_space,			FFloatingHideShow},
   {METAKEY|ShiftMask,	XK_r,	   			layout_centered},
@@ -175,8 +175,8 @@ static const Bindings bind[] = {
   {METAKEY|ControlMask,	XK_f,				dmenu_font_size},
   {METAKEY|ControlMask,	XK_ugrave,	   		FDelWindowFromScratchpad},
 
-  {METAKEY,				XK_n,				FFocusNext},
-  {METAKEY|ShiftMask,	XK_n,				FFocusPrev},
+  {METAKEY,				XK_m,				FFocusNext},
+  {METAKEY,				XK_j,				FFocusPrev},
   {METAKEY,				XK_comma,			FFocusNextMonitor},
 
   {METAKEY|ControlMask|ShiftMask,	XK_j,	FSendWindowToPrevWorkspace},
