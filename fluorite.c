@@ -468,10 +468,10 @@ static void *FInotifyXresources(void *useless)
 
 void FReloadXresources()
 {
-	Window focused;
-	int revert;
+	// Window focused;
+	// int revert;
 
-	XGetInputFocus(fluorite.dpy, &focused, &revert);
+	// XGetInputFocus(fluorite.dpy, &focused, &revert);
 	char prog[255] = "xrdb ~/.Xresources";
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
@@ -492,8 +492,11 @@ void FReloadXresources()
 		fluorite.mon[keep_mon].mx + fluorite.mon[keep_mon].mw / 2,
 		fluorite.mon[keep_mon].my + fluorite.mon[keep_mon].mh / 2
 	);
-	XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
-	FWarpCursor(focused);
+	// if (focused != None)
+	// {
+	// 	XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
+	// 	FWarpCursor(focused);
+	// }
 	FApplyBorders();
 	FRedrawWindows();
 }
@@ -2363,6 +2366,9 @@ void FRotateWindows(int mode)
 
 void FChangeMasterOffset(int mode)
 {
+	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.ws[fluorite.cr_ws].layout == STACKED)
+		return ;
+
 	switch (mode)
 	{
 		case UP:
