@@ -2657,6 +2657,13 @@ void FFocusNextMonitor()
 	if (mon == fluorite.ct_mon)
 		mon = 0;
 	FChangeMonitor(mon);
+	XWarpPointer(
+		fluorite.dpy, None, fluorite.root,
+		0, 0, 0, 0,
+		fluorite.mon[mon].mx + fluorite.mon[mon].mw / 2,
+		fluorite.mon[mon].my + fluorite.mon[mon].mh / 2
+	);
+
 	for (w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 	{
 		if (!w->fc)
@@ -2674,12 +2681,6 @@ void FFocusNextMonitor()
 		goto next;
 	}
 
-	XWarpPointer(
-		fluorite.dpy, None, fluorite.root,
-		0, 0, 0, 0,
-		fluorite.mon[mon].mx + fluorite.mon[mon].mw / 2,
-		fluorite.mon[mon].my + fluorite.mon[mon].mh / 2
-	);
 	if (fluorite.ws[fluorite.cr_ws].t_wins)
 	{
 		fluorite.ws[fluorite.cr_ws].t_wins->fc = True;

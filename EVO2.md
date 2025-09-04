@@ -7,10 +7,9 @@
     - [ ] New tiled doesn't take focus if on floating windows
         - Might not be a bug really
     - [ ] Opening a swallowing windows gives focus back on master
-    - [ ] Switching monitors doesn't warp the cursor
+    - [X] Switching monitors doesn't warp the cursor
 
 # TODO
-- [X] Disable master offset changing when in fullscreen or in stacked layout
 - [ ] Find how to do a proper refocus when reloading Xresources
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [ ] Add Tags like DWM
@@ -90,3 +89,4 @@
 - [X] Cursor warping should never refocus !
 - [X] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
      - Kinda done I think ?
+- [X] Disable master offset changing when in fullscreen or in stacked layout
