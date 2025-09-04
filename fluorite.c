@@ -468,10 +468,10 @@ static void *FInotifyXresources(void *useless)
 
 void FReloadXresources()
 {
-	// Window focused;
-	// int revert;
+	Window focused;
+	int revert;
 
-	// XGetInputFocus(fluorite.dpy, &focused, &revert);
+	XGetInputFocus(fluorite.dpy, &focused, &revert);
 	char prog[255] = "xrdb ~/.Xresources";
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
@@ -492,13 +492,27 @@ void FReloadXresources()
 		fluorite.mon[keep_mon].mx + fluorite.mon[keep_mon].mw / 2,
 		fluorite.mon[keep_mon].my + fluorite.mon[keep_mon].mh / 2
 	);
-	// if (focused != None)
-	// {
-	// 	XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
-	// 	FWarpCursor(focused);
-	// }
-	FApplyBorders();
+	if (focused != None)
+	{
+		for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+			if (focused == w->w)
+				w->fc = 1;
+		for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+			if (focused == w->w)
+				w->fc = 1;
+		if (fluorite.hpads != -1)
+		{
+			Scratchpads *p = fluorite.pads[fluorite.hpads];
+			for (Windows *w = p->s_wins; w != NULL; w = w->next)
+				if (focused == w->w)
+					w->fc = 1;
+		}
+		XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
+		FWarpCursor(focused);
+	}
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
+	FApplyBorders();
 }
 
 static void FRun()
@@ -725,6 +739,7 @@ found:
 	{
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		FRedrawWindows();
+		XSync(fluorite.dpy, True);
 		FApplyBorders();
 	}
 	XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
@@ -804,6 +819,7 @@ static void FMapRequest(XEvent ev)
 
 	FRedrawWindows();
 	FWarpCursor(nw->w);
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 	FUpdateClientList();
 	if ((fluorite.ws[fluorite.cr_ws].fs && is_floating) || (fluorite.hpads != 1 && is_floating))
@@ -2795,8 +2811,9 @@ next:
 	w->prev = NULL;
 	p->s_wins = FAddWindow(p->s_wins, w);
 	fluorite.hpads = hkey;
-	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
+	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 	FApplyBorders();
 }
 

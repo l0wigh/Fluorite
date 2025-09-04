@@ -2,15 +2,8 @@
 - [ ] Handle focus properly and force everything to focus the last focused window
     - [X] Switching monitors using binding should keep track of which window was focused
     - [X] Cursor warping should never refocus !
-- [ ] Bugs with no cursor warp
-    - [ ] Scratchpads doesn't take focus if cursor isn't on it
-    - [ ] New tiled doesn't take focus if on floating windows
-        - Might not be a bug really
-    - [ ] Opening a swallowing windows gives focus back on master
-    - [X] Switching monitors doesn't warp the cursor
 
 # TODO
-- [ ] Find how to do a proper refocus when reloading Xresources
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [ ] Add Tags like DWM
 - [ ] Add EWMH
@@ -90,3 +83,9 @@
 - [X] ? Add a way to recognize a missplaced floating and fix it's workspace to the current monitor it's in
      - Kinda done I think ?
 - [X] Disable master offset changing when in fullscreen or in stacked layout
+- [X] Bugs with no cursor warp
+    - [X] Scratchpads doesn't take focus if cursor isn't on it
+    - [X] New tiled doesn't take focus if on floating windows
+    - [X] Opening a swallowing windows gives focus back on master
+    - [X] Switching monitors doesn't warp the cursor
+- [X] Find how to do a proper refocus when reloading Xresources
