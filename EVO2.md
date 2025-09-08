@@ -2,6 +2,7 @@
 - [ ] Handle focus properly and force everything to focus the last focused window
     - [X] Switching monitors using binding should keep track of which window was focused
     - [X] Cursor warping should never refocus !
+- [ ] No warp bugs
 
 # TODO
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
@@ -87,4 +88,5 @@
     - [X] New tiled doesn't take focus if on floating windows
     - [X] Opening a swallowing windows gives focus back on master
     - [X] Switching monitors doesn't warp the cursor
+    - [X] Should not change focus based on mouse when switching toggling fullscreen
 - [X] Find how to do a proper refocus when reloading Xresources

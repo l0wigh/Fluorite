@@ -2614,6 +2614,7 @@ next:
 	w->fs = !w->fs;
 	fluorite.ws[fluorite.cr_ws].fs = !fluorite.ws[fluorite.cr_ws].fs;
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 	FWarpCursor(w->w);
 
