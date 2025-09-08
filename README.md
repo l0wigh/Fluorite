@@ -18,6 +18,7 @@ There is still "workflow" bugs that might bother me after a while. I'm thinking 
 - Better EWMH handling, leading to a better integration with other X11 tools like Polybar
 - Cursor Warp options
 - Window swallowing
+- Custom IPC for Polybar
 - ...
 
 ## Things that didn't changed in [EVO 2]
@@ -25,6 +26,22 @@ There is still "workflow" bugs that might bother me after a while. I'm thinking 
 - It's still light, functionnal, predictable and beautiful
 - Also the whole codebase has changed and is more robust and less clunky
 - Might also be even more performant with more features
+
+## Polybar IPC
+
+- Layout
+```
+[module/fluorite_layout]
+type = custom/ipc
+hook-0 = "echo Cascade"
+hook-1 = "echo DWM"
+hook-2 = "echo Centered"
+hook-3 = "echo Stacked"
+initial = <label>
+format-prefix = ""
+format-prefix-foreground = ${colors.primary}
+label = %output%
+```
 
 ## Old README
 

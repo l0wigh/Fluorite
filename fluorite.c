@@ -155,6 +155,7 @@ static void		FUpdateClientList();
 static void		FResetWindowOpacity(Window w);
 static void		FRemoveActiveWindow();
 static void		FSearchAndDestoryGhostWindows();
+static void		FPolybarLayoutIPC(const int layout);
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -1151,6 +1152,9 @@ static void FMoveWindowBasedOnMonitor(Windows *w)
 static void FRedrawWindows()
 {
 	FSearchAndDestoryGhostWindows();
+
+	if (POLYBAR_IPC)
+		FPolybarLayoutIPC(fluorite.ws[fluorite.cr_ws].layout + 1);
 
 	if (!fluorite.ws[fluorite.cr_ws].t_wins)
 		goto floating;
@@ -2973,4 +2977,11 @@ static void FSearchAndDestoryGhostWindows()
 	// 		if (!FWindowExists(fluorite.dpy, w->w))
 	// 			fluorite.pads[i]->s_wins = FDelWindow(fluorite.pads[i]->s_wins, w);
 	// }
+}
+
+static void FPolybarLayoutIPC(const int msg)
+{
+	char command[256];
+	snprintf(command, sizeof(command), "polybar-msg hook fluorite_layout %d", msg);
+	FExecute(command);
 }

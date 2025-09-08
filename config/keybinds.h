@@ -19,8 +19,8 @@ enum MODE {
 enum LAYOUT {
 	CASCADE,
 	DWM,
-	STACKED,
-	CENTERED
+	CENTERED,
+	STACKED
 };
 
 #define METAKEY					Mod4Mask		/* key that will be used for bindings */
@@ -105,6 +105,7 @@ static void window_workspace_ten() { FSendWindowToWorkspace(9); }
 static void layout_fluorite() { FChangeLayout(CASCADE); }
 static void layout_dwm() { FChangeLayout(DWM); }
 static void layout_centered() { FChangeLayout(CENTERED); }
+static void layout_stacked() { FChangeLayout(STACKED); }
 static void layout_auto()
 {
 	if (STARTING_LAYOUT == DWM)
@@ -112,7 +113,6 @@ static void layout_auto()
 	else
 		layout_dwm();
 }
-static void layout_stacked() { FChangeLayout(STACKED); }
 
 static const Bindings bind[] = {
   {METAKEY,				XK_Return,			terminal},

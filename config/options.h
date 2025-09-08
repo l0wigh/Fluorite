@@ -9,6 +9,7 @@
 #define STARTING_LAYOUT			CASCADE			/* CASCADE / DWM / CENTERED */ 
 #define WARP_CURSOR				False			/* (True is recommended) When True, move the cursor to the newly focused window */
 #define JUMP_TO_URGENT			True			/* When True, move to the workspaces where a window need attention */
+#define POLYBAR_IPC				True			/* When True, Polybar will receive IPC from Fluorite */
 
 typedef struct
 {
