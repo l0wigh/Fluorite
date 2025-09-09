@@ -156,6 +156,7 @@ static void		FResetWindowOpacity(Window w);
 static void		FRemoveActiveWindow();
 static void		FSearchAndDestoryGhostWindows();
 static void		FPolybarLayoutIPC(const int layout);
+static void		FPolybarScratchpadsIPC();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -1535,6 +1536,7 @@ force_unmap:
 redraw:
 	FUpdateClientList();
 	FRemoveActiveWindow();
+	FPolybarScratchpadsIPC();
 
 	int keep_ws = fluorite.cr_ws;
 	int keep_mon = fluorite.cr_mon;
@@ -1664,6 +1666,7 @@ force_destroy:
 update:
 	FUpdateClientList();
 	FRedrawWindows();
+	FPolybarScratchpadsIPC();
 
 	int keep_ws = fluorite.cr_ws;
 	int keep_mon = fluorite.cr_mon;
@@ -2756,7 +2759,7 @@ static Scratchpads *FCreateOrGetScratchpad(KeySym key)
 	if (p && p->key == key)
 		return p;
 
-	p = calloc(1, sizeof(Scratchpads));
+	p = (Scratchpads *) calloc(1, sizeof(Scratchpads));
 	p->key = key;
 	p->s_wins = NULL;
 	fluorite.pads[hash] = p;
@@ -2837,6 +2840,7 @@ next:
 	XSync(fluorite.dpy, True);
 	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 	FApplyBorders();
+	FPolybarScratchpadsIPC();
 }
 
 void FDelWindowFromScratchpad()
@@ -2858,7 +2862,10 @@ void FDelWindowFromScratchpad()
 		w->prev = NULL;
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 		if (!p->s_wins)
+		{
+			memset(fluorite.pads[fluorite.hpads], 0, sizeof(Scratchpads));
 			fluorite.hpads = -1;
+		}
 		FRedrawWindows();
 		FApplyBorders();
 		XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
@@ -2866,6 +2873,7 @@ void FDelWindowFromScratchpad()
 		FWarpCursor(w->w);
 		break;
 	}
+	FPolybarScratchpadsIPC();
 }
 
 void FScratchpadHideShow()
@@ -2942,6 +2950,7 @@ void FScratchpadHideShow()
 		}
 	}
 	FApplyBorders();
+	FPolybarScratchpadsIPC();
 }
 
 void FCenterScratchpadWindow()
@@ -2986,5 +2995,44 @@ static void FPolybarLayoutIPC(const int msg)
 {
 	char command[256];
 	snprintf(command, sizeof(command), "polybar-msg hook fluorite_layout %d", msg);
+	FExecute(command);
+}
+
+static void FPolybarScratchpadsIPC()
+{
+	char *scratchpads_value = NULL;
+	char *tmp;
+	char command[256];
+	Atom scratchpads_atom = XInternAtom(fluorite.dpy, "FLUORITE_SCRATCHPADS", False);
+
+	scratchpads_value = (char *) calloc(HASH_SIZE, sizeof(char));
+	for (int i = 0; i < HASH_SIZE; i++) 
+	{
+		if (fluorite.pads[i] && fluorite.pads[i]->key)
+		{
+			tmp = strdup(XKeysymToString(fluorite.pads[i]->key));
+			if (tmp && fluorite.pads[i]->s_wins)
+			{
+				if (i == fluorite.hpads)
+					strcat(scratchpads_value, "[");
+				strcat(scratchpads_value, tmp);
+				if (i == fluorite.hpads)
+					strcat(scratchpads_value, "]");
+				strcat(scratchpads_value, " ");
+				free(tmp);
+			}
+		}
+	}
+
+	if (strlen(scratchpads_value) > 1)
+	{
+		XChangeProperty(fluorite.dpy, fluorite.root, scratchpads_atom, XA_STRING, 8, PropModeReplace, (unsigned char *)scratchpads_value, strlen(scratchpads_value));
+		XSync(fluorite.dpy, True);
+	}
+	else
+		XDeleteProperty(fluorite.dpy, fluorite.root, scratchpads_atom);
+
+	free(scratchpads_value);
+	snprintf(command, sizeof(command), "polybar-msg hook fluorite_scratchpads 1");
 	FExecute(command);
 }

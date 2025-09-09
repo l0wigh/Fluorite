@@ -37,10 +37,13 @@ hook-0 = "echo Cascade"
 hook-1 = "echo DWM"
 hook-2 = "echo Centered"
 hook-3 = "echo Stacked"
-initial = <label>
-format-prefix = ""
-format-prefix-foreground = ${colors.primary}
-label = %output%
+```
+
+- Scratchpads list
+```
+[module/fluorite_scratchpads]
+type = custom/ipc
+hook-0 = xprop -root FLUORITE_SCRATCHPADS 2>/dev/null | awk -F '"' '/=/{print $2}' || echo ""
 ```
 
 ## Old README
