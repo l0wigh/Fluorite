@@ -1,3 +1,13 @@
+# Check if it's fixed
+- [X] There is some unexpected crashes with scratchpads
+    - Last time it happens was when I tried to close a scratchpads that was opened after a floating windows
+    - Open a tiled window and a floating
+    - Focus floating
+    - Open Scratchpad
+    - Close Scratchpad
+    - Focus should be back on floating and it should crash
+    - Also test without a tiled window
+
 # Workflow bugs
 - [ ] Handle focus properly and force everything to focus the last focused window
     - [X] Switching monitors using binding should keep track of which window was focused
@@ -21,8 +31,6 @@
     - The border and the focus works but FocusNext fail
     - I comes from the fact that if the cursor isn't on a window, the focus goes back to master, but not really
         - Find a way to avoid that issues when no cursor warp
-- [!] There is some unexpected crashes with scratchpads
-    - Last time it happens was when I tried to close a scratchpads that was opened after a floating windows
 - [-] Closing a floating windows does not give focus back on the tiled windows
     - Also test with DestroyNotify
 - [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it
