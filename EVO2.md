@@ -5,6 +5,11 @@
 - [ ] No warp bugs
 
 # TODO
+- [ ] Create a EWMH-style variable that will keep every scratchpads
+    - Recover the binding used
+    - Add/Delete/Update the bindings list
+    - Send IPC to ask polybar to update the list
+    - Have two list, one with inactives scratchpads and one with actives scratchpads
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [ ] Add Tags like DWM
 - [ ] Add EWMH
@@ -12,8 +17,12 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [!] There is still some focus issues when switching workspace across multiple monitors
+    - The border and the focus works but FocusNext fail
+    - I comes from the fact that if the cursor isn't on a window, the focus goes back to master, but not really
+        - Find a way to avoid that issues when no cursor warp
 - [!] There is some unexpected crashes with scratchpads
-    - Can't reproduce good luck
+    - Last time it happens was when I tried to close a scratchpads that was opened after a floating windows
 - [-] Closing a floating windows does not give focus back on the tiled windows
     - Also test with DestroyNotify
 - [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it

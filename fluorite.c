@@ -1376,6 +1376,7 @@ static void FChangeMonitor(int mon)
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 	no_warp = False;
 }
