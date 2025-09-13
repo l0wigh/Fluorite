@@ -2912,8 +2912,10 @@ void FDelWindowFromScratchpad()
 			fluorite.hpads = -1;
 		}
 		FRedrawWindows();
+		XSync(fluorite.dpy, True);
 		FApplyBorders();
 		XChangeProperty(fluorite.dpy, w->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+		FUpdateClientList();
 		XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 		FWarpCursor(w->w);
 		break;
