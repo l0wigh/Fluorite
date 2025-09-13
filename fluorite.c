@@ -95,6 +95,7 @@ typedef struct
 	int			sr;
 	int			sl;
 	int 		primary;
+	int			fx_hdn;
 	Windows		*fx_win;
 } Monitors;
 
@@ -180,6 +181,7 @@ static void		FPolybarLayoutIPC(const int layout);
 static void		FPolybarScratchpadsIPC();
 static void		FGetFixedPartialStrut(Window w, int new_win);
 static void		FRecalculateStrut();
+static void		FResetMonitorStrut(int mon);
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -332,6 +334,7 @@ static void FInitMonitors()
 		fluorite.mon[i].ws = default_monitor_workspace[i] - 1;
 		fluorite.mon[i].primary = False;
 		fluorite.mon[i].fx_win = NULL;
+		fluorite.mon[i].fx_hdn = False;
 		if (default_monitor_workspace[i] == 0)
 			fluorite.mon[i].ws = 9;
 		if (infos[i].primary)
@@ -344,7 +347,7 @@ static void FInitMonitors()
 
 	if (hot_plug)
 	{
-		usleep(200000);
+		usleep(100000);
 		int primary = 0;
 		for (int i = 0; i < fluorite.ct_mon; i++)
 		{
@@ -554,33 +557,42 @@ static void FRun()
 		switch (ev.type)
 		{
 			case ConfigureRequest:
+				fprintf(stderr, "[FConfigureRequest]: Called\n");
 				FConfigureRequest(ev);
 				break;
 			case MapRequest:
+				fprintf(stderr, "[FMapRequest]: Called\n");
 				FMapRequest(ev);
 				break;
 			case UnmapNotify:
+				fprintf(stderr, "[FUnmapNotify]: Called\n");
 				FUnmapNotify(ev);
 				break;
 			case ButtonPress:
+				fprintf(stderr, "[FButtonPress]: Called\n");
 				FButtonPress(ev);
 				break;
 			case KeyPress:
+				fprintf(stderr, "[FKeyPress]: Called\n");
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
+				fprintf(stderr, "[FMotionNotify]: Called\n");
 				FGetMonitorFromMouse();
 				// FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
 			case EnterNotify:
+				fprintf(stderr, "[EnterNotify]: Called\n");
 				FGetMonitorFromMouse();
 				FFocusWindowUnderCursor();
 				break;
 			case ClientMessage:
+				fprintf(stderr, "[FClientMessage]: Called\n");
 				FClientMessage(ev);
 				break;
 			case DestroyNotify:
+				fprintf(stderr, "[FDestroyNotify]: Called\n");
 				FDestroyNotify(ev);
 				break;
 		}
@@ -1478,10 +1490,14 @@ static void FUnmapNotify(XEvent ev)
 	int ws;
 
 	if (no_unmap)
+	{
 		return;
+	}
 
 	if (fluorite.hpads == -1)
+	{
 		goto next;
+	}
 
 	Scratchpads *p = fluorite.pads[fluorite.hpads];
 	for (Windows *w = p->s_wins; w != NULL; w = w->next)
@@ -1612,7 +1628,7 @@ static void FDestroyNotify(XEvent ev)
 	int ws;
 	int i = 0;
 
-	for (int i = 0; i <= fluorite.ct_mon; i++)
+	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
 		for (Windows *fx = fluorite.mon[i].fx_win; fx != NULL; fx = fx->next)
 		{
@@ -1621,10 +1637,7 @@ static void FDestroyNotify(XEvent ev)
 			fluorite.mon[i].fx_win = FDelWindow(fluorite.mon[i].fx_win, fx);
 			fx->next = NULL;
 			fx->prev = NULL;
-			fluorite.mon[i].sl = 0;
-			fluorite.mon[i].sr = 0;
-			fluorite.mon[i].st = 0;
-			fluorite.mon[i].sb = 0;
+			FResetMonitorStrut(i);
 			FRecalculateStrut();
 			goto update;
 		}
@@ -3037,7 +3050,7 @@ static void FPolybarLayoutIPC(const int msg)
 	if (!POLYBAR_IPC)
 		return ;
 	char command[256];
-	snprintf(command, sizeof(command), "polybar-msg hook fluorite_layout %d", msg);
+	snprintf(command, sizeof(command), "polybar-msg action \"fluorite_layout.hook.%d\"", msg);
 	FExecute(command);
 }
 
@@ -3078,7 +3091,7 @@ static void FPolybarScratchpadsIPC()
 		XDeleteProperty(fluorite.dpy, fluorite.root, scratchpads_atom);
 
 	free(scratchpads_value);
-	snprintf(command, sizeof(command), "polybar-msg hook fluorite_scratchpads 1");
+	snprintf(command, sizeof(command), "polybar-msg action \"fluorite_scratchpads.hook.0\"");
 	FExecute(command);
 }
 
@@ -3183,4 +3196,37 @@ static void FRecalculateStrut()
 	for (int i = 0; i < fluorite.ct_mon; i++)
 		for (Windows *fx = fluorite.mon[i].fx_win; fx != NULL; fx = fx->next)
 			FGetFixedPartialStrut(fx->w, False);
+}
+
+static void FResetMonitorStrut(int mon)
+{
+	fluorite.mon[mon].sl = 0;
+	fluorite.mon[mon].sr = 0;
+	fluorite.mon[mon].st = 0;
+	fluorite.mon[mon].sb = 0;
+}
+
+void FToggleFixedStrut()
+{
+	if (fluorite.mon[fluorite.cr_mon].fx_hdn)
+	{
+		for (Windows *fx = fluorite.mon[fluorite.cr_mon].fx_win; fx != NULL; fx = fx->next)
+		{
+			XMapWindow(fluorite.dpy, fx->w);
+			FGetFixedPartialStrut(fx->w, False);
+		}
+	}
+	else
+	{
+		no_unmap = True;
+		for (Windows *fx = fluorite.mon[fluorite.cr_mon].fx_win; fx != NULL; fx = fx->next)
+			XUnmapWindow(fluorite.dpy, fx->w);
+		FResetMonitorStrut(fluorite.cr_mon);
+		XSync(fluorite.dpy, True);
+		no_unmap = False;
+		FRedrawWindows();
+		XSync(fluorite.dpy, True);
+		FApplyBorders();
+	}
+	fluorite.mon[fluorite.cr_mon].fx_hdn = !fluorite.mon[fluorite.cr_mon].fx_hdn;
 }

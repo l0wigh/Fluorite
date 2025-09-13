@@ -53,6 +53,7 @@ void FAddWindowToScratchpad();
 void FDelWindowFromScratchpad();
 void FScratchpadHideShow();
 void FCenterScratchpadWindow();
+void FToggleFixedStrut();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -119,8 +120,8 @@ static const Bindings bind[] = {
   {METAKEY,     		XK_w,				browser},
   {METAKEY,     		XK_k,				rotate_windows_up},
   {METAKEY,     		XK_l,				rotate_windows_down},
-  {METAKEY|ShiftMask,     		XK_j,				master_offset_down},
-  {METAKEY|ShiftMask,     		XK_m,				master_offset_up},
+  {METAKEY|ShiftMask,   XK_j,				master_offset_down},
+  {METAKEY|ShiftMask,   XK_m,				master_offset_up},
   {METAKEY,     		XK_equal,			master_offset_reset},
   {METAKEY,     		XK_space,			FTileWindow},
   {METAKEY,     		XK_s,				layout_stacked},
@@ -131,6 +132,7 @@ static const Bindings bind[] = {
   {METAKEY, 			XK_Print,			print_screen},
   {METAKEY,				XK_c,	   			layout_centered},
   {METAKEY,				XK_ugrave,	   		FScratchpadHideShow},
+  {METAKEY,				XK_h,				FToggleFixedStrut},
 
   {METAKEY|ShiftMask,	XK_Return,			FSwapWithMaster},
   {METAKEY|ShiftMask, 	XK_q,				FCloseWindow},
@@ -192,6 +194,4 @@ static const Bindings bind[] = {
   {0,				XF86XK_AudioLowerVolume,	volume_down},
   {0,				XF86XK_Favorites,			st_music},
   {0,				XF86XK_AudioMicMute,		toggle_mic},
-
-  {METAKEY,	XK_p,	   		testing},
 };
