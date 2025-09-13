@@ -557,42 +557,33 @@ static void FRun()
 		switch (ev.type)
 		{
 			case ConfigureRequest:
-				fprintf(stderr, "[FConfigureRequest]: Called\n");
 				FConfigureRequest(ev);
 				break;
 			case MapRequest:
-				fprintf(stderr, "[FMapRequest]: Called\n");
 				FMapRequest(ev);
 				break;
 			case UnmapNotify:
-				fprintf(stderr, "[FUnmapNotify]: Called\n");
 				FUnmapNotify(ev);
 				break;
 			case ButtonPress:
-				fprintf(stderr, "[FButtonPress]: Called\n");
 				FButtonPress(ev);
 				break;
 			case KeyPress:
-				fprintf(stderr, "[FKeyPress]: Called\n");
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
-				fprintf(stderr, "[FMotionNotify]: Called\n");
 				FGetMonitorFromMouse();
 				// FFocusWindowUnderCursor();
 				FMotionNotify(ev);
 				break;
 			case EnterNotify:
-				fprintf(stderr, "[EnterNotify]: Called\n");
 				FGetMonitorFromMouse();
 				FFocusWindowUnderCursor();
 				break;
 			case ClientMessage:
-				fprintf(stderr, "[FClientMessage]: Called\n");
 				FClientMessage(ev);
 				break;
 			case DestroyNotify:
-				fprintf(stderr, "[FDestroyNotify]: Called\n");
 				FDestroyNotify(ev);
 				break;
 		}
@@ -1185,7 +1176,7 @@ static void FMoveWindowBasedOnMonitor(Windows *w)
 static void FRedrawWindows()
 {
 	FSearchAndDestoryGhostWindows();
-	FPolybarLayoutIPC(fluorite.ws[fluorite.cr_ws].layout + 1);
+	FPolybarLayoutIPC(fluorite.ws[fluorite.cr_ws].layout);
 
 	if (!fluorite.ws[fluorite.cr_ws].t_wins)
 		goto floating;
@@ -3052,7 +3043,7 @@ static void FPolybarLayoutIPC(const int msg)
 	if (!POLYBAR_IPC)
 		return ;
 	char command[256];
-	snprintf(command, sizeof(command), "polybar-msg action \"fluorite_layout.hook.%d\"", msg);
+	snprintf(command, sizeof(command), "polybar-msg action \"#fluorite_layout.hook.%d\"", msg);
 	FExecute(command);
 }
 
@@ -3093,7 +3084,7 @@ static void FPolybarScratchpadsIPC()
 		XDeleteProperty(fluorite.dpy, fluorite.root, scratchpads_atom);
 
 	free(scratchpads_value);
-	snprintf(command, sizeof(command), "polybar-msg action \"fluorite_scratchpads.hook.0\"");
+	snprintf(command, sizeof(command), "polybar-msg action \"#fluorite_scratchpads.hook.0\"");
 	FExecute(command);
 }
 

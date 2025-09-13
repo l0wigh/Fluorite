@@ -8,6 +8,7 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [!] Killing a scratchpad window that is unmapped fail
 - [ ] Find why border are not applied directly on Xresources reload
 - [!?] There is still some focus issues when switching workspace across multiple monitors
     - The border and the focus works but FocusNext fail
