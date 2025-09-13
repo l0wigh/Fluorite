@@ -1,27 +1,9 @@
-# Check if it's fixed
-- [X] There is some unexpected crashes with scratchpads
-    - Last time it happens was when I tried to close a scratchpads that was opened after a floating windows
-    - Open a tiled window and a floating
-    - Focus floating
-    - Open Scratchpad
-    - Close Scratchpad
-    - Focus should be back on floating and it should crash
-    - Also test without a tiled window
-
 # Workflow bugs
-- [ ] Handle focus properly and force everything to focus the last focused window
-    - [X] Switching monitors using binding should keep track of which window was focused
-    - [X] Cursor warping should never refocus !
-- [ ] No warp bugs
+- [ ] Remove the possibility to change master offset when only one window is opened
 
 # TODO
-- [ ] Create a EWMH-style variable that will keep every scratchpads
-    - Recover the binding used
-    - Add/Delete/Update the bindings list
-    - Send IPC to ask polybar to update the list
-    - Have two list, one with inactives scratchpads and one with actives scratchpads
-- [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
-- [ ] Add Tags like DWM
+- [?] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
+- [?] Add Tags like DWM
 - [ ] Add EWMH
     - https://specifications.freedesktop.org/wm-spec/1.3/
 - [ ] Add Organizer back !
@@ -31,11 +13,13 @@
     - The border and the focus works but FocusNext fail
     - I comes from the fact that if the cursor isn't on a window, the focus goes back to master, but not really
         - Find a way to avoid that issues when no cursor warp
+- [ ] Some focus issues still occurs but are really strange and almost never happens
 - [-] Closing a floating windows does not give focus back on the tiled windows
     - Also test with DestroyNotify
 - [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it
     - Can't reproduce
 - [ ] Centered layout needs to have more horizontal gaps space between windows in columns
+- [ ] Need less gaps on the left and right (outer) on all layout
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 - [?] Swallowing and/or swallowed windows might not be link to the good workspace
     - Add a function that just go through all ws and put the windows correctly
@@ -107,3 +91,8 @@
     - [X] Switching monitors doesn't warp the cursor
     - [X] Should not change focus based on mouse when switching toggling fullscreen
 - [X] Find how to do a proper refocus when reloading Xresources
+- [X] There is some unexpected crashes with scratchpads
+- [X] Switching monitors using binding should keep track of which window was focused
+- [X] Cursor warping should never refocus !
+- [X] Create a EWMH-style variable that will keep every scratchpads
+- [X] Add NET_WM_STRUT_PARTIAL to automatically manage polybar used space (IMPORTANT !)

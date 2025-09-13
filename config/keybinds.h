@@ -184,6 +184,7 @@ static const Bindings bind[] = {
 
   {METAKEY|Mod1Mask,	XK_ugrave,	   		FCenterScratchpadWindow},
 
+
   {0,				XF86XK_MonBrightnessUp,		brightness_up},
   {0,				XF86XK_MonBrightnessDown,	brightness_down},
   {0,				XF86XK_AudioMute,			volume_mute},
@@ -191,4 +192,6 @@ static const Bindings bind[] = {
   {0,				XF86XK_AudioLowerVolume,	volume_down},
   {0,				XF86XK_Favorites,			st_music},
   {0,				XF86XK_AudioMicMute,		toggle_mic},
+
+  {METAKEY,	XK_p,	   		testing},
 };

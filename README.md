@@ -1,4 +1,4 @@
-# Fluorite [EVO 2] (Beta 8)
+# Fluorite [EVO 2] (Beta 10)
 
 This is a very early Evolution of Fluorite 1.1
 
@@ -24,8 +24,6 @@ There is still "workflow" bugs that might bother me after a while. I'm thinking 
 ## Things that didn't changed in [EVO 2]
 
 - It's still light, functionnal, predictable and beautiful
-- Also the whole codebase has changed and is more robust and less clunky
-- Might also be even more performant with more features
 
 ## Polybar IPC
 
