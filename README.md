@@ -48,21 +48,19 @@ hook-0 = xprop -root FLUORITE_SCRATCHPADS 2>/dev/null | awk -F '"' '/=/{print $2
 
 ## New deps install informations
 
-/!\ Still untested
-
-- Arch: 
+- Arch (Tested): 
 ```sh
-sudo pacman -S base-devel libx11 libxcursor libxrandr xdotool libxcb libxrender libxfixes libxext libxtst libxinerama libxkbcommon libxau libxdmcp
+sudo pacman -S base-devel libx11 libxcursor libxrandr xdotool
 ```
 
-- Gentoo: 
+- Gentoo (Untested): 
 ```sh
 sudo emerge --ask x11-libs/libX11 x11-libs/libXcursor x11-libs/libXrandr x11-misc/xdotool sys-libs/glibc x11-libs/libxcb x11-libs/libXrender x11-libs/libXfixes x11-libs/libXext x11-libs/libXtst x11-libs/libXinerama x11-libs/libxkbcommon x11-libs/libXau x11-libs/libXdmcp
 ```
 
-- Void: 
+- Void (Tested): 
 ```sh
-sudo xbps-install -Sy base-devel libX11 libXcursor libXrandr xdotool glibc libxcb libXrender libXfixes libXext libXtst libXinerama libxkbcommon libXau libXdmcp
+sudo xbps-install -Sy base-devel libX11-devel libXcursor-devel libXrandr-devel xdotool-devel
 ```
 
 If you are on another distro and want to help other users to know what to install, feel free to create a pull request or an issue !

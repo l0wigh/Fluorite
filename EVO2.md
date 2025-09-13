@@ -8,6 +8,7 @@
 - [ ] Add Organizer back !
 
 # BUG
+- [ ] Find why border are not applied directly on Xresources reload
 - [!?] There is still some focus issues when switching workspace across multiple monitors
     - The border and the focus works but FocusNext fail
     - I comes from the fact that if the cursor isn't on a window, the focus goes back to master, but not really
