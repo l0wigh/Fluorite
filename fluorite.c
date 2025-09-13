@@ -1617,7 +1617,6 @@ redraw:
 static void FDestroyNotify(XEvent ev)
 {
 	int ws;
-	int i = 0;
 
 	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
@@ -1634,24 +1633,23 @@ static void FDestroyNotify(XEvent ev)
 		}
 	}
 
-	for (Scratchpads *p = fluorite.pads[i]; i < HASH_SIZE; i++)
+	for (int i = 0; i < HASH_SIZE; i++)
 	{
-		if (!p)
+		if (!fluorite.pads[i])
 			continue;
-		for (Windows *w = p->s_wins; w != NULL; w = w->next)
+		for (Windows *w = fluorite.pads[i]->s_wins; w != NULL; w = w->next)
 		{
-			if (w->w != ev.xunmap.window)
+			if (w->w != ev.xdestroywindow.window)
 				continue;
-			XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
-			p->s_wins = FDelWindow(p->s_wins, w);
+			fluorite.pads[i]->s_wins = FDelWindow(fluorite.pads[i]->s_wins, w);
 			w->next = NULL;
 			w->prev = NULL;
 			fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
-			goto next;
+			goto update;
 		}
 	}
 
-next:
+
 	ws = FFindWorkspaceFromWindow(ev.xdestroywindow.window);
 	if (ws == -1)
 		return;

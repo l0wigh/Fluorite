@@ -8,7 +8,6 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [!] Killing a scratchpad window that is unmapped fail
 - [ ] Find why border are not applied directly on Xresources reload
 - [!?] There is still some focus issues when switching workspace across multiple monitors
     - The border and the focus works but FocusNext fail
@@ -91,3 +90,4 @@
 - [X] Closing a floating windows does not give focus back on the tiled windows
 - [X] Swallowing and/or swallowed windows might not be link to the good workspace
 - [X] Remove the possibility to change master offset when only one window is opened
+- [X] Killing a scratchpad window that is unmapped fail
