@@ -27,6 +27,8 @@ There is still "workflow" bugs that might bother me after a while. I'm thinking 
 
 ## Polybar IPC
 
+Fluorite can handle very basic Polybar IPC Modules. Add them in your polybar and set the Fluorite option `POLYBAR_IPC` to `True`.
+
 - Layout
 ```
 [module/fluorite_layout]
@@ -43,6 +45,27 @@ hook-3 = "echo Stacked"
 type = custom/ipc
 hook-0 = xprop -root FLUORITE_SCRATCHPADS 2>/dev/null | awk -F '"' '/=/{print $2}' || echo ""
 ```
+
+## New deps install informations
+
+/!\ Still untested
+
+- Arch: 
+```sh
+sudo pacman -S base-devel libx11 libxcursor libxrandr xdotool libxcb libxrender libxfixes libxext libxtst libxinerama libxkbcommon libxau libxdmcp
+```
+
+- Gentoo: 
+```sh
+sudo emerge --ask x11-libs/libX11 x11-libs/libXcursor x11-libs/libXrandr x11-misc/xdotool sys-libs/glibc x11-libs/libxcb x11-libs/libXrender x11-libs/libXfixes x11-libs/libXext x11-libs/libXtst x11-libs/libXinerama x11-libs/libxkbcommon x11-libs/libXau x11-libs/libXdmcp
+```
+
+- Void: 
+```sh
+sudo xbps-install -Sy base-devel libX11 libXcursor libXrandr xdotool glibc libxcb libXrender libXfixes libXext libXtst libXinerama libxkbcommon libXau libXdmcp
+```
+
+If you are on another distro and want to help other users to know what to install, feel free to create a pull request or an issue !
 
 ## Old README
 
