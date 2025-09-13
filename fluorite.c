@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 10)"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 11)"
 
 #include "config/keybinds.h"
 #include "config/design.h"
@@ -2450,7 +2450,7 @@ void FRotateWindows(int mode)
 
 void FChangeMasterOffset(int mode)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.ws[fluorite.cr_ws].layout == STACKED)
+	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
 		return ;
 
 	switch (mode)
@@ -2790,6 +2790,8 @@ next:
 
 void FResetMasterOffset()
 {
+	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
+		return ;
 	fluorite.ws[fluorite.cr_ws].mo = fluorite.conf.mo;
 	FRedrawWindows();
 	FApplyBorders();

@@ -1,5 +1,4 @@
 # Workflow bugs
-- [ ] Remove the possibility to change master offset when only one window is opened
 
 # TODO
 - [?] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
@@ -9,23 +8,14 @@
 - [ ] Add Organizer back !
 
 # BUG
-- [!] There is still some focus issues when switching workspace across multiple monitors
+- [!?] There is still some focus issues when switching workspace across multiple monitors
     - The border and the focus works but FocusNext fail
     - I comes from the fact that if the cursor isn't on a window, the focus goes back to master, but not really
         - Find a way to avoid that issues when no cursor warp
 - [ ] Some focus issues still occurs but are really strange and almost never happens
-- [-] Closing a floating windows does not give focus back on the tiled windows
-    - Also test with DestroyNotify
 - [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it
     - Can't reproduce
-- [ ] Centered layout needs to have more horizontal gaps space between windows in columns
-- [ ] Need less gaps on the left and right (outer) on all layout
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
-- [?] Swallowing and/or swallowed windows might not be link to the good workspace
-    - Add a function that just go through all ws and put the windows correctly
-- [?] Swapping workspace between monitors doesnt give focus properly which makes the FSwapFocus fail
-    - It affects greatly stacked layout since focus isn't changed when swapping windows !
-    - might be fixed, but still take a look at that
 
 # CLEAN
 - [ ] Reset borders function
@@ -96,3 +86,6 @@
 - [X] Cursor warping should never refocus !
 - [X] Create a EWMH-style variable that will keep every scratchpads
 - [X] Add NET_WM_STRUT_PARTIAL to automatically manage polybar used space (IMPORTANT !)
+- [X] Closing a floating windows does not give focus back on the tiled windows
+- [X] Swallowing and/or swallowed windows might not be link to the good workspace
+- [X] Remove the possibility to change master offset when only one window is opened
