@@ -37,6 +37,7 @@ hook-0 = "echo Cascade"
 hook-1 = "echo DWM"
 hook-2 = "echo Centered"
 hook-3 = "echo Stacked"
+initial = 1 ; Change it to your default layout (1 = Cascade, 2 = DWM, ...)
 ```
 
 - Scratchpads list
@@ -44,6 +45,7 @@ hook-3 = "echo Stacked"
 [module/fluorite_scratchpads]
 type = custom/ipc
 hook-0 = xprop -root FLUORITE_SCRATCHPADS 2>/dev/null | awk -F '"' '/=/{print $2}' || echo ""
+initial = 1 ; Will check on startup if there is already some Scratchpads
 ```
 
 ## New deps install informations

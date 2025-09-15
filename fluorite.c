@@ -821,7 +821,7 @@ static void FMapRequest(XEvent ev)
 	XRaiseWindow(fluorite.dpy, nw->w);
 	XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 
-	if (!is_fixed)
+	if (!is_fixed && !is_floating)
 		if (FCheckWindowNeedsSwallowing(nw))
 			goto freeing;
 
@@ -2095,15 +2095,9 @@ static void FSwapMonitorWorkspace(int ws, int mon)
 	int swap_mon = fluorite.cr_mon;
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
-	{
-		w->fc = False;
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
-	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
-	{
-		w->fc = False;
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
-	}
 
 	FRemoveActiveWindow();
 	fluorite.mon[mon].ws = fluorite.cr_ws;
@@ -2114,12 +2108,13 @@ static void FSwapMonitorWorkspace(int ws, int mon)
 	fluorite.mon[fluorite.cr_mon].ws = ws;
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 	XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
-	if (fluorite.ws[fluorite.cr_ws].t_wins && !fluorite.ws[fluorite.cr_ws].fs)
-	{
-		XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
-		XSetWindowBorder(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, fluorite.conf.bf);
-	}
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+		if (w->fc) { XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime); goto redraw; }
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+		if (w->fc) { XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime); goto redraw; }
+redraw:
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 }
 
