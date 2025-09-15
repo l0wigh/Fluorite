@@ -1,4 +1,4 @@
-# Fluorite [EVO 2] (Beta 10)
+# Fluorite [EVO 2] (Beta 12)
 
 This is a very early Evolution of Fluorite 1.1
 
