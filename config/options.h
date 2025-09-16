@@ -4,7 +4,6 @@
 // #define MAX_WINDOWS				15				/* number of windows per workspaces */
 #define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
 #define OPEN_IN_FLOAT			False			/* When True, windows will be opened in floating be default. Not applied on fixed windows */
-#define PRIMARY_BAR_ONLY		True			/* When True, Fluorite will considere that only the primary monitor is having a bar. When false Fluorite will assume that every monitor have one */
 #define XRESOURCES_AUTO_RELOAD	True			/* When True, monitor if the ~/.Xresources file is modified and reload the config if so */
 #define STARTING_LAYOUT			CASCADE			/* CASCADE / DWM / CENTERED */ 
 #define WARP_CURSOR				False			/* (True is recommended) When True, move the cursor to the newly focused window */
