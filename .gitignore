@@ -4,3 +4,5 @@ V2.md
 Fluorite
 *.o
 GHIDRA_FIX
+genereate_checklist.sh
+CHECKLIST.md
