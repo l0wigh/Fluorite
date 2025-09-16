@@ -29,7 +29,7 @@
 
 static inline int MAX(int a, int b) { return a > b ? a : b; }
 
-enum SIDE
+enum SIDES
 {
 	LEFT,
 	RIGHT,

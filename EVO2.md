@@ -1,26 +1,27 @@
 # Workflow bugs
 
 # TODO
-- [?] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
-- [?] Add Tags like DWM
-- [ ] Add EWMH
-    - https://specifications.freedesktop.org/wm-spec/1.3/
-- [ ] Add Organizer back !
+- Nothing
 
 # BUG
-- [!?] There is still some focus issues when switching workspace across multiple monitors
-    - The border and the focus works but FocusNext fail
-    - It comes from the fact that if the cursor isn't on a window, the focus goes back to master, but not really
-        - Find a way to avoid that issues when no cursor warp
-- [ ] Find why border are not applied directly on Xresources reload
-- [ ] Some focus issues still occurs but are really strange and almost never happens
-- [ ] Focus fail sometimes on scratchpads while they borders clearly tell that it they have it
-    - Can't reproduce
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
+
+# REV 2
+- [ ] Create a binding to switch focus between scratchpads and tiled/float
+- [ ] Add Organizer back !
+- [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
+- [?] Add Tags like DWM
+    - How ?
+    - What that it would add to Fluorite ?
+    - What it would cost me on the programming side ?
+    - How many bugs ?
+- [?] Add EWMH
+    - https://specifications.freedesktop.org/wm-spec/1.3/
+    - Nothing important to add right now
 
 # IDEAS
 - Find a way to determine if a new window is linked to another one already present.
@@ -91,3 +92,4 @@
 - [X] Swallowing and/or swallowed windows might not be link to the good workspace
 - [X] Remove the possibility to change master offset when only one window is opened
 - [X] Killing a scratchpad window that is unmapped fail
+- [X] There is still some focus issues when switching workspace across multiple monitors
