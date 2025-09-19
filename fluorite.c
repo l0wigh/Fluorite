@@ -2177,6 +2177,7 @@ void FShowWorkspace(int ws)
 	no_unmap = False;
 
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 }
 
