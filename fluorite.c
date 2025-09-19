@@ -3150,12 +3150,6 @@ static void FGetFixedPartialStrut(Window w, int new_win)
 		}
 	}
 	FChangeMonitor(keep_mon);
-	XWarpPointer(
-		fluorite.dpy, None, fluorite.root,
-		0, 0, 0, 0,
-		fluorite.mon[keep_mon].mx + fluorite.mon[keep_mon].mw / 2,
-		fluorite.mon[keep_mon].my + fluorite.mon[keep_mon].mh / 2
-	);
 	if (focused != None)
 	{
 		for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
