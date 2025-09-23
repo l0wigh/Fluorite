@@ -4,6 +4,7 @@
 - Nothing
 
 # BUG
+- [ ] Strut aren't nicely reapplied after a sleep
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN

@@ -162,6 +162,7 @@ static void 	FConfigureRequest(XEvent ev);
 static void 	FKeyPress(XEvent ev);
 static int  	FFindWorkspaceFromWindow(Window w);
 static void		FResetFocus(Windows *w);
+static int		FWindowExists(Display *dpy, Window win);
 static void 	FUnmapNotify(XEvent ev);
 static void 	FDestroyNotify(XEvent ev);
 static Windows	*FAddWindow(Windows *cw, Windows *nw);
@@ -299,10 +300,19 @@ static void FLoadTheme()
 static void FInitMonitors()
 {
 	int hot_plug = False;
-	XRRMonitorInfo *infos;
+	int prev_ct = fluorite.ct_mon;
+	XRRMonitorInfo *infos = XRRGetMonitors(fluorite.dpy, fluorite.root, 0, &fluorite.ct_mon);
+	Monitors *prev_mon = (fluorite.mon != NULL) ? calloc(prev_ct, sizeof(Monitors)) : NULL;
 
 	if (fluorite.mon != NULL)
 	{
+		if (prev_ct == fluorite.ct_mon)
+		{
+			int n = (prev_ct < fluorite.ct_mon) ? prev_ct : fluorite.ct_mon;
+			for (int i = 0; i < n; i++)
+				prev_mon[i] = fluorite.mon[i];
+
+		}
 		free(fluorite.mon);
 		no_unmap = True;
 		XGrabServer(fluorite.dpy);
@@ -319,7 +329,6 @@ static void FInitMonitors()
 		hot_plug = True;
 	}
 
-	infos = XRRGetMonitors(fluorite.dpy, fluorite.root, 0, &fluorite.ct_mon);
 	fluorite.mon = (Monitors *) calloc(fluorite.ct_mon, sizeof(Monitors));
 	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
@@ -327,11 +336,8 @@ static void FInitMonitors()
 		fluorite.mon[i].my = infos[i].y;
 		fluorite.mon[i].mw = infos[i].width;
 		fluorite.mon[i].mh = infos[i].height;
-		fluorite.mon[i].sl = 0;
-		fluorite.mon[i].sr = 0;
-		fluorite.mon[i].st = 0;
-		fluorite.mon[i].sb = 0;
 		fluorite.mon[i].ws = default_monitor_workspace[i] - 1;
+		FResetMonitorStrut(i);
 		fluorite.mon[i].primary = False;
 		fluorite.mon[i].fx_win = NULL;
 		fluorite.mon[i].fx_hdn = False;
@@ -341,16 +347,26 @@ static void FInitMonitors()
 		{
 			fluorite.mon[i].primary = True;
 			fluorite.cr_mon = i;
-			xdo_move_mouse(fluorite.xdo, fluorite.mon[i].mx + (fluorite.mon[i].mw / 2), fluorite.mon[i].my + (fluorite.mon[i].mh / 2), fluorite.scr);
+			if (!hot_plug)
+				xdo_move_mouse(fluorite.xdo, fluorite.mon[i].mx + (fluorite.mon[i].mw / 2), fluorite.mon[i].my + (fluorite.mon[i].mh / 2), fluorite.scr);
 		}
 	}
+	XFree(infos);
 
 	if (hot_plug)
 	{
+		no_warp = True;
 		usleep(100000);
 		int primary = 0;
 		for (int i = 0; i < fluorite.ct_mon; i++)
 		{
+			if (prev_mon)
+			{
+				fluorite.mon[i].sl = prev_mon[i].sl;
+				fluorite.mon[i].sr = prev_mon[i].sr;
+				fluorite.mon[i].st = prev_mon[i].st;
+				fluorite.mon[i].sb = prev_mon[i].sb;
+			}
 			if (fluorite.mon[i].primary)
 				primary = i;
 			fluorite.cr_ws = fluorite.mon[i].ws;
@@ -360,15 +376,19 @@ static void FInitMonitors()
 			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 				XMapWindow(fluorite.dpy, w->w);
 			FRedrawWindows();
+			XSync(fluorite.dpy, True);
 			FApplyBorders();
 		}
+		free(prev_mon);
 		fluorite.cr_mon = primary;
 		fluorite.cr_ws = fluorite.mon[fluorite.cr_mon].ws;
 		if (fluorite.ws[fluorite.cr_mon].t_wins)
 			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
 		FRedrawWindows();
+		XSync(fluorite.dpy, True);
 		FApplyBorders();
 		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+		no_warp = False;
 	}
 }
 
@@ -1616,7 +1636,7 @@ static void FDestroyNotify(XEvent ev)
 	{
 		for (Windows *fx = fluorite.mon[i].fx_win; fx != NULL; fx = fx->next)
 		{
-			if (fx->w != ev.xdestroywindow.window)
+			if (fx->w != ev.xdestroywindow.window) 
 				continue;
 			fluorite.mon[i].fx_win = FDelWindow(fluorite.mon[i].fx_win, fx);
 			fx->next = NULL;
@@ -2356,6 +2376,7 @@ redraw:
 	w->fc = True;
 	XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
     FRedrawWindows();
+	XSync(fluorite.dpy, True);
     FApplyBorders();
 }
 
