@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 12)"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 14)"
 
 #include "config/keybinds.h"
 #include "config/design.h"

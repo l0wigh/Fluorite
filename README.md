@@ -1,4 +1,4 @@
-# Fluorite [EVO 2] (Beta 12)
+# Fluorite [EVO 2] (Beta 14)
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
