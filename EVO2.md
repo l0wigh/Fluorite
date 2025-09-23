@@ -4,7 +4,7 @@
 - Nothing
 
 # BUG
-- [ ] Strut aren't nicely reapplied after a sleep
+- [ ] No focused border when manually changing values in Xresources
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN

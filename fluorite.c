@@ -263,23 +263,32 @@ static void FLoadXresources()
 	xdb = XrmGetStringDatabase(xrm);
 
 	if (XrmGetResource(xdb, "fluorite.border_width", "*", &type, &xval))
-		if (xval.addr)
-			fluorite.conf.bw = strtoul(xval.addr, NULL, 10);
-	if (XrmGetResource(xdb, "fluorite.border_focused", "*", &type, &xval))
-		if (xval.addr)
-			fluorite.conf.bf = strtoul(xval.addr, NULL, 0);
-	if (XrmGetResource(xdb, "fluorite.border_unfocused", "*", &type, &xval))
-		if (xval.addr)
-			fluorite.conf.bu = strtoul(xval.addr, NULL, 0);
+		if (xval.addr) fluorite.conf.bw = strtoul(xval.addr, NULL, 10);
 	if (XrmGetResource(xdb, "fluorite.gaps", "*", &type, &xval))
-		if (xval.addr)
-			fluorite.conf.gp = strtoul(xval.addr, NULL, 10);
+		if (xval.addr) fluorite.conf.gp = strtoul(xval.addr, NULL, 10);
 	if (XrmGetResource(xdb, "fluorite.stack_offset", "*", &type, &xval))
-		if (xval.addr)
-			fluorite.conf.so = strtoul(xval.addr, NULL, 10);
+		if (xval.addr) fluorite.conf.so = strtoul(xval.addr, NULL, 10);
 	if (XrmGetResource(xdb, "fluorite.default_master_offset", "*", &type, &xval))
+		if (xval.addr) fluorite.conf.mo = strtoul(xval.addr, NULL, 10);
+
+	if (XrmGetResource(xdb, "fluorite.border_focused", "*", &type, &xval))
+	{
 		if (xval.addr)
-			fluorite.conf.mo = strtoul(xval.addr, NULL, 10);
+		{
+			char *addr = xval.addr;
+			if (*addr == '#') addr++;
+			fluorite.conf.bf = strtoul(addr, NULL, 16);
+		}
+	}
+	if (XrmGetResource(xdb, "fluorite.border_unfocused", "*", &type, &xval))
+	{
+		if (xval.addr)
+		{
+			char *addr = xval.addr;
+			if (*addr == '#') addr++;
+			fluorite.conf.bu = strtoul(addr, NULL, 16);
+		}
+	}
 	
 	fluorite.conf.bf |= 0xff << 24;
 	fluorite.conf.bu |= 0xff << 24;
