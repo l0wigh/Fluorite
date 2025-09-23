@@ -360,13 +360,8 @@ static void FInitMonitors()
 		int primary = 0;
 		for (int i = 0; i < fluorite.ct_mon; i++)
 		{
-			if (prev_mon)
-			{
-				fluorite.mon[i].sl = prev_mon[i].sl;
-				fluorite.mon[i].sr = prev_mon[i].sr;
-				fluorite.mon[i].st = prev_mon[i].st;
-				fluorite.mon[i].sb = prev_mon[i].sb;
-			}
+			if (prev_ct == fluorite.ct_mon)
+				fluorite.mon[i] = prev_mon[i];
 			if (fluorite.mon[i].primary)
 				primary = i;
 			fluorite.cr_ws = fluorite.mon[i].ws;
