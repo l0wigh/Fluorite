@@ -74,6 +74,7 @@ static void dmenu_font() { char prog[255] = "~/tools/suckless_tools/scripts/st_f
 static void dmenu_font_size() { char prog[255] = "~/tools/suckless_tools/scripts/st_font.sh"; FExecute(prog); }
 static void print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; FExecute(prog); }
 static void toggle_mic() { char prog[255] = "pactl set-source-mute 1 toggle && pactl set-source-mute 2 toggle"; FExecute(prog); }
+static void dmenu_hdmi() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_hdmiplug.sh"; FExecute(prog); }
 
 // Fluorite based user defined function
 static void rotate_windows_up() { FRotateWindows(UP); }
@@ -176,6 +177,7 @@ static const Bindings bind[] = {
   {METAKEY|ControlMask,	XK_space,			FTileAllWindows},
   {METAKEY|ControlMask,	XK_f,				dmenu_font_size},
   {METAKEY|ControlMask,	XK_ugrave,	   		FDelWindowFromScratchpad},
+  {METAKEY|ControlMask,	XK_h,				dmenu_hdmi},
 
   {METAKEY,				XK_m,				FFocusNext},
   {METAKEY,				XK_j,				FFocusPrev},

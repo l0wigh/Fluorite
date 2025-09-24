@@ -309,19 +309,10 @@ static void FLoadTheme()
 static void FInitMonitors()
 {
 	int hot_plug = False;
-	int prev_ct = fluorite.ct_mon;
 	XRRMonitorInfo *infos = XRRGetMonitors(fluorite.dpy, fluorite.root, 0, &fluorite.ct_mon);
-	Monitors *prev_mon = (fluorite.mon != NULL) ? calloc(prev_ct, sizeof(Monitors)) : NULL;
 
 	if (fluorite.mon != NULL)
 	{
-		if (prev_ct == fluorite.ct_mon)
-		{
-			int n = (prev_ct < fluorite.ct_mon) ? prev_ct : fluorite.ct_mon;
-			for (int i = 0; i < n; i++)
-				prev_mon[i] = fluorite.mon[i];
-
-		}
 		free(fluorite.mon);
 		no_unmap = True;
 		XGrabServer(fluorite.dpy);
@@ -365,12 +356,9 @@ static void FInitMonitors()
 	if (hot_plug)
 	{
 		no_warp = True;
-		usleep(100000);
 		int primary = 0;
 		for (int i = 0; i < fluorite.ct_mon; i++)
 		{
-			if (prev_ct == fluorite.ct_mon)
-				fluorite.mon[i] = prev_mon[i];
 			if (fluorite.mon[i].primary)
 				primary = i;
 			fluorite.cr_ws = fluorite.mon[i].ws;
@@ -383,7 +371,6 @@ static void FInitMonitors()
 			XSync(fluorite.dpy, True);
 			FApplyBorders();
 		}
-		free(prev_mon);
 		fluorite.cr_mon = primary;
 		fluorite.cr_ws = fluorite.mon[fluorite.cr_mon].ws;
 		if (fluorite.ws[fluorite.cr_mon].t_wins)
