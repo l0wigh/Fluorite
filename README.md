@@ -12,13 +12,17 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 
 - Keyboard centric
 - Multiple dynamic master layout tiling (Cascade, DWM, Centered, Stacked)
-- Multi-Monitors with hot-reload capabilities (XMonad style)
+- Multi-Monitors with hot-reload capabilities* (XMonad style)
 - Static configuration for bindings and options. Less computer resources needed for stuff you almost never change
 - Dynamic (re)configuration for your theme using Xresources. "Wow is that Hyprland ?"
 - Dynamic scratchpads that you bind to any of your keyboard keys. No need for multiple bindings in your configuration
 - Window swallowing. Get that useless terminal out of your way
 - EWMH handling. Give you more features without more configuration required
 - Polybar IPC. Active Layout and Scratchpads should not be some kind of secrets
+
+* [!] For now, you need to do the step in the right order and not using scripts.
+    - Plug -> activate using xrandr
+    - Deactivate using xrandr -> Unplug
 
 ## Dependencies installation
 
