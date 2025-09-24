@@ -4,6 +4,7 @@
 - Nothing
 
 # BUG
+- [ ] Firefox in scratchpads, if killed, the scratchpads cause some issues...
 - [ ] No focused border when manually changing values in Xresources
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 

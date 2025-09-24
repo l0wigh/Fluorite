@@ -136,7 +136,7 @@ static const Bindings bind[] = {
 
   {METAKEY|ShiftMask,	XK_Return,			FSwapWithMaster},
   {METAKEY|ShiftMask, 	XK_q,				FCloseWindow},
-  {METAKEY|ShiftMask, 	XK_p,    			FQuit},
+  {METAKEY|ShiftMask, 	XK_Escape,			FQuit},
   {METAKEY|ShiftMask, 	XK_d,	   			runner_cmd},
   {METAKEY|ShiftMask,	XK_k,	   			rotate_slaves_windows_up},
   {METAKEY|ShiftMask, 	XK_l,	   			rotate_slaves_windows_down},
