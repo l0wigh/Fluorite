@@ -105,14 +105,14 @@ static void window_workspace_seven() { FSendWindowToWorkspace(6); }
 static void window_workspace_eight() { FSendWindowToWorkspace(7); }
 static void window_workspace_nine() { FSendWindowToWorkspace(8); }
 static void window_workspace_ten() { FSendWindowToWorkspace(9); }
-static void layout_fluorite() { FChangeLayout(CASCADE); }
+static void layout_cascade() { FChangeLayout(CASCADE); }
 static void layout_dwm() { FChangeLayout(DWM); }
 static void layout_centered() { FChangeLayout(CENTERED); }
 static void layout_stacked() { FChangeLayout(STACKED); }
 static void layout_auto()
 {
 	if (STARTING_LAYOUT == DWM)
-		layout_fluorite();
+		layout_cascade();
 	else
 		layout_dwm();
 }
