@@ -516,10 +516,8 @@ static void *FInotifyXresources(void *useless)
 
 void FReloadXresources()
 {
-	Window focused;
-	int revert;
+	Window focused = fluorite.root;
 
-	XGetInputFocus(fluorite.dpy, &focused, &revert);
 	char prog[255] = "xrdb ~/.Xresources";
 	if (system(prog) == -1)
 		printf("Error: can't start %s\n", prog);
@@ -535,27 +533,24 @@ void FReloadXresources()
 		FApplyBorders();
 	}
 	FChangeMonitor(keep_mon);
-	if (focused != None)
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+		if (w->fc)
+			focused = w->w;
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+		if (w->fc)
+			focused = w->w;
+	if (fluorite.hpads != -1)
 	{
-		for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
-			if (focused == w->w)
-				w->fc = 1;
-		for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
-			if (focused == w->w)
-				w->fc = 1;
-		if (fluorite.hpads != -1)
-		{
-			Scratchpads *p = fluorite.pads[fluorite.hpads];
-			for (Windows *w = p->s_wins; w != NULL; w = w->next)
-				if (focused == w->w)
-					w->fc = 1;
-		}
-		XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
-		FWarpCursor(focused);
+		Scratchpads *p = fluorite.pads[fluorite.hpads];
+		for (Windows *w = p->s_wins; w != NULL; w = w->next)
+			if (w->fc)
+				focused = w->w;
 	}
-	FRedrawWindows();
-	XSync(fluorite.dpy, True);
+	XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
+	FWarpCursor(focused);
 	FApplyBorders();
+	XSync(fluorite.dpy, True);
+	FRedrawWindows();
 }
 
 static void FRun()

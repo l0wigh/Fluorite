@@ -75,6 +75,7 @@ static void dmenu_font_size() { char prog[255] = "~/tools/suckless_tools/scripts
 static void print_screen() { char prog[255] = "~/tools/suckless_tools/scripts/print_screen.sh"; FExecute(prog); }
 static void toggle_mic() { char prog[255] = "pactl set-source-mute 1 toggle && pactl set-source-mute 2 toggle"; FExecute(prog); }
 static void dmenu_hdmi() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_hdmiplug.sh"; FExecute(prog); }
+static void dmenu_polybar_style() { char prog[255] = "~/tools/suckless_tools/scripts/dmenu_polybar_style.sh"; FExecute(prog); }
 
 // Fluorite based user defined function
 static void rotate_windows_up() { FRotateWindows(UP); }
@@ -142,7 +143,7 @@ static const Bindings bind[] = {
   {METAKEY|ShiftMask,	XK_k,	   			rotate_slaves_windows_up},
   {METAKEY|ShiftMask, 	XK_l,	   			rotate_slaves_windows_down},
   {METAKEY|ShiftMask, 	XK_e,	   			locking},
-  // {METAKEY|ShiftMask,	XK_m,				dmenu_music},
+  {METAKEY|ShiftMask,	XK_p,				dmenu_polybar_style},
   {METAKEY|ShiftMask, 	XK_f,				dmenu_font},
   {METAKEY|ShiftMask,	XK_space,			FFloatingHideShow},
   {METAKEY|ShiftMask,	XK_r,	   			layout_centered},

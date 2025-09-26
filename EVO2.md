@@ -4,14 +4,7 @@
 - Nothing
 
 # BUG
-- [!] monitor goes on top of each others when setup left to right
-- [?] strut fails to be applied on all windows when unplugging
-    - when manually doing all the step in the good order, seems to work
-    - might need to look on how to setup xrandr and how to handle dirty unplug
-- [X] strut aren't deleted on second monitor
-    - should be fixed
 - [ ] Firefox in scratchpads, if killed, the scratchpads cause some issues...
-- [ ] No focused border when manually changing values in Xresources
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
@@ -101,3 +94,4 @@
 - [X] Remove the possibility to change master offset when only one window is opened
 - [X] Killing a scratchpad window that is unmapped fail
 - [X] There is still some focus issues when switching workspace across multiple monitors
+- [X] No focused border when manually changing values in Xresources
