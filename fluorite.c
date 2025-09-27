@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <sys/inotify.h>
 #include <errno.h>
+#include <confuse.h>
 
 /* DEF: constant */
 #define MAX_WS 10
