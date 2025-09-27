@@ -1,3 +1,4 @@
+#include <strings.h>
 #define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 15)"
 
 #include "config/keybinds.h"
@@ -14,6 +15,7 @@
 #include <sys/types.h>
 #include <err.h>
 #include <string.h>
+#include <stdlib.h>
 #include <pthread.h>
 #include <fcntl.h>
 #include <sys/inotify.h>
@@ -74,7 +76,7 @@ typedef struct
 	cfg_bool_t	fw;
 	cfg_bool_t	af;
 	cfg_bool_t	oif;
-	char		*sl;
+	int			sl;
 	cfg_bool_t	wc;
 	cfg_bool_t	jtu;
 	char		*home;
@@ -191,6 +193,7 @@ static void		FPolybarScratchpadsIPC();
 static void		FGetFixedPartialStrut(Window w, int new_win);
 static void		FRecalculateStrut(int mon);
 static void		FResetMonitorStrut(int mon);
+static int		FCheckCanSwallow(Window w);
        void		FReloadConfig();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
@@ -211,6 +214,9 @@ static int no_refocus = False;
 static unsigned int numlockmask = 0;
 static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 static char **workspace_names;
+static char **default_floating;
+static char **default_fixed;
+static char **default_swallowing;
 
 int main(void)
 {
@@ -238,11 +244,14 @@ static void FInit()
 	XrmInitialize();
 	XSetErrorHandler(FErrorHandler);
 	FApplyProps();
+	FLoadXresources();
+	workspace_names = (char **) calloc(10, sizeof(char *));
+	default_floating = (char **) calloc(1, sizeof(char *));
+	default_fixed = (char **) calloc(1, sizeof(char *));
+	default_swallowing = (char **) calloc(1, sizeof(char *));
+	FReloadConfig();
 	FInitMonitors();
 	FInitWorkspaces();
-	workspace_names = (char **) calloc(10, sizeof(char *));
-	FLoadXresources();
-	FReloadConfig();
 	FGrabKeys(fluorite.root);
 }
 
@@ -322,7 +331,7 @@ static void FLoadDefaultConfig()
 {
 	fluorite.conf.af = True;
 	fluorite.conf.oif = False;
-	fluorite.conf.sl = strdup("cascade");
+	fluorite.conf.sl = CASCADE;
 	fluorite.conf.wc = False;
 	fluorite.conf.jtu = True;
 	for (int i = 0; i < 10; i++)
@@ -429,7 +438,7 @@ static void FInitWorkspaces()
 	for (int i = 0; i < MAX_WS; i++)
 	{
 		fluorite.ws[i].fs = False;
-		fluorite.ws[i].layout = STARTING_LAYOUT;
+		fluorite.ws[i].layout = fluorite.conf.sl;
 		fluorite.ws[i].fl_hdn = False;
 		fluorite.ws[i].mo = fluorite.conf.mo;
 		fluorite.ws[i].ct_win = 0;
@@ -592,8 +601,12 @@ void FReloadXresources()
 void FReloadConfig()
 {
 	char path[1024];
+	char *sl = strdup("cascade");
 	int dmw;
 	char wn;
+	char dfl;
+	char dfx;
+	char dsw;
 	XTextProperty text;
 
 	FLoadDefaultConfig();
@@ -601,14 +614,14 @@ void FReloadConfig()
 		CFG_SIMPLE_BOOL("follow_windows", &fluorite.conf.fw),
 		CFG_SIMPLE_BOOL("auto_floating", &fluorite.conf.af),
 		CFG_SIMPLE_BOOL("open_in_float", &fluorite.conf.oif),
-		CFG_SIMPLE_STR("starting_layout", &fluorite.conf.sl),
+	CFG_SIMPLE_STR("starting_layout", &sl),
 		CFG_SIMPLE_BOOL("warp_cursor", &fluorite.conf.wc),
 		CFG_SIMPLE_BOOL("jump_to_urgent", &fluorite.conf.jtu),
 		CFG_INT_LIST("default_monitor_workspaces", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", dmw),
 		CFG_STR_LIST("workspaces_names", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", wn),
-		// CFG_STR_LIST("default_floating", "", default_floating),
-		// CFG_STR_LIST("default_fixed", "", default_fixed),
-		// CFG_STR_LIST("default_swallowing", "", default_swallowing),
+		CFG_STR_LIST("default_floating", "", dfl),
+		CFG_STR_LIST("default_fixed", "", dfx),
+		CFG_STR_LIST("default_swallowing", "", dsw),
 		// CFG_SEC("bind", binds, CFGF_MULTI | CFGF_TITLE),
 		CFG_END()
 	};
@@ -617,6 +630,15 @@ void FReloadConfig()
 	cfg = cfg_init(opts, 0);
 	snprintf(path, sizeof(path), "%s/.config/fluorite/fluorite.conf", getenv("HOME"));
 	cfg_parse(cfg, path);
+
+	if (strcasecmp(sl, "Cascade") == 0)
+		fluorite.conf.sl = CASCADE;
+	else if (strcasecmp(sl, "DWM") == 0)
+		fluorite.conf.sl = DWM;
+	else if (strcasecmp(sl, "Centered") == 0)
+		fluorite.conf.sl = CENTERED;
+	else if (strcasecmp(sl, "Stacked") == 0)
+		fluorite.conf.sl = STACKED;
 
 	for (int i = 0; i < (int) cfg_size(cfg, "default_monitor_workspaces"); i++)
 		default_monitor_workspace[i] = (int) cfg_getnint(cfg, "default_monitor_workspaces", i);
@@ -629,6 +651,36 @@ void FReloadConfig()
 	}
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
+
+	for (int i = 0; default_floating[i]; i++)
+		free(default_floating[i]);
+	free(default_floating);
+	default_floating = (char **) calloc(cfg_size(cfg, "default_floating") + 1, sizeof(char *));
+	for (int i = 0; i < (int) cfg_size(cfg, "default_floating"); i++)
+		default_floating[i] = strdup(cfg_getnstr(cfg, "default_floating", i));
+
+	for (int i = 0; default_fixed[i]; i++)
+		free(default_fixed[i]);
+	free(default_fixed);
+	default_fixed = (char **) calloc(cfg_size(cfg, "default_fixed") + 1, sizeof(char *));
+	for (int i = 0; i < (int) cfg_size(cfg, "default_fixed"); i++)
+		default_fixed[i] = strdup(cfg_getnstr(cfg, "default_fixed", i));
+
+	for (int i = 0; default_swallowing[i]; i++)
+		free(default_swallowing[i]);
+	free(default_swallowing);
+	default_swallowing = (char **) calloc(cfg_size(cfg, "default_swallowing") + 1, sizeof(char *));
+	for (int i = 0; i < (int) cfg_size(cfg, "default_swallowing"); i++)
+		default_swallowing[i] = strdup(cfg_getnstr(cfg, "default_swallowing", i));
+
+	for (int i = 0; i < MAX_WS; i++)
+	{
+		if (!fluorite.ws[i].t_wins && !fluorite.ws[i].f_wins) { fluorite.ws[i].layout = fluorite.conf.sl; continue; }
+		for (Windows *w = fluorite.ws[i].t_wins; w != NULL; w = w->next)
+			w->can_sw = FCheckCanSwallow(w->w);
+		for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
+			w->can_sw = FCheckCanSwallow(w->w);
+	}
 
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
@@ -776,10 +828,10 @@ static int FCheckCanSwallow(Window w)
 
 	if (XGetClassHint(fluorite.dpy, w, &name))
 	{
-		for (long unsigned int i = 0; i < LENGTH(default_swallowing); i++)
+		for (long unsigned int i = 0; default_swallowing[i]; i++)
 		{
-			if (strcmp(default_swallowing[i].wm_class, name.res_class) == 0 ||
-					strcmp(default_swallowing[i].wm_class, name.res_name) == 0)
+			if (strcmp(default_swallowing[i], name.res_class) == 0 ||
+					strcmp(default_swallowing[i], name.res_name) == 0)
 			{
 				XFree(name.res_name);
 				XFree(name.res_class);
@@ -1381,10 +1433,10 @@ static int FCheckWindowIsFloating(Window w)
 
 	if (XGetClassHint(fluorite.dpy, w, &name))
 	{
-		for (long unsigned int i = 0; i < LENGTH(default_floating); i++)
+		for (long unsigned int i = 0; default_floating[i]; i++)
 		{
-			if (strcmp(default_floating[i].wm_class, name.res_class) == 0 ||
-					strcmp(default_floating[i].wm_class, name.res_name) == 0)
+			if (strcmp(default_floating[i], name.res_class) == 0 ||
+					strcmp(default_floating[i], name.res_name) == 0)
 			{
 				XFree(name.res_name);
 				XFree(name.res_class);
@@ -1433,9 +1485,9 @@ static int FCheckWindowIsFixed(Window w)
 
 	if (XGetClassHint(fluorite.dpy, w, &name))
 	{
-		for (long unsigned int i = 0; i < LENGTH(default_fixed); i++)
+		for (long unsigned int i = 0; default_fixed[i]; i++)
 		{
-			if (strcmp(default_fixed[i].wm_class, name.res_class) == 0 || strcmp(default_fixed[i].wm_class, name.res_name) == 0)
+			if (strcmp(default_fixed[i], name.res_class) == 0 || strcmp(default_fixed[i], name.res_name) == 0)
 			{
 				XFree(name.res_name);
 				XFree(name.res_class);
@@ -2730,7 +2782,7 @@ void FChangeLayout(int layout)
 		return;
 
 	if (fluorite.ws[fluorite.cr_ws].layout == layout)
-		fluorite.ws[fluorite.cr_ws].layout = STARTING_LAYOUT;
+		fluorite.ws[fluorite.cr_ws].layout = fluorite.conf.sl;
 	else
 		fluorite.ws[fluorite.cr_ws].layout = layout;
 
@@ -3381,4 +3433,26 @@ void FToggleFixedStrut()
 		XSync(fluorite.dpy, True);
 		FApplyBorders();
 	}
+}
+
+void FCycleLayouts()
+{
+	switch (fluorite.ws[fluorite.cr_ws].layout)
+	{
+		case CASCADE:
+			fluorite.ws[fluorite.cr_ws].layout = DWM;
+			break;
+		case DWM:
+			fluorite.ws[fluorite.cr_ws].layout = CENTERED;
+			break;
+		case CENTERED:
+			fluorite.ws[fluorite.cr_ws].layout = STACKED;
+			break;
+		case STACKED:
+			fluorite.ws[fluorite.cr_ws].layout = CASCADE;
+			break;
+	}
+	FRedrawWindows();
+	XSync(fluorite.dpy, True);
+	FApplyBorders();
 }

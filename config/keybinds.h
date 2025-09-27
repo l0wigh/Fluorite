@@ -1,7 +1,6 @@
 #include <X11/X.h>
 #include <X11/keysym.h>
 #include <X11/XF86keysym.h>
-#include "options.h"
 
 typedef struct
 {
@@ -54,6 +53,7 @@ void FDelWindowFromScratchpad();
 void FScratchpadHideShow();
 void FCenterScratchpadWindow();
 void FToggleFixedStrut();
+void FCycleLayouts();
 
 // User defined Functions
 static void terminal() { char prog[255] = "st"; FExecute(prog); }
@@ -105,17 +105,10 @@ static void window_workspace_seven() { FSendWindowToWorkspace(6); }
 static void window_workspace_eight() { FSendWindowToWorkspace(7); }
 static void window_workspace_nine() { FSendWindowToWorkspace(8); }
 static void window_workspace_ten() { FSendWindowToWorkspace(9); }
-static void layout_cascade() { FChangeLayout(CASCADE); }
-static void layout_dwm() { FChangeLayout(DWM); }
+// static void layout_cascade() { FChangeLayout(CASCADE); }
+// static void layout_dwm() { FChangeLayout(DWM); }
 static void layout_centered() { FChangeLayout(CENTERED); }
 static void layout_stacked() { FChangeLayout(STACKED); }
-static void layout_auto()
-{
-	if (STARTING_LAYOUT == DWM)
-		layout_cascade();
-	else
-		layout_dwm();
-}
 
 static const Bindings bind[] = {
   {METAKEY,				XK_Return,			terminal},
@@ -130,7 +123,7 @@ static const Bindings bind[] = {
   {METAKEY,     		XK_t,				themes},
   {METAKEY,     		XK_f,				FFullscreenToggle},
   {METAKEY,				XK_d,	   			runner_app},
-  {METAKEY,				XK_r,	   			layout_auto},
+  {METAKEY,				XK_r,	   			FCycleLayouts},
   {METAKEY, 			XK_Print,			print_screen},
   {METAKEY,				XK_c,	   			layout_centered},
   {METAKEY,				XK_ugrave,	   		FScratchpadHideShow},
