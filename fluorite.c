@@ -2,7 +2,6 @@
 #define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 15)"
 
 #include "config/keybinds.h"
-#include "config/design.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -319,12 +318,12 @@ static void FLoadXresources()
 
 static void FLoadDefaultTheme()
 {
-	fluorite.conf.bw = BORDER_WIDTH;
-	fluorite.conf.bf = BORDER_FOCUSED;
-	fluorite.conf.bu = BORDER_UNFOCUSED;
-	fluorite.conf.gp = GAPS;
-	fluorite.conf.so = STACK_OFFSET;
-	fluorite.conf.mo = DEFAULT_MASTER_OFFSET;
+	fluorite.conf.bw = 2;
+	fluorite.conf.bf = 0xeb6f92;
+	fluorite.conf.bu = 0x524f67;
+	fluorite.conf.gp = 5;
+	fluorite.conf.so = 5;
+	fluorite.conf.mo = 0;
 }
 
 static void FLoadDefaultConfig()
