@@ -1810,20 +1810,40 @@ void FQuit()
 
 void FCloseWindow()
 {
-	XEvent closing;
-	Window focused;
-	int revert;
+    Window focused;
+    int revert;
+    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    if (focused == fluorite.root)
+        return;
+;
+    Atom wm_protocols = XInternAtom(fluorite.dpy, "WM_PROTOCOLS", False);
+    Atom wm_delete = XInternAtom(fluorite.dpy, "WM_DELETE_WINDOW", False);
+;
+    Atom *protocols;
+    int n;
+    if (XGetWMProtocols(fluorite.dpy, focused, &protocols, &n))
+    {
+        for (int i = 0; i < n; i++)
+        {
+            if (protocols[i] == wm_delete)
+            {
+                XEvent ev;
+                memset(&ev, 0, sizeof(ev));
+                ev.xclient.type = ClientMessage;
+                ev.xclient.window = focused;
+                ev.xclient.message_type = wm_protocols;
+                ev.xclient.format = 32;
+                ev.xclient.data.l[0] = wm_delete;
+                ev.xclient.data.l[1] = CurrentTime;
+                XSendEvent(fluorite.dpy, focused, False, NoEventMask, &ev);
+                XFree(protocols);
+                return;
+            }
+        }
+        XFree(protocols);
+    }
 
-	XGetInputFocus(fluorite.dpy, &focused, &revert);
-	if (focused == fluorite.root)
-		return;
-	memset(&closing, 0, sizeof(closing));
-	closing.xclient.type = ClientMessage;
-	closing.xclient.message_type = XInternAtom(fluorite.dpy, "WM_PROTOCOLS", False);
-	closing.xclient.format = 32;
-	closing.xclient.data.l[0] = XInternAtom(fluorite.dpy, "WM_DELETE_WINDOW", False);
-	closing.xclient.window = focused;
-	XSendEvent(fluorite.dpy, focused, False, 0, &closing);
+    XKillClient(fluorite.dpy, focused);
 }
 
 Window FWindowUnderCursor()
