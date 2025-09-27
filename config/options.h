@@ -1,13 +1,6 @@
 #include <stdlib.h>
 
-#define FOLLOW_WINDOWS			False			/* do you want to change workspace when sending a window to another workspace */
-#define AUTO_FLOATING			True			/* When False, floating windows, will open in tiled layout */
-#define OPEN_IN_FLOAT			False			/* When True, windows will be opened in floating be default. Not applied on fixed windows */
-#define XRESOURCES_AUTO_RELOAD	True			/* When True, monitor if the ~/.Xresources file is modified and reload the config if so */
 #define STARTING_LAYOUT			CASCADE			/* CASCADE / DWM / CENTERED */ 
-#define WARP_CURSOR				False			/* When True, move the cursor to the newly focused window */
-#define JUMP_TO_URGENT			True			/* When True, move to the workspaces where a window need attention */
-#define POLYBAR_IPC				True			/* When True, Polybar will receive IPC from Fluorite */
 
 typedef struct
 {

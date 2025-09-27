@@ -65,13 +65,19 @@ typedef struct Windows
 
 typedef struct
 {
-	int  bf;
-	int  bu;
-	int  bw;
-	int  gp;
-	int  so;
-	int  mo;
-	char *home;
+	int			bf;
+	int  		bu;
+	int  		bw;
+	int  		gp;
+	int  		so;
+	int  		mo;
+	cfg_bool_t	fw;
+	cfg_bool_t	af;
+	cfg_bool_t	oif;
+	char		*sl;
+	cfg_bool_t	wc;
+	cfg_bool_t	jtu;
+	char		*home;
 } Configuration;
 
 typedef struct
@@ -141,12 +147,13 @@ typedef struct
 static void		FInit();
 static int  	FErrorHandler(Display *dis, XErrorEvent *ev);
 static void 	FLoadXresources();
-static void 	FLoadTheme();
+static void 	FLoadDefaultTheme();
+static void		FLoadDefaultConfig();
 static void 	FInitMonitors();
 static void 	FInitWorkspaces();
 static void 	FApplyProps();
 static void 	FGrabKeys(Window w);
-static void 	*FInotifyXresources(void *ptr);
+static void 	*FInotifyConfigAndXresources(void *ptr);
 static void 	FRun();
 static void 	FGetMonitorFromMouse();
 static int		FCheckWindowToplevel(Window nw);
@@ -184,6 +191,7 @@ static void		FPolybarScratchpadsIPC();
 static void		FGetFixedPartialStrut(Window w, int new_win);
 static void		FRecalculateStrut(int mon);
 static void		FResetMonitorStrut(int mon);
+       void		FLoadConfig();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -207,8 +215,7 @@ int main(void)
 	pthread_t t_inotify;
 
 	FInit();
-	if (XRESOURCES_AUTO_RELOAD)
-		pthread_create(&t_inotify, NULL, &FInotifyXresources, NULL);
+	pthread_create(&t_inotify, NULL, &FInotifyConfigAndXresources, NULL);
 	FRun();
 	FQuit();
 }
@@ -232,6 +239,7 @@ static void FInit()
 	FInitMonitors();
 	FInitWorkspaces();
 	FLoadXresources();
+	FLoadConfig();
 	FGrabKeys(fluorite.root);
 }
 
@@ -253,7 +261,7 @@ static void FLoadXresources()
 	XrmValue xval;
 	Display *dummy_display;
 
-	FLoadTheme();
+	FLoadDefaultTheme();
 
 	dummy_display = XOpenDisplay(NULL);
 	xrm = XResourceManagerString(dummy_display);
@@ -297,7 +305,7 @@ static void FLoadXresources()
 	XCloseDisplay(dummy_display);
 }
 
-static void FLoadTheme()
+static void FLoadDefaultTheme()
 {
 	fluorite.conf.bw = BORDER_WIDTH;
 	fluorite.conf.bf = BORDER_FOCUSED;
@@ -305,6 +313,15 @@ static void FLoadTheme()
 	fluorite.conf.gp = GAPS;
 	fluorite.conf.so = STACK_OFFSET;
 	fluorite.conf.mo = DEFAULT_MASTER_OFFSET;
+}
+
+static void FLoadDefaultConfig()
+{
+	fluorite.conf.af = True;
+	fluorite.conf.oif = False;
+	fluorite.conf.sl = strdup("cascade");
+	fluorite.conf.wc = False;
+	fluorite.conf.jtu = True;
 }
 
 static void FInitMonitors()
@@ -476,17 +493,21 @@ static void FGrabKeys(Window w)
 	}
 }
 
-static void *FInotifyXresources(void *useless)
+static void *FInotifyConfigAndXresources(void *useless)
 {
 	(void)useless;
-	const char *filename = ".Xresources";
-	char *home = getenv("HOME");
+	char *theme_path = getenv("HOME");
+	char config_path[BUF_LEN];
+	const char *theme_file = ".Xresources";
+	const char *config_file = "fluorite.conf";
 	char buf[BUF_LEN];
 	int fd;
 
 	if ((fd = inotify_init1(IN_NONBLOCK)) < 0)
 		return NULL;
-	inotify_add_watch(fd, home, IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
+	snprintf(config_path, sizeof(config_path), "%s/.config/fluorite", getenv("HOME"));
+	inotify_add_watch(fd, theme_path, IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
+	inotify_add_watch(fd, config_path, IN_CREATE | IN_MODIFY | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO);
 
 	while (1145)
 	{
@@ -505,8 +526,10 @@ static void *FInotifyXresources(void *useless)
 		while (i < len)
 		{
 			struct inotify_event *event = (struct inotify_event *) &buf[i];
-			if (event->len > 0 && strcmp(event->name, filename) == 0)
+			if (event->len > 0 && strcmp(event->name, theme_file) == 0)
 					FReloadXresources();
+			if (event->len > 0 && strcmp(event->name, config_file) == 0)
+					FLoadConfig();
 			i += EVENT_SIZE + event->len;
 		}
 	}
@@ -552,6 +575,38 @@ void FReloadXresources()
 	FApplyBorders();
 	XSync(fluorite.dpy, True);
 	FRedrawWindows();
+}
+
+void FLoadConfig()
+{
+	char path[1024];
+
+	FLoadDefaultConfig();
+	cfg_opt_t opts[] = {
+		CFG_SIMPLE_BOOL("follow_windows", &fluorite.conf.fw),
+		CFG_SIMPLE_BOOL("auto_floating", &fluorite.conf.af),
+		CFG_SIMPLE_BOOL("open_in_float", &fluorite.conf.oif),
+		CFG_SIMPLE_STR("starting_layout", &fluorite.conf.sl),
+		CFG_SIMPLE_BOOL("warp_cursor", &fluorite.conf.wc),
+		CFG_SIMPLE_BOOL("jump_to_urgent", &fluorite.conf.jtu),
+		// CFG_INT_LIST("default_monitor_workspaces", "{ 1, 0, 3, 4, 5, 6, 7, 8, 9, 2 }", default_monitor_workspaces),
+		// CFG_STR_LIST("workspace_names", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", workspace_names),
+		// CFG_STR_LIST("default_floating", "", default_floating),
+		// CFG_STR_LIST("default_fixed", "", default_fixed),
+		// CFG_STR_LIST("default_swallowing", "", default_swallowing),
+		// CFG_SEC("bind", binds, CFGF_MULTI | CFGF_TITLE),
+		CFG_END()
+	};
+	cfg_t *cfg;
+
+	cfg = cfg_init(opts, 0);
+	snprintf(path, sizeof(path), "%s/.config/fluorite/fluorite.conf", getenv("HOME"));
+	cfg_parse(cfg, path);
+	cfg_free(cfg);
+
+	FRedrawWindows();
+	XSync(fluorite.dpy, True);
+	FApplyBorders();
 }
 
 static void FRun()
@@ -649,7 +704,7 @@ static int FCheckWindowToplevel(Window nw)
 				FResetFocus(fluorite.ws[i].t_wins);
 				FResetFocus(fluorite.ws[i].f_wins);
 				w->fc = True;
-				if (JUMP_TO_URGENT)
+				if (fluorite.conf.jtu)
 					goto show_ws;
 				return True;
 			}
@@ -663,7 +718,7 @@ static int FCheckWindowToplevel(Window nw)
 				FResetFocus(fluorite.ws[i].f_wins);
 				w->fc = True;
 				FWarpCursor(w->w);
-				if (JUMP_TO_URGENT)
+				if (fluorite.conf.jtu)
 					goto show_ws;
 				return True;
 			}
@@ -802,7 +857,7 @@ static void FMapRequest(XEvent ev)
 
 	if (FCheckWindowToplevel(ev.xmaprequest.window))
 	{
-		if (JUMP_TO_URGENT)
+		if (fluorite.conf.jtu)
 			return free(nw);
 		XWMHints *hints = XGetWMHints(fluorite.dpy, ev.xmaprequest.window);
 		hints->flags |= XUrgencyHint;
@@ -855,7 +910,7 @@ static void FMapRequest(XEvent ev)
 	XSetInputFocus(fluorite.dpy, nw->w, RevertToPointerRoot, CurrentTime);
 	XSetWindowBorderWidth(fluorite.dpy, nw->w, fluorite.conf.bw);
 
-	if ((is_floating && AUTO_FLOATING) || OPEN_IN_FLOAT)
+	if ((is_floating && fluorite.conf.af) || fluorite.conf.oif)
 		FManageFloatingWindow(nw);
 	else
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);;
@@ -1331,7 +1386,7 @@ static int FCheckWindowIsFloating(Window w)
 	if (XGetTransientForHint(fluorite.dpy, w, &tr))
 		ret_val = True;
 
-	if (OPEN_IN_FLOAT)
+	if (fluorite.conf.oif)
 		ret_val = True;
 	
 	XFree(p);
@@ -2077,7 +2132,7 @@ static void FWarpCursor(Window w)
 	int x, y, ww, wh;
 	Window dummy;
 
-	if (!WARP_CURSOR || no_warp)
+	if (!fluorite.conf.wc || no_warp)
 		return;
 
 	no_refocus = True;
@@ -2303,7 +2358,7 @@ next:
 	FRedrawWindows();
 	FApplyBorders();
 
-	if (FOLLOW_WINDOWS)
+	if (fluorite.conf.fw)
 		FShowWorkspace(ws);
 }
 
@@ -3072,8 +3127,6 @@ static void FSearchAndDestoryGhostWindows()
 
 static void FPolybarLayoutIPC(const int msg)
 {
-	if (!POLYBAR_IPC)
-		return ;
 	char command[256];
 	snprintf(command, sizeof(command), "polybar-msg action \"#fluorite_layout.hook.%d\"", msg);
 	FExecute(command);
@@ -3081,8 +3134,6 @@ static void FPolybarLayoutIPC(const int msg)
 
 static void FPolybarScratchpadsIPC()
 {
-	if (!POLYBAR_IPC)
-		return ;
 	char *scratchpads_value = NULL;
 	char *tmp;
 	char command[256];
