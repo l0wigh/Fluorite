@@ -191,7 +191,7 @@ static void		FPolybarScratchpadsIPC();
 static void		FGetFixedPartialStrut(Window w, int new_win);
 static void		FRecalculateStrut(int mon);
 static void		FResetMonitorStrut(int mon);
-       void		FLoadConfig();
+       void		FReloadConfig();
 	   void 	FShowWorkspace(int ws);
 	   void 	FSendWindowToWorkspace(int ws);
        void 	FExecute(char *argument);
@@ -209,6 +209,8 @@ static int no_unmap = False;
 static int no_warp = False;
 static int no_refocus = False;
 static unsigned int numlockmask = 0;
+static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+static char **workspace_names;
 
 int main(void)
 {
@@ -238,8 +240,9 @@ static void FInit()
 	FApplyProps();
 	FInitMonitors();
 	FInitWorkspaces();
+	workspace_names = (char **) calloc(10, sizeof(char *));
 	FLoadXresources();
-	FLoadConfig();
+	FReloadConfig();
 	FGrabKeys(fluorite.root);
 }
 
@@ -322,6 +325,15 @@ static void FLoadDefaultConfig()
 	fluorite.conf.sl = strdup("cascade");
 	fluorite.conf.wc = False;
 	fluorite.conf.jtu = True;
+	for (int i = 0; i < 10; i++)
+	{
+		char name[2] = { 0 };
+		if (i == 9)
+			name[1] = '0';
+		else
+			name[1] = i + 31;
+		workspace_names[i] = strdup(name);
+	}
 }
 
 static void FInitMonitors()
@@ -497,7 +509,7 @@ static void *FInotifyConfigAndXresources(void *useless)
 {
 	(void)useless;
 	char *theme_path = getenv("HOME");
-	char config_path[BUF_LEN];
+	char config_path[1024];
 	const char *theme_file = ".Xresources";
 	const char *config_file = "fluorite.conf";
 	char buf[BUF_LEN];
@@ -529,7 +541,7 @@ static void *FInotifyConfigAndXresources(void *useless)
 			if (event->len > 0 && strcmp(event->name, theme_file) == 0)
 					FReloadXresources();
 			if (event->len > 0 && strcmp(event->name, config_file) == 0)
-					FLoadConfig();
+					FReloadConfig();
 			i += EVENT_SIZE + event->len;
 		}
 	}
@@ -577,9 +589,12 @@ void FReloadXresources()
 	FRedrawWindows();
 }
 
-void FLoadConfig()
+void FReloadConfig()
 {
 	char path[1024];
+	int dmw;
+	char wn;
+	XTextProperty text;
 
 	FLoadDefaultConfig();
 	cfg_opt_t opts[] = {
@@ -589,8 +604,8 @@ void FLoadConfig()
 		CFG_SIMPLE_STR("starting_layout", &fluorite.conf.sl),
 		CFG_SIMPLE_BOOL("warp_cursor", &fluorite.conf.wc),
 		CFG_SIMPLE_BOOL("jump_to_urgent", &fluorite.conf.jtu),
-		// CFG_INT_LIST("default_monitor_workspaces", "{ 1, 0, 3, 4, 5, 6, 7, 8, 9, 2 }", default_monitor_workspaces),
-		// CFG_STR_LIST("workspace_names", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", workspace_names),
+		CFG_INT_LIST("default_monitor_workspaces", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", dmw),
+		CFG_STR_LIST("workspaces_names", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", wn),
 		// CFG_STR_LIST("default_floating", "", default_floating),
 		// CFG_STR_LIST("default_fixed", "", default_fixed),
 		// CFG_STR_LIST("default_swallowing", "", default_swallowing),
@@ -602,11 +617,23 @@ void FLoadConfig()
 	cfg = cfg_init(opts, 0);
 	snprintf(path, sizeof(path), "%s/.config/fluorite/fluorite.conf", getenv("HOME"));
 	cfg_parse(cfg, path);
-	cfg_free(cfg);
+
+	for (int i = 0; i < (int) cfg_size(cfg, "default_monitor_workspaces"); i++)
+		default_monitor_workspace[i] = (int) cfg_getnint(cfg, "default_monitor_workspaces", i);
+
+	for (int i = 0; i < (int) cfg_size(cfg, "workspaces_names"); i++)
+	{
+		if (workspace_names[i])
+			free(workspace_names[i]);
+		workspace_names[i] = strdup(cfg_getnstr(cfg, "workspaces_names", i));
+	}
+	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
+	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
 	FApplyBorders();
+	cfg_free(cfg);
 }
 
 static void FRun()
