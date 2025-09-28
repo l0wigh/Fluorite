@@ -47,6 +47,34 @@ enum SIDES
 	BOTTOM_EX
 };
 
+enum FUN_TYPE
+{
+	VOID,
+	INT,
+	CHAR
+};
+
+typedef struct
+{
+	char	*name;
+	int		type;
+	void	(*fun)();
+	void	(*int_fun)(int arg);
+	void	(*char_fun)(char *arg);
+} UserFunc;
+
+typedef struct
+{
+	unsigned int	mod;
+	KeySym			key;
+	int				type;
+	void			(*int_fun)(int arg);
+	void			(*char_fun)(char *arg);
+	void			(*fun)();
+	int				int_arg;
+	char			*char_arg;
+} NeoBindings;
+
 /* DEF: struct */
 typedef struct Windows
 {
@@ -216,6 +244,36 @@ static char **workspace_names;
 static char **default_floating;
 static char **default_fixed;
 static char **default_swallowing;
+static NeoBindings *binds;
+static UserFunc user_functions_list[] = {
+	{"close_window",				VOID,	FCloseWindow, NULL, NULL},
+	{"swap_with_master",			VOID,	FSwapWithMaster, NULL, NULL},
+	{"focus_next_window",			VOID,	FFocusNext, NULL, NULL},
+	{"focus_prev_window",			VOID,	FFocusPrev, NULL, NULL},
+	{"focus_next_workspace",		VOID,	FNextWorkspace, NULL, NULL},
+	{"focus_prev_workspace",		VOID,	FPrevWorkspace, NULL, NULL},
+	{"tile_window",					VOID,	FTileWindow, NULL, NULL},
+	{"tile_all",					VOID,	FTileAllWindows, NULL, NULL},
+	{"toggle_fullscreen",			VOID,	FFullscreenToggle, NULL, NULL},
+	{"hide_show_floating",			VOID,	FFloatingHideShow, NULL, NULL},
+	{"send_window_next_workspace",	VOID,	FSendWindowToNextWorkspace, NULL, NULL},
+	{"send_window_prev_workspace",	VOID,	FSendWindowToPrevWorkspace, NULL, NULL},
+	{"focus_next_monitor",			VOID,	FFocusNextMonitor, NULL, NULL},
+	{"reset_master_offset",			VOID,	FResetMasterOffset, NULL, NULL},
+	{"add_window_scratchpad",		VOID,	FAddWindowToScratchpad, NULL, NULL},
+	{"del_window_scratchpad",		VOID,	FDelWindowFromScratchpad, NULL, NULL},
+	{"center_scratchpad_window",	VOID,	FCenterScratchpadWindow, NULL, NULL},
+	{"toggle_fixed_strut",			VOID,	FToggleFixedStrut, NULL, NULL},
+	{"cycle_layouts",				VOID,	FCycleLayouts, NULL, NULL},
+	{"close_fluorite",				VOID,	FQuit, NULL, NULL},
+	{"window_rotate",				INT,	NULL, FRotateWindows, NULL},
+	{"stack_rotate",				INT, 	NULL, FRotateStackWindows, NULL},
+	{"change_master_offset",		INT, 	NULL, FChangeMasterOffset, NULL},
+	{"show_workspace",				INT, 	NULL, FShowWorkspace, NULL},
+	{"send_window_to_workspace",	INT, 	NULL, FSendWindowToWorkspace, NULL},
+	{"change_layout",				INT, 	NULL, FChangeLayout, NULL},
+	{"exec",						CHAR,	NULL, NULL, FExecute},
+};
 
 int main(void)
 {
@@ -502,11 +560,11 @@ static void FGrabKeys(Window w)
 		if (!syms)
 			return;
 		for (k = start; k <= (unsigned int)end; k++)
-			for (i = 0; i < LENGTH(bind); i++)
-				if (bind[i].key == syms[(k - start) * skip])
+			for (i = 0; binds[i].key; i++)
+				if (binds[i].key == syms[(k - start) * skip])
 					for (j = 0; j < LENGTH(modifiers); j++)
 						XGrabKey(fluorite.dpy, k,
-							 bind[i].mod | modifiers[j],
+							 binds[i].mod | modifiers[j],
 							 w, True,
 							 GrabModeAsync, GrabModeAsync);
 		XFree(syms);
@@ -597,6 +655,62 @@ void FReloadXresources()
 	FRedrawWindows();
 }
 
+static void FParseModsAndKeys(cfg_t *user_bind, NeoBindings *b)
+{
+	char *bind_dup = strdup(cfg_title(user_bind));
+	char *tok = strtok(bind_dup, "+");
+
+	b->mod = 0;
+	while (tok)
+	{
+		if (strcasecmp(tok, "Mod4") == 0) b->mod |= Mod4Mask;
+		else if (strcasecmp(tok, "Mod3") == 0) b->mod |= Mod3Mask;
+		else if (strcasecmp(tok, "Mod2") == 0) b->mod |= Mod2Mask;
+		else if (strcasecmp(tok, "Alt") == 0) b->mod |= Mod1Mask;
+		else if (strcasecmp(tok, "Shift") == 0) b->mod |= ShiftMask;
+		else if (strcasecmp(tok, "Ctrl") == 0) b->mod |= ControlMask;
+		else b->key = XStringToKeysym(tok);
+	}
+	free(bind_dup);
+}
+
+static void FParseBindings(cfg_t *cfg)
+{
+	NeoBindings *b = (NeoBindings *) calloc(cfg_size(cfg, "bind") + 1, sizeof(NeoBindings));
+
+	for (int i = 0; i < (int) cfg_size(cfg, "bind"); i++)
+	{
+		cfg_t *user_bind = cfg_getnsec(cfg, "bind", i);
+		char *action = cfg_getstr(user_bind, "action");
+		for (unsigned int j = 0; j < LENGTH(user_functions_list); j++)
+		{
+			if (strcasecmp(action, user_functions_list[i].name) == 0)
+			{
+				FParseModsAndKeys(user_bind, b);
+				b[i].type = user_functions_list[i].type;
+				switch (user_functions_list[i].type)
+				{
+					case VOID:
+						b[i].fun = user_functions_list[i].fun;
+						break;
+					case INT:
+						b[i].int_fun = user_functions_list[i].int_fun;
+						b[i].int_arg = cfg_getint(cfg, "arg");
+						break;
+					case CHAR:
+						b[i].char_fun = user_functions_list[i].char_fun;
+						b[i].char_arg = cfg_getstr(cfg, "arg");
+						break;
+				}
+			}
+		}
+	}
+	free(binds);
+	binds = (NeoBindings *) calloc(cfg_size(cfg, "bind") + 1, sizeof(NeoBindings));
+	memcpy(binds, b, sizeof(NeoBindings));
+	free(b);
+}
+
 void FReloadConfig()
 {
 	char path[1024];
@@ -609,6 +723,13 @@ void FReloadConfig()
 	XTextProperty text;
 
 	FLoadDefaultConfig();
+
+	cfg_opt_t binds[] = {
+		CFG_STR("action", NULL, CFGF_NONE),
+		CFG_STR("arg", NULL, CFGF_NONE),
+		CFG_END()
+	};
+
 	cfg_opt_t opts[] = {
 		CFG_SIMPLE_BOOL("follow_windows", &fluorite.conf.fw),
 		CFG_SIMPLE_BOOL("auto_floating", &fluorite.conf.af),
@@ -621,7 +742,7 @@ void FReloadConfig()
 		CFG_STR_LIST("default_floating", "", dfl),
 		CFG_STR_LIST("default_fixed", "", dfx),
 		CFG_STR_LIST("default_swallowing", "", dsw),
-		// CFG_SEC("bind", binds, CFGF_MULTI | CFGF_TITLE),
+		CFG_SEC("bind", binds, CFGF_MULTI | CFGF_TITLE),
 		CFG_END()
 	};
 	cfg_t *cfg;
@@ -681,6 +802,9 @@ void FReloadConfig()
 			w->can_sw = FCheckCanSwallow(w->w);
 	}
 
+	FParseBindings(cfg);
+
+	// TODO: Add a way to not change focus
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
 	FApplyBorders();
@@ -1582,9 +1706,24 @@ static void FConfigureRequest(XEvent ev)
 static void FKeyPress(XEvent ev)
 {
 	XKeyPressedEvent e = ev.xkey;
-	for (long unsigned int i = 0; i < LENGTH(bind); i++)
-		if (e.keycode == XKeysymToKeycode(fluorite.dpy, bind[i].key) && MODMASK(bind[i].mod) == MODMASK(e.state) && bind[i].func)
-				bind[i].func();
+	for (long unsigned int i = 0; binds[i].key; i++)
+	{
+		if (e.keycode == XKeysymToKeycode(fluorite.dpy, binds[i].key) && MODMASK(binds[i].mod) == MODMASK(e.state))
+		{
+				switch (binds[i].type)
+				{
+					case INT:
+						binds[i].int_fun(binds[i].int_arg);
+						break;
+					case CHAR:
+						binds[i].char_fun(binds[i].char_arg);
+						break;
+					default:
+						binds[i].fun();
+						break;
+				}
+		}
+	}
 }
 
 static int FFindWorkspaceFromWindow(Window w)
