@@ -8,6 +8,7 @@
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
+- [ ] Avoid refocus when reloading configuration
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 

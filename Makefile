@@ -17,7 +17,7 @@ OBJS		= $(SRCS:.c=.o)
 OBJECTS_PREFIXED = $(addprefix $(OBJS_DIR), $(OBJS))
 CC			= gcc
 CC_FLAGS	= -Wall -Werror -Wextra -O2 -pipe -mtune=native -march=native -I/usr/include/freetype2
-LIBS		= -lX11 -lXcursor -lXrandr -lxdo
+LIBS		= -lX11 -lXcursor -lXrandr -lxdo -lconfuse
 
 $(OBJS_DIR)%.o : %.c $(PROJECT_H)
 	@mkdir -p $(OBJS_DIR)
