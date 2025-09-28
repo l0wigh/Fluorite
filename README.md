@@ -1,44 +1,40 @@
-# Fluorite [EVO 2] (Beta 15)
+# Fluorite [EVO 2] (Beta 16)
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
-![Fluorite Presentation](./screenshots/rose-pine.png)
-*Rosé-pine Theme*
+![Fluorite Presentation](./screenshots/cascade/fluorite_rosepine.png)
+*Rosé-pine Theme in Cascade layout*
 
-![Fluorite Presentation](./screenshots/Multimonitor.png)
-*Multimonitor Demo*
+![Fluorite Presentation](./screenshots/centered/fluorite_gruvbox.png)
+*Gruvbox Theme in Centered layout*
 
 ## Features
 
-- Keyboard centric
-- Multiple dynamic master layout tiling (Cascade, DWM, Centered, Stacked)
-- Multi-Monitors with hot-reload capabilities* (XMonad style)
-- Static configuration for bindings and options. Less computer resources needed for stuff you almost never change
+- Keyboard centric. Faster and easier workflow.
+- Multiple dynamic master layout tiling that will suits your daily needs. (Cascade, DWM, Centered, Stacked)
+- Multi-Monitors with hot-plug capabilities. Restarting your WM mid-meeting should never happens. (XMonad style)
+- Dynamic (re)configuration for your options and bindings using configuration file.
 - Dynamic (re)configuration for your theme using Xresources. "Wow is that Hyprland ?"
-- Dynamic scratchpads that you bind to any of your keyboard keys. No need for multiple bindings in your configuration
-- Window swallowing. Get that useless terminal out of your way
+- Dynamic scratchpads that you bind to any of your keyboard keys. No need for thousands of bindings in your configuration.
+- Window swallowing. Get that useless terminal out of your way.
 - EWMH handling. Give you more features without more configuration required
 - Polybar IPC. Active Layout and Scratchpads should not be some kind of secrets
-
-* [!] For now, you need to do the step in the right order and not using scripts.
-    - Plug -> activate using xrandr
-    - Deactivate using xrandr -> Unplug
 
 ## Dependencies installation
 
 - Arch: 
 ```sh
-sudo pacman -S base-devel libx11 libxcursor libxrandr xdotool
+sudo pacman -S base-devel libx11 libxcursor libxrandr xdotool confuse
 ```
 
 - Void: 
 ```sh
-sudo xbps-install -Sy base-devel libX11-devel libXcursor-devel libXrandr-devel xdotool-devel
+sudo xbps-install -Sy base-devel libX11-devel libXcursor-devel libXrandr-devel xdotool-devel confuse
 ```
 
 - Gentoo (Untested): 
 ```sh
-sudo emerge --ask x11-libs/libX11 x11-libs/libXcursor x11-libs/libXrandr x11-misc/xdotool sys-libs/glibc x11-libs/libxcb x11-libs/libXrender x11-libs/libXfixes x11-libs/libXext x11-libs/libXtst x11-libs/libXinerama x11-libs/libxkbcommon x11-libs/libXau x11-libs/libXdmcp
+sudo emerge --ask x11-libs/libX11 x11-libs/libXcursor x11-libs/libXrandr x11-misc/xdotool sys-libs/glibc x11-libs/libxcb x11-libs/libXrender x11-libs/libXfixes x11-libs/libXext x11-libs/libXtst x11-libs/libXinerama x11-libs/libxkbcommon x11-libs/libXau x11-libs/libXdmcp dev-libs/confuse
 ```
 
 If you are on another distro and want to help other users to know what to install, feel free to create a pull request or an issue !
@@ -88,10 +84,6 @@ initial = 1 ; Will check on startup if there is already some Scratchpads
 
 ## Documentation ?
 
-Go to [Fluorite Website](https://fluorite.surge.sh) for more informations.
+Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. (Currently kind of outdated)
 
 You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
-
-## Known issues
-
-- If java apps are clunky, you can add `export _JAVA_AWT_WM_NONREPARENTING=1` to your .xinitrc just before Fluorite execution.

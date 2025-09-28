@@ -1,7 +1,5 @@
-#include <strings.h>
-#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 15)"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 16)"
 
-#include "config/keybinds.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -31,6 +29,22 @@
 
 static inline int MAX(int a, int b) { return a > b ? a : b; }
 
+enum MODE
+{
+	UP,
+	DOWN,
+	RESET
+};
+
+enum LAYOUT
+{
+	CASCADE,
+	DWM,
+	CENTERED,
+	STACKED
+};
+
+
 enum SIDES
 {
 	LEFT,
@@ -58,7 +72,7 @@ typedef struct
 {
 	char	*name;
 	int		type;
-	void	(*fun)();
+	void	(*void_fun)();
 	void	(*int_fun)(int arg);
 	void	(*char_fun)(char *arg);
 } UserFunc;
@@ -70,7 +84,7 @@ typedef struct
 	int				type;
 	void			(*int_fun)(int arg);
 	void			(*char_fun)(char *arg);
-	void			(*fun)();
+	void			(*void_fun)();
 	int				int_arg;
 	char			*char_arg;
 } NeoBindings;
@@ -101,11 +115,11 @@ typedef struct
 	int  		so;
 	int  		mo;
 	cfg_bool_t	fw;
-	cfg_bool_t	af;
-	cfg_bool_t	oif;
+	cfg_bool_t	ff;
 	int			sl;
 	cfg_bool_t	wc;
 	cfg_bool_t	jtu;
+	KeySym		mt;
 	char		*home;
 } Configuration;
 
@@ -221,17 +235,36 @@ static void		FGetFixedPartialStrut(Window w, int new_win);
 static void		FRecalculateStrut(int mon);
 static void		FResetMonitorStrut(int mon);
 static int		FCheckCanSwallow(Window w);
-       void		FReloadConfig();
-	   void 	FShowWorkspace(int ws);
-	   void 	FSendWindowToWorkspace(int ws);
-       void 	FExecute(char *argument);
-       void 	FQuit();
-       void 	FCloseWindow();
-       void 	FRotateStackWindows(int mode);
-       void 	FRotateWindows(int mode);
-	   void		FAddWindowToScratchpad();
-	   void		FDelWindowFromScratchpad();
-	   void		FScratchpadHideShow();
+static void		FReloadConfig();
+static void		FExecute(char *argument);
+static void 	FQuit();
+static void 	FCloseWindow();
+static void 	FRotateWindows(int mode);
+static void 	FRotateStackWindows(int mode);
+static void 	FChangeMasterOffset(int mode);
+static void 	FSwapWithMaster();
+static void 	FFocusNext();
+static void 	FFocusPrev();
+static void 	FNextWorkspace();
+static void 	FPrevWorkspace();
+static void 	FShowWorkspace(int ws);
+static void 	FSendWindowToWorkspace(int ws);
+static void 	FTileWindow();
+static void 	FChangeLayout(int layout);
+static void 	FTileAllWindows();
+static void 	FFullscreenToggle();
+static void 	FFloatingHideShow();
+static void 	FSendWindowToNextWorkspace();
+static void 	FSendWindowToPrevWorkspace();
+static void 	FFocusNextMonitor();
+static void 	FResetMasterOffset();
+static void 	FReloadXresources();
+static void 	FAddWindowToScratchpad();
+static void 	FDelWindowFromScratchpad();
+static void 	FScratchpadHideShow();
+static void 	FCenterScratchpadWindow();
+static void 	FToggleFixedStrut();
+static void 	FCycleLayouts();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -241,10 +274,11 @@ static int no_refocus = False;
 static unsigned int numlockmask = 0;
 static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 static char **workspace_names;
-static char **default_floating;
-static char **default_fixed;
-static char **default_swallowing;
+static char **floating_windows;
+static char **fixed_windows;
+static char **swallowing_windows;
 static NeoBindings *binds;
+static int binds_count;
 static UserFunc user_functions_list[] = {
 	{"close_window",				VOID,	FCloseWindow, NULL, NULL},
 	{"swap_with_master",			VOID,	FSwapWithMaster, NULL, NULL},
@@ -256,6 +290,7 @@ static UserFunc user_functions_list[] = {
 	{"tile_all",					VOID,	FTileAllWindows, NULL, NULL},
 	{"toggle_fullscreen",			VOID,	FFullscreenToggle, NULL, NULL},
 	{"hide_show_floating",			VOID,	FFloatingHideShow, NULL, NULL},
+	{"hide_show_scratchpad",		VOID,	FScratchpadHideShow, NULL, NULL},
 	{"send_window_next_workspace",	VOID,	FSendWindowToNextWorkspace, NULL, NULL},
 	{"send_window_prev_workspace",	VOID,	FSendWindowToPrevWorkspace, NULL, NULL},
 	{"focus_next_monitor",			VOID,	FFocusNextMonitor, NULL, NULL},
@@ -303,13 +338,12 @@ static void FInit()
 	FApplyProps();
 	FLoadXresources();
 	workspace_names = (char **) calloc(10, sizeof(char *));
-	default_floating = (char **) calloc(1, sizeof(char *));
-	default_fixed = (char **) calloc(1, sizeof(char *));
-	default_swallowing = (char **) calloc(1, sizeof(char *));
+	floating_windows = (char **) calloc(1, sizeof(char *));
+	fixed_windows = (char **) calloc(1, sizeof(char *));
+	swallowing_windows = (char **) calloc(1, sizeof(char *));
 	FReloadConfig();
 	FInitMonitors();
 	FInitWorkspaces();
-	FGrabKeys(fluorite.root);
 }
 
 static int FErrorHandler(Display *dis, XErrorEvent *ev)
@@ -386,8 +420,7 @@ static void FLoadDefaultTheme()
 
 static void FLoadDefaultConfig()
 {
-	fluorite.conf.af = True;
-	fluorite.conf.oif = False;
+	fluorite.conf.ff = False;
 	fluorite.conf.sl = CASCADE;
 	fluorite.conf.wc = False;
 	fluorite.conf.jtu = True;
@@ -560,7 +593,7 @@ static void FGrabKeys(Window w)
 		if (!syms)
 			return;
 		for (k = start; k <= (unsigned int)end; k++)
-			for (i = 0; binds[i].key; i++)
+			for (i = 0; i < (unsigned int) binds_count; i++)
 				if (binds[i].key == syms[(k - start) * skip])
 					for (j = 0; j < LENGTH(modifiers); j++)
 						XGrabKey(fluorite.dpy, k,
@@ -616,7 +649,7 @@ static void *FInotifyConfigAndXresources(void *useless)
 	return NULL;
 }
 
-void FReloadXresources()
+static void FReloadXresources()
 {
 	Window focused = fluorite.root;
 
@@ -655,6 +688,18 @@ void FReloadXresources()
 	FRedrawWindows();
 }
 
+static int FGetModifier(char *mod)
+{
+	if (strcasecmp(mod, "Mod4") == 0) return Mod4Mask;
+	else if (strcasecmp(mod, "Mod3") == 0) return Mod3Mask;
+	else if (strcasecmp(mod, "Mod2") == 0) return Mod2Mask;
+	else if (strcasecmp(mod, "Mod1") == 0) return Mod1Mask;
+	else if (strcasecmp(mod, "Alt") == 0) return Mod1Mask;
+	else if (strcasecmp(mod, "Shift") == 0) return ShiftMask;
+	else if (strcasecmp(mod, "Ctrl") == 0) return ControlMask;
+	else return 0;
+}
+
 static void FParseModsAndKeys(cfg_t *user_bind, NeoBindings *b)
 {
 	char *bind_dup = strdup(cfg_title(user_bind));
@@ -663,86 +708,112 @@ static void FParseModsAndKeys(cfg_t *user_bind, NeoBindings *b)
 	b->mod = 0;
 	while (tok)
 	{
-		if (strcasecmp(tok, "Mod4") == 0) b->mod |= Mod4Mask;
-		else if (strcasecmp(tok, "Mod3") == 0) b->mod |= Mod3Mask;
-		else if (strcasecmp(tok, "Mod2") == 0) b->mod |= Mod2Mask;
-		else if (strcasecmp(tok, "Alt") == 0) b->mod |= Mod1Mask;
-		else if (strcasecmp(tok, "Shift") == 0) b->mod |= ShiftMask;
-		else if (strcasecmp(tok, "Ctrl") == 0) b->mod |= ControlMask;
+		int mod = FGetModifier(tok);
+		if (mod) b->mod |= mod;
 		else b->key = XStringToKeysym(tok);
+		tok = strtok(NULL, "+");
 	}
 	free(bind_dup);
 }
 
 static void FParseBindings(cfg_t *cfg)
 {
+	int next_bind;
 	NeoBindings *b = (NeoBindings *) calloc(cfg_size(cfg, "bind") + 1, sizeof(NeoBindings));
 
+	binds_count = 0;
 	for (int i = 0; i < (int) cfg_size(cfg, "bind"); i++)
 	{
 		cfg_t *user_bind = cfg_getnsec(cfg, "bind", i);
 		char *action = cfg_getstr(user_bind, "action");
+		next_bind = False;
 		for (unsigned int j = 0; j < LENGTH(user_functions_list); j++)
 		{
-			if (strcasecmp(action, user_functions_list[i].name) == 0)
+			if (strcasecmp(action, user_functions_list[j].name) == 0)
 			{
-				FParseModsAndKeys(user_bind, b);
-				b[i].type = user_functions_list[i].type;
-				switch (user_functions_list[i].type)
+				FParseModsAndKeys(user_bind, &b[i]);
+				b[i].type = user_functions_list[j].type;
+				if (strcasecmp(user_functions_list[j].name, "window_rotate") == 0 ||
+					strcasecmp(user_functions_list[j].name, "stack_rotate") == 0 ||
+					strcasecmp(user_functions_list[j].name, "change_master_offset") == 0
+				)
 				{
-					case VOID:
-						b[i].fun = user_functions_list[i].fun;
-						break;
-					case INT:
-						b[i].int_fun = user_functions_list[i].int_fun;
-						b[i].int_arg = cfg_getint(cfg, "arg");
-						break;
-					case CHAR:
-						b[i].char_fun = user_functions_list[i].char_fun;
-						b[i].char_arg = cfg_getstr(cfg, "arg");
-						break;
+					b[i].int_fun = user_functions_list[j].int_fun;
+					if (strcasecmp(cfg_getstr(user_bind, "arg"), "up") == 0) b[i].int_arg = UP;
+					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "down") == 0) b[i].int_arg = DOWN;
+					else b[i].int_arg = UP;
 				}
+				else if (strcasecmp(user_functions_list[j].name, "change_layout") == 0)
+				{
+					b[i].int_fun = user_functions_list[j].int_fun;
+					if (strcasecmp(cfg_getstr(user_bind, "arg"), "cascade") == 0) b[i].int_arg = CASCADE;
+					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "dwm") == 0) b[i].int_arg = DWM;
+					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "centered") == 0) b[i].int_arg = CENTERED;
+					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "stacked") == 0) b[i].int_arg = STACKED;
+					else b[i].int_arg = CASCADE;
+				}
+				else
+				{
+					switch (user_functions_list[j].type)
+					{
+						case VOID:
+							b[i].void_fun = user_functions_list[j].void_fun;
+							break;
+						case INT:
+							b[i].int_fun = user_functions_list[j].int_fun;
+							b[i].int_arg = atoi(cfg_getstr(user_bind, "arg")) - 1;
+							if (b[i].int_arg > 9) b[i].int_arg = 9;
+							else if (b[i].int_arg < 0) b[i].int_arg = 0;
+							break;
+						case CHAR:
+							b[i].char_fun = user_functions_list[j].char_fun;
+							b[i].char_arg = strdup(cfg_getstr(user_bind, "arg"));
+							break;
+					}
+				}
+				next_bind = True;
+				binds_count++;
 			}
+			if (next_bind) break;
 		}
 	}
-	free(binds);
-	binds = (NeoBindings *) calloc(cfg_size(cfg, "bind") + 1, sizeof(NeoBindings));
-	memcpy(binds, b, sizeof(NeoBindings));
-	free(b);
+	if (binds)
+		free(binds);
+	binds = b;
+	b = NULL;
 }
 
-void FReloadConfig()
+static void FReloadConfig()
 {
 	char path[1024];
 	char *sl = strdup("cascade");
-	int dmw;
 	char wn;
 	char dfl;
 	char dfx;
 	char dsw;
+	char mt = 0;
 	XTextProperty text;
 
 	FLoadDefaultConfig();
 
-	cfg_opt_t binds[] = {
+	cfg_opt_t bopts[] = {
 		CFG_STR("action", NULL, CFGF_NONE),
 		CFG_STR("arg", NULL, CFGF_NONE),
 		CFG_END()
 	};
 
 	cfg_opt_t opts[] = {
+		CFG_STR("meta_key", "Mod4", mt),
 		CFG_SIMPLE_BOOL("follow_windows", &fluorite.conf.fw),
-		CFG_SIMPLE_BOOL("auto_floating", &fluorite.conf.af),
-		CFG_SIMPLE_BOOL("open_in_float", &fluorite.conf.oif),
-	CFG_SIMPLE_STR("starting_layout", &sl),
+		CFG_SIMPLE_BOOL("force_floating", &fluorite.conf.ff),
+		CFG_SIMPLE_STR("starting_layout", &sl),
 		CFG_SIMPLE_BOOL("warp_cursor", &fluorite.conf.wc),
 		CFG_SIMPLE_BOOL("jump_to_urgent", &fluorite.conf.jtu),
-		CFG_INT_LIST("default_monitor_workspaces", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", dmw),
 		CFG_STR_LIST("workspaces_names", "{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 }", wn),
-		CFG_STR_LIST("default_floating", "", dfl),
-		CFG_STR_LIST("default_fixed", "", dfx),
-		CFG_STR_LIST("default_swallowing", "", dsw),
-		CFG_SEC("bind", binds, CFGF_MULTI | CFGF_TITLE),
+		CFG_STR_LIST("floating_windows", "", dfl),
+		CFG_STR_LIST("fixed_windows", "", dfx),
+		CFG_STR_LIST("swallowing_windows", "", dsw),
+		CFG_SEC("bind", bopts, CFGF_MULTI | CFGF_TITLE),
 		CFG_END()
 	};
 	cfg_t *cfg;
@@ -750,6 +821,10 @@ void FReloadConfig()
 	cfg = cfg_init(opts, 0);
 	snprintf(path, sizeof(path), "%s/.config/fluorite/fluorite.conf", getenv("HOME"));
 	cfg_parse(cfg, path);
+
+	fluorite.conf.mt = FGetModifier(cfg_getstr(cfg, "meta_key"));
+	if (!fluorite.conf.mt)
+		fluorite.conf.mt = Mod4Mask;
 
 	if (strcasecmp(sl, "Cascade") == 0)
 		fluorite.conf.sl = CASCADE;
@@ -760,9 +835,6 @@ void FReloadConfig()
 	else if (strcasecmp(sl, "Stacked") == 0)
 		fluorite.conf.sl = STACKED;
 
-	for (int i = 0; i < (int) cfg_size(cfg, "default_monitor_workspaces"); i++)
-		default_monitor_workspace[i] = (int) cfg_getnint(cfg, "default_monitor_workspaces", i);
-
 	for (int i = 0; i < (int) cfg_size(cfg, "workspaces_names"); i++)
 	{
 		if (workspace_names[i])
@@ -772,26 +844,26 @@ void FReloadConfig()
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 
-	for (int i = 0; default_floating[i]; i++)
-		free(default_floating[i]);
-	free(default_floating);
-	default_floating = (char **) calloc(cfg_size(cfg, "default_floating") + 1, sizeof(char *));
-	for (int i = 0; i < (int) cfg_size(cfg, "default_floating"); i++)
-		default_floating[i] = strdup(cfg_getnstr(cfg, "default_floating", i));
+	for (int i = 0; floating_windows[i]; i++)
+		free(floating_windows[i]);
+	free(floating_windows);
+	floating_windows = (char **) calloc(cfg_size(cfg, "floating_windows") + 1, sizeof(char *));
+	for (int i = 0; i < (int) cfg_size(cfg, "floating_windows"); i++)
+		floating_windows[i] = strdup(cfg_getnstr(cfg, "floating_windows", i));
 
-	for (int i = 0; default_fixed[i]; i++)
-		free(default_fixed[i]);
-	free(default_fixed);
-	default_fixed = (char **) calloc(cfg_size(cfg, "default_fixed") + 1, sizeof(char *));
-	for (int i = 0; i < (int) cfg_size(cfg, "default_fixed"); i++)
-		default_fixed[i] = strdup(cfg_getnstr(cfg, "default_fixed", i));
+	for (int i = 0; fixed_windows[i]; i++)
+		free(fixed_windows[i]);
+	free(fixed_windows);
+	fixed_windows = (char **) calloc(cfg_size(cfg, "fixed_windows") + 1, sizeof(char *));
+	for (int i = 0; i < (int) cfg_size(cfg, "fixed_windows"); i++)
+		fixed_windows[i] = strdup(cfg_getnstr(cfg, "fixed_windows", i));
 
-	for (int i = 0; default_swallowing[i]; i++)
-		free(default_swallowing[i]);
-	free(default_swallowing);
-	default_swallowing = (char **) calloc(cfg_size(cfg, "default_swallowing") + 1, sizeof(char *));
-	for (int i = 0; i < (int) cfg_size(cfg, "default_swallowing"); i++)
-		default_swallowing[i] = strdup(cfg_getnstr(cfg, "default_swallowing", i));
+	for (int i = 0; swallowing_windows[i]; i++)
+		free(swallowing_windows[i]);
+	free(swallowing_windows);
+	swallowing_windows = (char **) calloc(cfg_size(cfg, "swallowing_windows") + 1, sizeof(char *));
+	for (int i = 0; i < (int) cfg_size(cfg, "swallowing_windows"); i++)
+		swallowing_windows[i] = strdup(cfg_getnstr(cfg, "swallowing_windows", i));
 
 	for (int i = 0; i < MAX_WS; i++)
 	{
@@ -803,6 +875,8 @@ void FReloadConfig()
 	}
 
 	FParseBindings(cfg);
+	XUngrabKey(fluorite.dpy, AnyKey, AnyModifier, fluorite.root);
+	FGrabKeys(fluorite.root);
 
 	// TODO: Add a way to not change focus
 	FRedrawWindows();
@@ -951,10 +1025,10 @@ static int FCheckCanSwallow(Window w)
 
 	if (XGetClassHint(fluorite.dpy, w, &name))
 	{
-		for (long unsigned int i = 0; default_swallowing[i]; i++)
+		for (long unsigned int i = 0; swallowing_windows[i]; i++)
 		{
-			if (strcmp(default_swallowing[i], name.res_class) == 0 ||
-					strcmp(default_swallowing[i], name.res_name) == 0)
+			if (strcmp(swallowing_windows[i], name.res_class) == 0 ||
+					strcmp(swallowing_windows[i], name.res_name) == 0)
 			{
 				XFree(name.res_name);
 				XFree(name.res_class);
@@ -1085,8 +1159,8 @@ static void FMapRequest(XEvent ev)
 	nw->can_sw = FCheckCanSwallow(nw->w);
 	nw->sw = 0;
 	XSelectInput(fluorite.dpy, nw->w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask | KeyPressMask);
-	XGrabButton(fluorite.dpy, Button1, METAKEY, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
-	XGrabButton(fluorite.dpy, Button3, METAKEY, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(fluorite.dpy, Button1, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(fluorite.dpy, Button3, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XMapWindow(fluorite.dpy, nw->w);
 	XRaiseWindow(fluorite.dpy, nw->w);
 	XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
@@ -1112,7 +1186,7 @@ static void FMapRequest(XEvent ev)
 	XSetInputFocus(fluorite.dpy, nw->w, RevertToPointerRoot, CurrentTime);
 	XSetWindowBorderWidth(fluorite.dpy, nw->w, fluorite.conf.bw);
 
-	if ((is_floating && fluorite.conf.af) || fluorite.conf.oif)
+	if (is_floating || fluorite.conf.ff)
 		FManageFloatingWindow(nw);
 	else
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);;
@@ -1556,10 +1630,10 @@ static int FCheckWindowIsFloating(Window w)
 
 	if (XGetClassHint(fluorite.dpy, w, &name))
 	{
-		for (long unsigned int i = 0; default_floating[i]; i++)
+		for (long unsigned int i = 0; floating_windows[i]; i++)
 		{
-			if (strcmp(default_floating[i], name.res_class) == 0 ||
-					strcmp(default_floating[i], name.res_name) == 0)
+			if (strcmp(floating_windows[i], name.res_class) == 0 ||
+					strcmp(floating_windows[i], name.res_name) == 0)
 			{
 				XFree(name.res_name);
 				XFree(name.res_class);
@@ -1588,7 +1662,7 @@ static int FCheckWindowIsFloating(Window w)
 	if (XGetTransientForHint(fluorite.dpy, w, &tr))
 		ret_val = True;
 
-	if (fluorite.conf.oif)
+	if (fluorite.conf.ff)
 		ret_val = True;
 	
 	XFree(p);
@@ -1608,9 +1682,9 @@ static int FCheckWindowIsFixed(Window w)
 
 	if (XGetClassHint(fluorite.dpy, w, &name))
 	{
-		for (long unsigned int i = 0; default_fixed[i]; i++)
+		for (long unsigned int i = 0; fixed_windows[i]; i++)
 		{
-			if (strcmp(default_fixed[i], name.res_class) == 0 || strcmp(default_fixed[i], name.res_name) == 0)
+			if (strcmp(fixed_windows[i], name.res_class) == 0 || strcmp(fixed_windows[i], name.res_name) == 0)
 			{
 				XFree(name.res_name);
 				XFree(name.res_class);
@@ -1706,22 +1780,25 @@ static void FConfigureRequest(XEvent ev)
 static void FKeyPress(XEvent ev)
 {
 	XKeyPressedEvent e = ev.xkey;
-	for (long unsigned int i = 0; binds[i].key; i++)
+
+	for (long unsigned int i = 0; i < (long unsigned int) binds_count; i++)
 	{
-		if (e.keycode == XKeysymToKeycode(fluorite.dpy, binds[i].key) && MODMASK(binds[i].mod) == MODMASK(e.state))
+		switch (binds[i].type)
 		{
-				switch (binds[i].type)
-				{
-					case INT:
-						binds[i].int_fun(binds[i].int_arg);
-						break;
-					case CHAR:
-						binds[i].char_fun(binds[i].char_arg);
-						break;
-					default:
-						binds[i].fun();
-						break;
-				}
+			case INT:
+				if (e.keycode == XKeysymToKeycode(fluorite.dpy, binds[i].key) && MODMASK(binds[i].mod) == MODMASK(e.state) && binds[i].int_fun)
+					binds[i].int_fun(binds[i].int_arg);
+				break;
+			case CHAR:
+				if (e.keycode == XKeysymToKeycode(fluorite.dpy, binds[i].key) && MODMASK(binds[i].mod) == MODMASK(e.state) && binds[i].char_fun && binds[i].char_arg)
+					binds[i].char_fun(binds[i].char_arg);
+				break;
+			case VOID:
+				if (e.keycode == XKeysymToKeycode(fluorite.dpy, binds[i].key) && MODMASK(binds[i].mod) == MODMASK(e.state) && binds[i].void_fun)
+					binds[i].void_fun();
+				break;
+			default:
+				break;
 		}
 	}
 }
@@ -2067,21 +2144,22 @@ static Windows *FDelWindow(Windows *cw, Windows *w)
 	return cw;
 }
 
-void FExecute(char *argument)
+static void FExecute(char *argument)
 {
-	strcat(argument, " &");
-	if (system(argument) == -1)
+	char *prepared_cmd = strdup(argument);
+	strcat(prepared_cmd, " &");
+	if (system(prepared_cmd) == -1)
 		printf("Failed to execute program\n");
 }
 
-void FQuit()
+static void FQuit()
 {
 	free(fluorite.mon);
 	xdo_free(fluorite.xdo);
 	XCloseDisplay(fluorite.dpy);
 }
 
-void FCloseWindow()
+static void FCloseWindow()
 {
     Window focused;
     int revert;
@@ -2425,7 +2503,7 @@ redraw:
 	FApplyBorders();
 }
 
-void FShowWorkspace(int ws)
+static void FShowWorkspace(int ws)
 {
 	if (ws == fluorite.cr_ws)
 		return ;
@@ -2488,7 +2566,7 @@ void FShowWorkspace(int ws)
 	FApplyBorders();
 }
 
-void FSendWindowToWorkspace(int ws)
+static void FSendWindowToWorkspace(int ws)
 {
 	Window focused;
 	int revert;
@@ -2579,7 +2657,7 @@ next:
 		FShowWorkspace(ws);
 }
 
-void FNextWorkspace()
+static void FNextWorkspace()
 {
 	int ws = fluorite.cr_ws + 1;
 	if (ws == MAX_WS)
@@ -2587,7 +2665,7 @@ void FNextWorkspace()
 	FShowWorkspace(ws);
 }
 
-void FPrevWorkspace()
+static void FPrevWorkspace()
 {
 	int ws = fluorite.cr_ws - 1;
 	if (ws < 0)
@@ -2595,7 +2673,7 @@ void FPrevWorkspace()
 	FShowWorkspace(ws);
 }
 
-void FRotateStackWindows(int mode)
+static void FRotateStackWindows(int mode)
 {
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		return;
@@ -2674,7 +2752,7 @@ redraw:
 }
 
 
-void FRotateWindows(int mode)
+static void FRotateWindows(int mode)
 {
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		return;
@@ -2741,17 +2819,18 @@ void FRotateWindows(int mode)
 }
 
 
-void FChangeMasterOffset(int mode)
+static void FChangeMasterOffset(int mode)
 {
 	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
 		return ;
 
+	// I know it's reversed, don't ask why
 	switch (mode)
 	{
-		case UP:
+		case DOWN:
 			fluorite.ws[fluorite.cr_ws].mo += 25;
 			break;
-		case DOWN:
+		case UP:
 			fluorite.ws[fluorite.cr_ws].mo -= 25;
 			break;
 		case RESET:
@@ -2764,7 +2843,7 @@ void FChangeMasterOffset(int mode)
 }
 
 // TODO: Fix this when floating will be implemented fully
-void FSwapWithMaster()
+static void FSwapWithMaster()
 {
 	Window focused;
 	int revert;
@@ -2789,7 +2868,7 @@ found:
 	no_refocus = False;
 }
 
-void FFocusNext()
+static void FFocusNext()
 {
 	if (!fluorite.ws[fluorite.cr_ws].t_wins ||
 			!fluorite.ws[fluorite.cr_ws].t_wins->next ||
@@ -2826,7 +2905,7 @@ void FFocusNext()
 	FApplyBorders();
 }
 
-void FFocusPrev()
+static void FFocusPrev()
 {
 	Windows *last;
 
@@ -2867,7 +2946,7 @@ void FFocusPrev()
 	FApplyBorders();
 }
 
-void FTileWindow()
+static void FTileWindow()
 {
 	Window focused;
 	int revert;
@@ -2894,7 +2973,7 @@ void FTileWindow()
 	FApplyBorders();
 }
 
-void FTileAllWindows()
+static void FTileAllWindows()
 {
 	Windows *w;
 	Windows *prev;
@@ -2914,7 +2993,7 @@ void FTileAllWindows()
 	FApplyBorders();
 }
 
-void FChangeLayout(int layout)
+static void FChangeLayout(int layout)
 {
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		return;
@@ -2937,7 +3016,7 @@ void FChangeLayout(int layout)
 	FApplyBorders();
 }
 
-void FFullscreenToggle()
+static void FFullscreenToggle()
 {
 	Window focused;
 	int revert;
@@ -2977,7 +3056,7 @@ exit:
 	return ;
 }
 
-void FFloatingHideShow()
+static void FFloatingHideShow()
 {
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		return; 
@@ -3022,7 +3101,7 @@ void FFloatingHideShow()
 	no_unmap = False;
 }
 
-void FSendWindowToNextWorkspace()
+static void FSendWindowToNextWorkspace()
 {
 	int ws = fluorite.cr_ws + 1;
 	if (ws == MAX_WS)
@@ -3030,7 +3109,7 @@ void FSendWindowToNextWorkspace()
 	FSendWindowToWorkspace(ws);
 }
 
-void FSendWindowToPrevWorkspace()
+static void FSendWindowToPrevWorkspace()
 {
 	int ws = fluorite.cr_ws - 1;
 	if (ws < 0)
@@ -3038,7 +3117,7 @@ void FSendWindowToPrevWorkspace()
 	FSendWindowToWorkspace(ws);
 }
 
-void FFocusNextMonitor()
+static void FFocusNextMonitor()
 {
 	Windows *w;
 	int mon = fluorite.cr_mon + 1;
@@ -3081,7 +3160,7 @@ next:
 		FApplyBorders();
 }
 
-void FResetMasterOffset()
+static void FResetMasterOffset()
 {
 	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
 		return ;
@@ -3115,7 +3194,7 @@ static Scratchpads *FCreateOrGetScratchpad(KeySym key)
 	return p;
 }
 
-void FAddWindowToScratchpad()
+static void FAddWindowToScratchpad()
 {
 	XEvent ev;
 	Window focused;
@@ -3192,7 +3271,7 @@ next:
 	FPolybarScratchpadsIPC();
 }
 
-void FDelWindowFromScratchpad()
+static void FDelWindowFromScratchpad()
 {
 	if (fluorite.hpads == -1)
 		return;
@@ -3227,7 +3306,7 @@ void FDelWindowFromScratchpad()
 	FPolybarScratchpadsIPC();
 }
 
-void FScratchpadHideShow()
+static void FScratchpadHideShow()
 {
 	XEvent ev;
 	KeySym key;
@@ -3304,7 +3383,7 @@ void FScratchpadHideShow()
 	FPolybarScratchpadsIPC();
 }
 
-void FCenterScratchpadWindow()
+static void FCenterScratchpadWindow()
 {
 	Window focused;
 	int revert;
@@ -3547,7 +3626,7 @@ static void FResetMonitorStrut(int mon)
 	fluorite.mon[mon].sb = 0;
 }
 
-void FToggleFixedStrut()
+static void FToggleFixedStrut()
 {
 	if (fluorite.mon[fluorite.cr_mon].fx_hdn)
 	{
@@ -3573,7 +3652,7 @@ void FToggleFixedStrut()
 	}
 }
 
-void FCycleLayouts()
+static void FCycleLayouts()
 {
 	switch (fluorite.ws[fluorite.cr_ws].layout)
 	{
