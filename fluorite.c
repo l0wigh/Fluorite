@@ -273,12 +273,12 @@ static int no_warp = False;
 static int no_refocus = False;
 static unsigned int numlockmask = 0;
 static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
-static char **workspace_names;
+static char **workspaces_names;
 static char **floating_windows;
 static char **fixed_windows;
 static char **swallowing_windows;
-static NeoBindings *binds;
-static int binds_count;
+static NeoBindings *binds = NULL;
+static int binds_count = 0;
 static UserFunc user_functions_list[] = {
 	{"close_window",				VOID,	FCloseWindow, NULL, NULL},
 	{"swap_with_master",			VOID,	FSwapWithMaster, NULL, NULL},
@@ -337,7 +337,7 @@ static void FInit()
 	XSetErrorHandler(FErrorHandler);
 	FApplyProps();
 	FLoadXresources();
-	workspace_names = (char **) calloc(10, sizeof(char *));
+	workspaces_names = (char **) calloc(10, sizeof(char *));
 	floating_windows = (char **) calloc(1, sizeof(char *));
 	fixed_windows = (char **) calloc(1, sizeof(char *));
 	swallowing_windows = (char **) calloc(1, sizeof(char *));
@@ -426,12 +426,14 @@ static void FLoadDefaultConfig()
 	fluorite.conf.jtu = True;
 	for (int i = 0; i < 10; i++)
 	{
+		if (workspaces_names[i])
+			free(workspaces_names[i]);
 		char name[2] = { 0 };
 		if (i == 9)
 			name[1] = '0';
 		else
-			name[1] = i + 31;
-		workspace_names[i] = strdup(name);
+			name[1] = i + '1';
+		workspaces_names[i] = strdup(name);
 	}
 }
 
@@ -518,7 +520,7 @@ static void FInitMonitors()
 		FRedrawWindows();
 		XSync(fluorite.dpy, True);
 		FApplyBorders();
-		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 		no_warp = False;
 	}
 }
@@ -550,7 +552,7 @@ static void FApplyProps()
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_WM_VISIBLE_NAME", False), XInternAtom(fluorite.dpy, "UTF8_STRING", False), 8, PropModeReplace, (const unsigned char *) "Fluorite", strlen("Fluorite"));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False), XA_WINDOW, 32, PropModeReplace, (const unsigned char *) &fluorite.root, 1);
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False), XA_CARDINAL, 32, PropModeReplace, (const unsigned char *)&num_work_atom, 1);
-	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
+	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspaces_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 	Atom supported[8] = {
@@ -719,6 +721,7 @@ static void FParseModsAndKeys(cfg_t *user_bind, NeoBindings *b)
 static void FParseBindings(cfg_t *cfg)
 {
 	int next_bind;
+	int old_binds = binds_count;
 	NeoBindings *b = (NeoBindings *) calloc(cfg_size(cfg, "bind") + 1, sizeof(NeoBindings));
 
 	binds_count = 0;
@@ -778,7 +781,12 @@ static void FParseBindings(cfg_t *cfg)
 		}
 	}
 	if (binds)
+	{
+		for (int i = 0; i < old_binds; i++)
+			if (binds[i].type == CHAR && binds[i].char_arg)
+				free(binds[i].char_arg);
 		free(binds);
+	}
 	binds = b;
 	b = NULL;
 }
@@ -834,33 +842,44 @@ static void FReloadConfig()
 		fluorite.conf.sl = CENTERED;
 	else if (strcasecmp(sl, "Stacked") == 0)
 		fluorite.conf.sl = STACKED;
+	free(sl);
 
 	for (int i = 0; i < (int) cfg_size(cfg, "workspaces_names"); i++)
 	{
-		if (workspace_names[i])
-			free(workspace_names[i]);
-		workspace_names[i] = strdup(cfg_getnstr(cfg, "workspaces_names", i));
+		if (workspaces_names[i])
+			free(workspaces_names[i]);
+		workspaces_names[i] = strdup(cfg_getnstr(cfg, "workspaces_names", i));
 	}
-	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspace_names, MAX_WS, XUTF8StringStyle, &text);
+	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspaces_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
+	XFree(text.value);
 
-	for (int i = 0; floating_windows[i]; i++)
-		free(floating_windows[i]);
-	free(floating_windows);
+	if (floating_windows)
+	{
+		for (int i = 0; floating_windows[i]; i++)
+			free(floating_windows[i]);
+		free(floating_windows);
+	}
 	floating_windows = (char **) calloc(cfg_size(cfg, "floating_windows") + 1, sizeof(char *));
 	for (int i = 0; i < (int) cfg_size(cfg, "floating_windows"); i++)
 		floating_windows[i] = strdup(cfg_getnstr(cfg, "floating_windows", i));
 
-	for (int i = 0; fixed_windows[i]; i++)
-		free(fixed_windows[i]);
-	free(fixed_windows);
+	if (fixed_windows)
+	{
+		for (int i = 0; fixed_windows[i]; i++)
+			free(fixed_windows[i]);
+		free(fixed_windows);
+	}
 	fixed_windows = (char **) calloc(cfg_size(cfg, "fixed_windows") + 1, sizeof(char *));
 	for (int i = 0; i < (int) cfg_size(cfg, "fixed_windows"); i++)
 		fixed_windows[i] = strdup(cfg_getnstr(cfg, "fixed_windows", i));
 
-	for (int i = 0; swallowing_windows[i]; i++)
-		free(swallowing_windows[i]);
-	free(swallowing_windows);
+	if (swallowing_windows)
+	{
+		for (int i = 0; swallowing_windows[i]; i++)
+			free(swallowing_windows[i]);
+		free(swallowing_windows);
+	}
 	swallowing_windows = (char **) calloc(cfg_size(cfg, "swallowing_windows") + 1, sizeof(char *));
 	for (int i = 0; i < (int) cfg_size(cfg, "swallowing_windows"); i++)
 		swallowing_windows[i] = strdup(cfg_getnstr(cfg, "swallowing_windows", i));
@@ -878,7 +897,6 @@ static void FReloadConfig()
 	XUngrabKey(fluorite.dpy, AnyKey, AnyModifier, fluorite.root);
 	FGrabKeys(fluorite.root);
 
-	// TODO: Add a way to not change focus
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
 	FApplyBorders();
