@@ -3001,6 +3001,7 @@ static void FTileWindow()
 		}
 	}
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 }
 
@@ -3019,8 +3020,11 @@ static void FTileAllWindows()
 	fluorite.ws[fluorite.cr_ws].t_wins->prev = prev;
 	fluorite.ws[fluorite.cr_ws].t_wins = fluorite.ws[fluorite.cr_ws].f_wins;
 	fluorite.ws[fluorite.cr_ws].f_wins = NULL;
+	FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+	fluorite.ws[fluorite.cr_ws].t_wins->fc = True;
 
 	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 	FApplyBorders();
 }
 
