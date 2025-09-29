@@ -279,6 +279,9 @@ static char **fixed_windows;
 static char **swallowing_windows;
 static NeoBindings *binds = NULL;
 static int binds_count = 0;
+static Cursor cnorm;
+static Cursor cmove;
+static Cursor cresz;
 static UserFunc user_functions_list[] = {
 	{"close_window",				VOID,	FCloseWindow, NULL, NULL},
 	{"swap_with_master",			VOID,	FSwapWithMaster, NULL, NULL},
@@ -564,7 +567,10 @@ static void FApplyProps()
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 7);
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
 	XSelectInput(fluorite.dpy, fluorite.root, attributes.event_mask);
-	XDefineCursor(fluorite.dpy, fluorite.root, XcursorLibraryLoadCursor(fluorite.dpy, "arrow"));
+	cnorm = XcursorLibraryLoadCursor(fluorite.dpy, "arrow");
+	cmove = XcursorLibraryLoadCursor(fluorite.dpy, "fleur");
+	cresz = XcursorLibraryLoadCursor(fluorite.dpy, "bottom_right_corner");
+	XDefineCursor(fluorite.dpy, fluorite.root, cnorm);
 	XRRSelectInput(fluorite.dpy, fluorite.root, RROutputChangeNotifyMask | RRCrtcChangeNotifyMask | RRScreenChangeNotifyMask);
 	XSync(fluorite.dpy, True);
 	XFree(text.value);
@@ -929,6 +935,10 @@ static void FRun()
 				break;
 			case ButtonPress:
 				FButtonPress(ev);
+				break;
+			case ButtonRelease:
+				for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+					XDefineCursor(fluorite.dpy, w->w, cnorm);
 				break;
 			case KeyPress:
 				FKeyPress(ev);
@@ -2406,6 +2416,7 @@ found:
 	no_warp = True;
 	if (ev.xmotion.state & Button1Mask)
 	{
+		XDefineCursor(fluorite.dpy, target->w, cmove);
 		ddx = fluorite.mouse.swx + dpx;
 		ddy = fluorite.mouse.swy + dpy;
 		XMoveWindow(fluorite.dpy, target->w, ddx, ddy);
@@ -2417,6 +2428,7 @@ found:
 	}
 	else if (ev.xmotion.state & Button3Mask)
 	{
+		XDefineCursor(fluorite.dpy, target->w, cresz);
 		ddx = fluorite.mouse.sww + dpx;
 		ddy = fluorite.mouse.swh + dpy;
 		XResizeWindow(fluorite.dpy, target->w, ddx, ddy);
@@ -2426,6 +2438,7 @@ found:
 		hints.height = ddy;
 		goto pressed;
 	}
+	XDefineCursor(fluorite.dpy, target->w, cnorm);
 	goto exit;
 
 pressed:
