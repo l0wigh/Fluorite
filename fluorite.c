@@ -1643,7 +1643,6 @@ next:
 		if (focused == w->w)
 			FApplyActiveWindow(focused);
 	}
-
 }
 
 static int FCheckWindowIsFloating(Window w)
@@ -3692,19 +3691,16 @@ static void FCycleLayouts()
 	switch (fluorite.ws[fluorite.cr_ws].layout)
 	{
 		case CASCADE:
-			fluorite.ws[fluorite.cr_ws].layout = DWM;
+			FChangeLayout(DWM);
 			break;
 		case DWM:
-			fluorite.ws[fluorite.cr_ws].layout = CENTERED;
+			FChangeLayout(CENTERED);
 			break;
 		case CENTERED:
-			fluorite.ws[fluorite.cr_ws].layout = STACKED;
+			FChangeLayout(STACKED);
 			break;
 		case STACKED:
-			fluorite.ws[fluorite.cr_ws].layout = CASCADE;
+			FChangeLayout(CASCADE);
 			break;
 	}
-	FRedrawWindows();
-	XSync(fluorite.dpy, True);
-	FApplyBorders();
 }
