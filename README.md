@@ -84,6 +84,6 @@ initial = 1 ; Will check on startup if there is already some Scratchpads
 
 ## Documentation ?
 
-Go to [Fluorite Website](https://fluorite.surge.sh) for more informations. (Currently kind of outdated)
+Go to [Fluorite Website](https://fluorite.surge.sh) for more informations.
 
 You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
