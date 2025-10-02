@@ -272,7 +272,6 @@ static int no_unmap = False;
 static int no_warp = False;
 static int no_refocus = False;
 static unsigned int numlockmask = 0;
-static int default_monitor_workspace[10] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 static char **workspaces_names;
 static char **floating_windows;
 static char **fixed_windows;
@@ -478,13 +477,11 @@ static void FInitMonitors()
 		fluorite.mon[i].my = infos[i].y;
 		fluorite.mon[i].mw = infos[i].width;
 		fluorite.mon[i].mh = infos[i].height;
-		fluorite.mon[i].ws = default_monitor_workspace[i] - 1;
+		fluorite.mon[i].ws = i;
 		FResetMonitorStrut(i);
 		fluorite.mon[i].primary = False;
 		fluorite.mon[i].fx_win = NULL;
 		fluorite.mon[i].fx_hdn = False;
-		if (default_monitor_workspace[i] == 0)
-			fluorite.mon[i].ws = 9;
 		if (infos[i].primary)
 		{
 			fluorite.mon[i].primary = True;
@@ -939,6 +936,9 @@ static void FRun()
 			case ButtonRelease:
 				for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 					XDefineCursor(fluorite.dpy, w->w, cnorm);
+				if (fluorite.hpads != -1)
+					for (Windows *w = fluorite.pads[fluorite.hpads]->s_wins; w != NULL; w = w->next)
+						XDefineCursor(fluorite.dpy, w->w, cnorm);
 				break;
 			case KeyPress:
 				FKeyPress(ev);
