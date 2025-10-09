@@ -1,5 +1,5 @@
 # Workflow bugs
-- None
+- [ ] Better handling of focus if fluorite.ws[fluorite.cr_ws].fl_hdn !!!!
 
 # TODO
 - Nothing

@@ -1633,7 +1633,19 @@ next:
 		XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 		if (focused == w->w)
-			FApplyActiveWindow(focused);
+		{
+			if (!fluorite.ws[fluorite.cr_ws].fl_hdn)
+				FApplyActiveWindow(focused);
+			else
+			{
+				w->fc = False;
+				if (fluorite.ws[fluorite.cr_ws].t_wins)
+				{
+					fluorite.ws[fluorite.cr_ws].t_wins->fc = True;
+					break;
+				}
+			}
+		}
 	}
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w; w = w->next)

@@ -52,7 +52,7 @@ install: re
 		if [[ "$$response" =~ ^(oui|o|y|yes)$$ ]]; then \
 			printf "\033[2K\r$(TOTEM) ${BLU}[INFO]${RST} Installing the Standard configuration$(END)\n"; \
 			mkdir -p ~/.config/fluorite 2> /dev/null; \
-			cp ./config/example.conf ~/.config/fluorite/fluorite.conf; \
+			cp ./config/standard.conf ~/.config/fluorite/fluorite.conf; \
 			printf "\033[2K\r${GRN}$(TOTEM) [OK]${RST} Configuration installed at ~/.config/fluorite/fluorite.conf successfully$(END)\n"; \
 		elif [[ "$$response" =~ ^(dev|d)$$ ]]; then \
 			printf "\033[2K\r$(TOTEM) ${BLU}[INFO]${RST} Installing the L0Wigh configuration$(END)\n"; \

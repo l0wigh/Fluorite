@@ -51,7 +51,7 @@ make install
 
 ``` sh
 [[ -f ~/.Xresources ]] && xrdb -merge -I$HOME ~/.Xresources # For autoloading your Xresources file
-setxkbmap -layout fr
+setxkbmap fr
 polybar &
 picom &
 exec Fluorite
