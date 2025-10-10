@@ -16,6 +16,7 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 - Dynamic (re)configuration for your options and bindings using configuration file.
 - Dynamic (re)configuration for your theme using Xresources. "Wow is that Hyprland ?"
 - Dynamic scratchpads that you bind to any of your keyboard keys. No need for thousands of bindings in your configuration.
+- Organizer mode to help you manage your windows arrangement. (PS: Organizer is awesome, but will not manage your life)
 - Window swallowing. Get that useless terminal out of your way.
 - EWMH handling. Give you more features without more configuration required
 - Polybar IPC. Active Layout and Scratchpads should not be some kind of secrets
