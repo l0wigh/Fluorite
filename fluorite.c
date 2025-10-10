@@ -2320,6 +2320,7 @@ static Window FGetToplevel(Window w)
 
 static void FButtonPress(XEvent ev)
 {
+	if (fluorite.orgz) return;
 	unsigned b_w, d;
 	unsigned xdo_w, xdo_h;
 	Screen *scr;
