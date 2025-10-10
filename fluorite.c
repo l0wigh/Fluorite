@@ -2027,6 +2027,8 @@ static void FDestroyNotify(XEvent ev)
 {
 	int ws;
 
+	if (fluorite.orgz) FToggleOrganizer();
+
 	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
 		for (Windows *fx = fluorite.mon[i].fx_win; fx != NULL; fx = fx->next)
@@ -2825,8 +2827,17 @@ static void FRotateWindows(int mode)
 				{
 					if (w->fc)
 					{
-						if (!w || !w->prev)
+						if (!w->prev)
+						{
+							Windows *l = fluorite.ws[fluorite.cr_ws].t_wins;
+							for (; l->next != NULL; l = l->next);
+							w->next->prev = NULL;
+							fluorite.ws[fluorite.cr_ws].t_wins = w->next;
+							w->next = NULL;
+							l->next = w;
+							w->prev = l;
 							goto redraw;
+						}
 						Windows *prev = w->prev;
 						Windows *next = w->next;
 						Windows *n_prev = prev->prev;
@@ -2865,7 +2876,14 @@ static void FRotateWindows(int mode)
 					if (w->fc)
 					{
 						if (!w->next)
+						{
+							w->prev->next = NULL;
+							w->prev = NULL;
+							fluorite.ws[fluorite.cr_ws].t_wins->prev = w;
+							w->next = fluorite.ws[fluorite.cr_ws].t_wins;
+							fluorite.ws[fluorite.cr_ws].t_wins = w;
 							goto redraw;
+						}
 						Windows *next = w->next;
 						Windows *prev = w->prev;
 						Windows *n_next = next ? next->next : NULL;
@@ -3846,6 +3864,8 @@ static void FToggleOrganizer()
 				XMapWindow(fluorite.dpy, s->w);
 	}
 
+	FResetMonitorStrut(fluorite.cr_mon);
+	FRecalculateStrut(fluorite.cr_mon);
 	fluorite.orgz = !fluorite.orgz;
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
@@ -3857,14 +3877,14 @@ static void FToggleOrganizer()
 
 static void FRedrawOrganizer()
 {
-	int s_off = fluorite.mon[fluorite.cr_mon].mw / FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) - (fluorite.conf.gp * 5);
+	int s_off = (fluorite.mon[fluorite.cr_mon].mw - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr)) / FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) - (fluorite.conf.gp * 4);
 	int i = 0;
 	int wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.conf.gp * 2) + fluorite.mon[fluorite.cr_mon].st;
-	int wh = fluorite.mon[fluorite.cr_mon].mh - (fluorite.conf.gp * 4) - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
+	int wh = fluorite.mon[fluorite.cr_mon].mh - (fluorite.conf.bw * 2) - (fluorite.conf.gp * 4) - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
-		int wx = fluorite.mon[fluorite.cr_mon].mx + (i * s_off) + fluorite.conf.gp * 2;
+		int wx = fluorite.mon[fluorite.cr_mon].mx + (i * s_off) + fluorite.conf.gp * 2 + fluorite.mon[fluorite.cr_mon].sl;
 		if (i > 0) wx += i * fluorite.conf.gp * 4;
 		int ww = s_off;
 		XResizeWindow(fluorite.dpy, w->w, ww, wh);
