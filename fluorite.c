@@ -273,6 +273,7 @@ static Fluorite fluorite;
 static int no_unmap = False;
 static int no_warp = False;
 static int no_refocus = False;
+static int no_redraw = False;
 static unsigned int numlockmask = 0;
 static char **workspaces_names;
 static char **floating_windows;
@@ -1553,6 +1554,7 @@ static void FMoveWindowBasedOnMonitor(Windows *w)
 
 static void FRedrawWindows()
 {
+	if (no_redraw) return;
 	if (fluorite.orgz)
 	{
 		FRedrawOrganizer();
@@ -1895,7 +1897,9 @@ static void FUnmapNotify(XEvent ev)
 	int ws;
 
 	if (no_unmap) return;
+	no_redraw = True;
 	if (fluorite.orgz) FToggleOrganizer();
+	no_redraw = False;
 	if (fluorite.hpads == -1) goto next;
 
 	Scratchpads *p = fluorite.pads[fluorite.hpads];
@@ -3885,6 +3889,11 @@ static void FToggleOrganizer()
 
 static void FRedrawOrganizer()
 {
+	if (FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
+	{
+		FToggleOrganizer();
+		return ;
+	}
 	int s_off = (fluorite.mon[fluorite.cr_mon].mw - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr)) / FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) - (fluorite.conf.gp * 4);
 	int i = 0;
 	int wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.conf.gp * 2) + fluorite.mon[fluorite.cr_mon].st;
