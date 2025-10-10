@@ -2052,7 +2052,6 @@ static void FDestroyNotify(XEvent ev)
 		}
 	}
 
-
 	ws = FFindWorkspaceFromWindow(ev.xdestroywindow.window);
 	if (ws == -1)
 		return;
@@ -3459,12 +3458,14 @@ static void FSearchAndDestoryGhostWindows()
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 		if (!FWindowExists(fluorite.dpy, w->w))
 			fluorite.ws[fluorite.cr_ws].f_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
-	// for (int i = 0; i < HASH_SIZE; i++)
-	// {
-	// 	for (Windows *w = fluorite.pads[i]->s_wins; w != NULL; w = w->next)
-	// 		if (!FWindowExists(fluorite.dpy, w->w))
-	// 			fluorite.pads[i]->s_wins = FDelWindow(fluorite.pads[i]->s_wins, w);
-	// }
+	for (int i = 0; i < HASH_SIZE; i++)
+	{
+		if (!fluorite.pads[i]) continue;
+		for (Windows *w = fluorite.pads[i]->s_wins; w != NULL; w = w->next)
+			if (!FWindowExists(fluorite.dpy, w->w))
+				fluorite.pads[i]->s_wins = FDelWindow(fluorite.pads[i]->s_wins, w);
+	}
+	FPolybarScratchpadsIPC();
 }
 
 static void FPolybarLayoutIPC(const int msg)
