@@ -120,7 +120,6 @@ typedef struct
 	cfg_bool_t	wc;
 	cfg_bool_t	jtu;
 	KeySym		mt;
-	char		*home;
 } Configuration;
 
 typedef struct
