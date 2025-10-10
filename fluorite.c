@@ -3495,6 +3495,7 @@ static void FScratchpadHideShow()
 	FRemoveActiveWindow();
 	if (fluorite.hpads != hkey || fluorite.hpads == -1)
 	{
+		int found = False;
 		for (Windows *w = p->s_wins; w != NULL; w = w->next)
 		{
 			XMapWindow(fluorite.dpy, w->w);
@@ -3503,7 +3504,14 @@ static void FScratchpadHideShow()
 			{
 				XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bf);
 				XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+				found = True;
 			}
+		}
+		if (!found)
+		{
+			p->s_wins->fc = True;
+			XSetWindowBorder(fluorite.dpy, p->s_wins->w, fluorite.conf.bf);
+			XSetInputFocus(fluorite.dpy, p->s_wins->w, RevertToPointerRoot, CurrentTime);
 		}
 		fluorite.hpads = hkey;
 		FRedrawWindows();
