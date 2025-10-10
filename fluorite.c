@@ -184,6 +184,7 @@ typedef struct
 	int				xrandr_ev;
 	Scratchpads		*pads[HASH_SIZE];
 	int				hpads;
+	int				orgz;
 } Fluorite;
 
 /* DEF: functions */
@@ -252,7 +253,7 @@ static void 	FSendWindowToWorkspace(int ws);
 static void 	FTileWindow();
 static void 	FChangeLayout(int layout);
 static void 	FTileAllWindows();
-static void 	FFullscreenToggle();
+static void 	FToggleFullscreen();
 static void 	FFloatingHideShow();
 static void 	FSendWindowToNextWorkspace();
 static void 	FSendWindowToPrevWorkspace();
@@ -265,6 +266,8 @@ static void 	FScratchpadHideShow();
 static void 	FCenterScratchpadWindow();
 static void 	FToggleFixedStrut();
 static void 	FCycleLayouts();
+static void		FToggleOrganizer();
+static void		FRedrawOrganizer();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -290,7 +293,7 @@ static UserFunc user_functions_list[] = {
 	{"focus_prev_workspace",		VOID,	FPrevWorkspace, NULL, NULL},
 	{"tile_window",					VOID,	FTileWindow, NULL, NULL},
 	{"tile_all",					VOID,	FTileAllWindows, NULL, NULL},
-	{"toggle_fullscreen",			VOID,	FFullscreenToggle, NULL, NULL},
+	{"toggle_fullscreen",			VOID,	FToggleFullscreen, NULL, NULL},
 	{"hide_show_floating",			VOID,	FFloatingHideShow, NULL, NULL},
 	{"hide_show_scratchpad",		VOID,	FScratchpadHideShow, NULL, NULL},
 	{"send_window_next_workspace",	VOID,	FSendWindowToNextWorkspace, NULL, NULL},
@@ -303,6 +306,7 @@ static UserFunc user_functions_list[] = {
 	{"toggle_fixed_strut",			VOID,	FToggleFixedStrut, NULL, NULL},
 	{"cycle_layouts",				VOID,	FCycleLayouts, NULL, NULL},
 	{"close_fluorite",				VOID,	FQuit, NULL, NULL},
+	{"toggle_organizer",			VOID,	FToggleOrganizer, NULL, NULL},
 	{"window_rotate",				INT,	NULL, FRotateWindows, NULL},
 	{"stack_rotate",				INT, 	NULL, FRotateStackWindows, NULL},
 	{"change_master_offset",		INT, 	NULL, FChangeMasterOffset, NULL},
@@ -334,6 +338,7 @@ static void FInit()
 	fluorite.cr_ws = 0;
 	fluorite.mon = NULL;
 	fluorite.hpads = -1;
+	fluorite.orgz = False;
 
 	XrmInitialize();
 	XSetErrorHandler(FErrorHandler);
@@ -1151,6 +1156,8 @@ found:
 
 static void FMapRequest(XEvent ev)
 {
+	if (fluorite.orgz) FToggleOrganizer();
+
 	Windows *nw = (Windows *) calloc(1, sizeof(Windows));
 	XWindowAttributes wa;
 	int is_floating = False;
@@ -1198,7 +1205,7 @@ static void FMapRequest(XEvent ev)
 			goto freeing;
 
 	if (fluorite.ws[fluorite.cr_ws].fs && !is_floating)
-		FFullscreenToggle();
+		FToggleFullscreen();
 
 	if (is_fixed)
 	{
@@ -1547,6 +1554,11 @@ static void FMoveWindowBasedOnMonitor(Windows *w)
 
 static void FRedrawWindows()
 {
+	if (fluorite.orgz)
+	{
+		FRedrawOrganizer();
+		return;
+	}
 	FSearchAndDestoryGhostWindows();
 	for (int i = 0; i < fluorite.ct_mon; i++)
 		FRecalculateStrut(i);
@@ -1883,15 +1895,9 @@ static void FUnmapNotify(XEvent ev)
 {
 	int ws;
 
-	if (no_unmap)
-	{
-		return;
-	}
-
-	if (fluorite.hpads == -1)
-	{
-		goto next;
-	}
+	if (no_unmap) return;
+	if (fluorite.orgz) FToggleOrganizer();
+	if (fluorite.hpads == -1) goto next;
 
 	Scratchpads *p = fluorite.pads[fluorite.hpads];
 	for (Windows *w = p->s_wins; w != NULL; w = w->next)
@@ -2184,6 +2190,7 @@ static Windows *FDelWindow(Windows *cw, Windows *w)
 
 static void FExecute(char *argument)
 {
+	if (fluorite.orgz) return;
 	char *prepared_cmd = strdup(argument);
 	strcat(prepared_cmd, " &");
 	if (system(prepared_cmd) == -1)
@@ -2199,6 +2206,7 @@ static void FQuit()
 
 static void FCloseWindow()
 {
+	if (fluorite.orgz) return;
     Window focused;
     int revert;
     XGetInputFocus(fluorite.dpy, &focused, &revert);
@@ -2546,7 +2554,7 @@ redraw:
 
 static void FShowWorkspace(int ws)
 {
-	if (ws == fluorite.cr_ws)
+	if (ws == fluorite.cr_ws || fluorite.orgz)
 		return ;
 
 	for (int i = 0; i < fluorite.ct_mon; i++)
@@ -2613,7 +2621,7 @@ static void FSendWindowToWorkspace(int ws)
 	int revert;
 	Windows *w;
 
-	if (ws == fluorite.cr_ws || (!fluorite.ws[fluorite.cr_ws].t_wins && !fluorite.ws[fluorite.cr_ws].f_wins))
+	if (ws == fluorite.cr_ws || (!fluorite.ws[fluorite.cr_ws].t_wins && !fluorite.ws[fluorite.cr_ws].f_wins) || fluorite.orgz)
 		return ;
 
 	no_unmap = True;
@@ -2700,6 +2708,8 @@ next:
 
 static void FNextWorkspace()
 {
+	if (fluorite.orgz) return;
+
 	int ws = fluorite.cr_ws + 1;
 	if (ws == MAX_WS)
 		ws = 0;
@@ -2708,6 +2718,8 @@ static void FNextWorkspace()
 
 static void FPrevWorkspace()
 {
+	if (fluorite.orgz) return;
+
 	int ws = fluorite.cr_ws - 1;
 	if (ws < 0)
 		ws = MAX_WS - 1;
@@ -2716,7 +2728,7 @@ static void FPrevWorkspace()
 
 static void FRotateStackWindows(int mode)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs)
+	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz)
 		return;
 
     Windows *first;
@@ -2807,6 +2819,32 @@ static void FRotateWindows(int mode)
 		case UP:
 			if (!fluorite.ws[fluorite.cr_ws].t_wins || !fluorite.ws[fluorite.cr_ws].t_wins->next)
 				return;
+			if (fluorite.orgz)
+			{
+				for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+				{
+					if (w->fc)
+					{
+						if (!w || !w->prev)
+							goto redraw;
+						Windows *prev = w->prev;
+						Windows *next = w->next;
+						Windows *n_prev = prev->prev;
+						if (next)
+							next->prev = prev;
+						prev->next = next;
+						w->prev = n_prev;
+						w->next = prev;
+						prev->prev = w;
+						if (n_prev)
+							n_prev->next = w;
+						else
+							fluorite.ws[fluorite.cr_ws].t_wins = w;
+						XRaiseWindow(fluorite.dpy, w->w);
+						goto redraw;
+					}
+				}
+			}
 			first = fluorite.ws[fluorite.cr_ws].t_wins;
 			last = first;
 			while (last->next)
@@ -2820,6 +2858,33 @@ static void FRotateWindows(int mode)
 		case DOWN:
 			if (!fluorite.ws[fluorite.cr_ws].t_wins || !fluorite.ws[fluorite.cr_ws].t_wins->next)
 				return;
+			if (fluorite.orgz)
+			{
+				for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+				{
+					if (w->fc)
+					{
+						if (!w->next)
+							goto redraw;
+						Windows *next = w->next;
+						Windows *prev = w->prev;
+						Windows *n_next = next ? next->next : NULL;
+						Windows *n_prev = next;
+						next->prev = prev;
+						if (prev)
+							prev->next = next;
+						else
+							fluorite.ws[fluorite.cr_ws].t_wins = next;
+						if (n_next)
+							n_next->prev = w;
+						w->next = n_next;
+						w->prev = n_prev;
+						n_prev->next = w;
+						XLowerWindow(fluorite.dpy, w->w);
+						goto redraw;
+					}
+				}
+			}
 			last = fluorite.ws[fluorite.cr_ws].t_wins;
 			while (last->next)
 				last = last->next;
@@ -2853,16 +2918,18 @@ static void FRotateWindows(int mode)
 			break;
 		}
 	}
+
+redraw:
 	FRedrawWindows();
-	FApplyBorders();
 	XSync(fluorite.dpy, True);
+	FApplyBorders();
 	no_refocus = False;
 }
 
 
 static void FChangeMasterOffset(int mode)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
+	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2 || fluorite.orgz)
 		return ;
 
 	// I know it's reversed, don't ask why
@@ -2886,6 +2953,8 @@ static void FChangeMasterOffset(int mode)
 // TODO: Fix this when floating will be implemented fully
 static void FSwapWithMaster()
 {
+	if (fluorite.orgz) return;
+
 	Window focused;
 	int revert;
 	XEvent ev;
@@ -2917,7 +2986,7 @@ static void FFocusNext()
 			fluorite.ws[fluorite.cr_ws].layout == STACKED)
 		return;
 
-	if (fluorite.ws[fluorite.cr_ws].layout == CASCADE)
+	if (fluorite.ws[fluorite.cr_ws].layout == CASCADE && !fluorite.orgz)
 	{
 		FFocusPrev();
 		return;
@@ -2970,7 +3039,7 @@ static void FFocusPrev()
 			}
 			else
 			{
-				if (fluorite.ws[fluorite.cr_ws].layout == CASCADE)
+				if (fluorite.ws[fluorite.cr_ws].layout == CASCADE && !fluorite.orgz)
 				{
 					fluorite.ws[fluorite.cr_ws].t_wins->next->fc = True;
 					XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->next->w, RevertToPointerRoot, CurrentTime);
@@ -2989,6 +3058,8 @@ static void FFocusPrev()
 
 static void FTileWindow()
 {
+	if (fluorite.orgz) return;
+
 	Window focused;
 	int revert;
 
@@ -3017,6 +3088,8 @@ static void FTileWindow()
 
 static void FTileAllWindows()
 {
+	if (fluorite.orgz) return;
+
 	Windows *w;
 	Windows *prev;
 
@@ -3040,7 +3113,7 @@ static void FTileAllWindows()
 
 static void FChangeLayout(int layout)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs)
+	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz)
 		return;
 
 	if (fluorite.ws[fluorite.cr_ws].layout == layout)
@@ -3061,8 +3134,10 @@ static void FChangeLayout(int layout)
 	FApplyBorders();
 }
 
-static void FFullscreenToggle()
+static void FToggleFullscreen()
 {
+	if (fluorite.orgz) return;
+
 	Window focused;
 	int revert;
 	Windows *w;
@@ -3103,7 +3178,7 @@ exit:
 
 static void FFloatingHideShow()
 {
-	if (fluorite.ws[fluorite.cr_ws].fs)
+	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz)
 		return; 
 	
 	no_unmap = True;
@@ -3148,6 +3223,8 @@ static void FFloatingHideShow()
 
 static void FSendWindowToNextWorkspace()
 {
+	if (fluorite.orgz) return;
+
 	int ws = fluorite.cr_ws + 1;
 	if (ws == MAX_WS)
 		ws = 0;
@@ -3156,6 +3233,8 @@ static void FSendWindowToNextWorkspace()
 
 static void FSendWindowToPrevWorkspace()
 {
+	if (fluorite.orgz) return;
+
 	int ws = fluorite.cr_ws - 1;
 	if (ws < 0)
 		ws = MAX_WS - 1;
@@ -3164,6 +3243,8 @@ static void FSendWindowToPrevWorkspace()
 
 static void FFocusNextMonitor()
 {
+	if (fluorite.orgz) return;
+
 	Windows *w;
 	int mon = fluorite.cr_mon + 1;
 	if (mon == fluorite.ct_mon)
@@ -3207,7 +3288,7 @@ next:
 
 static void FResetMasterOffset()
 {
-	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
+	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2 || fluorite.orgz)
 		return ;
 	fluorite.ws[fluorite.cr_ws].mo = fluorite.conf.mo;
 	FRedrawWindows();
@@ -3241,6 +3322,8 @@ static Scratchpads *FCreateOrGetScratchpad(KeySym key)
 
 static void FAddWindowToScratchpad()
 {
+	if (fluorite.orgz) return;
+
 	XEvent ev;
 	Window focused;
 	int revert;
@@ -3318,7 +3401,7 @@ next:
 
 static void FDelWindowFromScratchpad()
 {
-	if (fluorite.hpads == -1)
+	if (fluorite.hpads == -1 || fluorite.orgz)
 		return;
 
 	Window focused;
@@ -3353,6 +3436,8 @@ static void FDelWindowFromScratchpad()
 
 static void FScratchpadHideShow()
 {
+	if (fluorite.orgz) return;
+	
 	XEvent ev;
 	KeySym key;
 	Scratchpads *p, *op;
@@ -3430,6 +3515,8 @@ static void FScratchpadHideShow()
 
 static void FCenterScratchpadWindow()
 {
+	if (fluorite.orgz) return;
+
 	Window focused;
 	int revert;
 	Windows *w;
@@ -3675,6 +3762,8 @@ static void FResetMonitorStrut(int mon)
 
 static void FToggleFixedStrut()
 {
+	if (fluorite.orgz) return;
+
 	if (fluorite.mon[fluorite.cr_mon].fx_hdn)
 	{
 		fluorite.mon[fluorite.cr_mon].fx_hdn = !fluorite.mon[fluorite.cr_mon].fx_hdn;
@@ -3701,6 +3790,8 @@ static void FToggleFixedStrut()
 
 static void FCycleLayouts()
 {
+	if (fluorite.orgz) return;
+
 	switch (fluorite.ws[fluorite.cr_ws].layout)
 	{
 		case CASCADE:
@@ -3715,5 +3806,69 @@ static void FCycleLayouts()
 		case STACKED:
 			FChangeLayout(CASCADE);
 			break;
+	}
+}
+
+static void FToggleOrganizer()
+{
+	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
+		return;
+
+	if (!fluorite.orgz)
+	{
+		no_unmap = True;
+		if (!fluorite.ws[fluorite.cr_ws].fl_hdn)
+		{
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+			{
+				XUnmapWindow(fluorite.dpy, w->w);
+				w->fc = False;
+			}
+		}
+		if (fluorite.hpads != -1)
+		{
+			for (Windows *s = fluorite.pads[fluorite.hpads]->s_wins; s != NULL; s = s->next)
+			{
+				XUnmapWindow(fluorite.dpy, s->w);
+				s->fc = False;
+			}
+		}
+		XSync(fluorite.dpy, True);
+		no_unmap = False;
+	}
+	else
+	{
+		if (!fluorite.ws[fluorite.cr_ws].fl_hdn)
+			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+				XMapWindow(fluorite.dpy, w->w);
+		if (fluorite.hpads != -1)
+			for (Windows *s = fluorite.pads[fluorite.hpads]->s_wins; s != NULL; s = s->next)
+				XMapWindow(fluorite.dpy, s->w);
+	}
+
+	fluorite.orgz = !fluorite.orgz;
+	FRedrawWindows();
+	XSync(fluorite.dpy, True);
+	FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+	fluorite.ws[fluorite.cr_ws].t_wins->fc = True;
+	XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
+	FApplyBorders();
+}
+
+static void FRedrawOrganizer()
+{
+	int s_off = fluorite.mon[fluorite.cr_mon].mw / FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) - (fluorite.conf.gp * 5);
+	int i = 0;
+	int wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.conf.gp * 2) + fluorite.mon[fluorite.cr_mon].st;
+	int wh = fluorite.mon[fluorite.cr_mon].mh - (fluorite.conf.gp * 4) - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		int wx = fluorite.mon[fluorite.cr_mon].mx + (i * s_off) + fluorite.conf.gp * 2;
+		if (i > 0) wx += i * fluorite.conf.gp * 4;
+		int ww = s_off;
+		XResizeWindow(fluorite.dpy, w->w, ww, wh);
+		XMoveWindow(fluorite.dpy, w->w, wx, wy);
+		i++;
 	}
 }
