@@ -1,21 +1,18 @@
 # Workflow bugs
-- [ ] Better handling of focus if fluorite.ws[fluorite.cr_ws].fl_hdn !!!!
+- Nothing
 
 # TODO
 - Nothing
 
 # BUG
-- [ ] Firefox in scratchpads, if killed, the scratchpads cause some issues...
 - [ ] Ghidra floating window, not nicely placed and focus + warp...
 
 # CLEAN
-- [ ] Avoid refocus when reloading configuration
 - [ ] Reset borders function
     - Find function that do loops through stacks and XSetWindowBorder
 
 # REV 2
 - [ ] Create a binding to switch focus between scratchpads and tiled/float
-- [ ] Add Organizer back !
 - [ ] Add the possibility to seamlessly move a floating window to another monitors and that it change it's workspace too
 - [?] Add Tags like DWM
     - How ?
@@ -97,3 +94,8 @@
 - [X] Killing a scratchpad window that is unmapped fail
 - [X] There is still some focus issues when switching workspace across multiple monitors
 - [X] No focused border when manually changing values in Xresources
+- [X] Add Organizer back !
+- [X] Firefox in scratchpads, if killed, the scratchpads cause some issues...
+- [X] Better handling of focus if fluorite.ws[fluorite.cr_ws].fl_hdn !!!!
+- [X] Avoid refocus when reloading configuration
+    - Should be fixed
