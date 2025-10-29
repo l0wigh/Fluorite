@@ -1,4 +1,4 @@
-# Fluorite [EVO 2] (Beta 16)
+# Fluorite [EVO 2] (RC-1)
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
@@ -7,6 +7,9 @@ Fluorite is a dynamic tiling window manager that aims to be light, functionnal, 
 
 ![Fluorite Presentation](./screenshots/centered/fluorite_gruvbox.png)
 *Gruvbox Theme in Centered layout*
+
+The current state is pretty much stable. There is probably some other bugs hiding in dark corners. That's the reason it's a Release Candidate 1.
+Feel free to open issues to help me fix them !
 
 ## Features
 

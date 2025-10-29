@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 2] (Beta 16)"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (RC-1)"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
