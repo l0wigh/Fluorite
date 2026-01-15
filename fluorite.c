@@ -1215,7 +1215,8 @@ static void FMapRequest(XEvent ev)
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
-		w->fc = False;
+		// TODO: check if this is a fix that can really be done
+		// w->fc = False;
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 	}
 	XSetInputFocus(fluorite.dpy, nw->w, RevertToPointerRoot, CurrentTime);
