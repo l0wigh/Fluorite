@@ -963,9 +963,6 @@ static void FRun()
 			case DestroyNotify:
 				FDestroyNotify(ev);
 				break;
-			case ClientMessage:
-				fluorite_handle_message(ev.xclient);
-				break;
 		}
 	}
 }
