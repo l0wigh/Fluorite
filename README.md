@@ -1,4 +1,4 @@
-# Fluorite [EVO 2] (RC-1)
+# Fluorite [EVO 2]
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
