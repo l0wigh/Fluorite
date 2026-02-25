@@ -2404,10 +2404,31 @@ next:
 
 static void FClientMessage(XEvent ev)
 {
+	no_refocus = True;
 	no_warp = True;
 	if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False))
 		FShowWorkspace((int)ev.xclient.data.l[0]);
+	else if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False))
+	{
+		no_warp = False;
+		for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+		{
+			w->fc = 0;
+			if (ev.xclient.window == w->w)
+				w->fc = 1;
+		}
+		for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+		{
+			w->fc = 0;
+			if (ev.xclient.window == w->w)
+				w->fc = 1;
+		}
+		XSetInputFocus(fluorite.dpy, ev.xclient.window, RevertToPointerRoot, CurrentTime);
+		FRedrawWindows();
+		FApplyBorders();
+	}
 	no_warp = False;
+	no_refocus = False;
 }
 
 static void FMotionNotify(XEvent ev)
