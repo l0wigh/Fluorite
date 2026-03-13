@@ -2407,7 +2407,12 @@ static void FClientMessage(XEvent ev)
 	no_refocus = True;
 	no_warp = True;
 	if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False))
+	{
+		int request_ws = ev.xclient.data.l[0];
+		if (request_ws < 0 || request_ws > 9)
+			return;
 		FShowWorkspace((int)ev.xclient.data.l[0]);
+	}
 	else if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False))
 	{
 		no_warp = False;
