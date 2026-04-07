@@ -408,7 +408,7 @@ static void FLoadXresources()
 			fluorite.conf.bu = strtoul(addr, NULL, 16);
 		}
 	}
-	
+
 	fluorite.conf.bf |= 0xff << 24;
 	fluorite.conf.bu |= 0xff << 24;
 	XrmDestroyDatabase(xdb);
@@ -969,7 +969,7 @@ static void FRun()
 
 static void FGetMonitorFromMouse()
 {
-	
+
 	int pointer_x, pointer_y, s_num;
 	int pos_x, pos_y, max_x, max_y;
 
@@ -1079,7 +1079,7 @@ static pid_t FGetParentProcess(pid_t p)
 	unsigned int v = 0;
 	FILE *f;
 	char buf[256];
-	
+
 	snprintf(buf, sizeof(buf) - 1, "/proc/%u/stat", (unsigned)p);
 
 	if (!(f = fopen(buf, "r")))
@@ -1279,20 +1279,20 @@ static void FRedrawCenteredMaster()
 	int mon_y = fluorite.mon[fluorite.cr_mon].my;
 	int mon_w = fluorite.mon[fluorite.cr_mon].mw;
 	int mon_h = fluorite.mon[fluorite.cr_mon].mh;
-	
+
 	// Calcul de la zone de contenu en tenant compte de tous les struts
 	int content_x = mon_x + fluorite.mon[fluorite.cr_mon].sl;
 	int content_y = mon_y + 2 * gap + fluorite.mon[fluorite.cr_mon].st;
 	int content_w = mon_w - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr);
 	int content_h = mon_h - 4 * gap - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
-	
+
 	int base_mw = content_w / 2;
 	int mw = base_mw + mo;
 	if (mw > content_w - 2 * gap)
 		mw = content_w - 2 * gap;
 	int mx = content_x + (content_w - mw) / 2;
 	int sw = (content_w - mw) / 2;
-	
+
 	w = fluorite.ws[fluorite.cr_ws].t_wins;
 	XMoveResizeWindow(
 		fluorite.dpy, w->w,
@@ -1305,7 +1305,7 @@ static void FRedrawCenteredMaster()
 	w->wy = content_y;
 	w->ww = mw - 2 * bw - 2 * gap;
 	w->wh = content_h - 2 * bw;
-	
+
 	int stack_n = n - 1;
 	int left_n = (stack_n + 1) / 2;
 	int right_n = stack_n / 2;
@@ -1315,7 +1315,7 @@ static void FRedrawCenteredMaster()
 	int right_h = (content_h - total_gap_right) / (right_n > 0 ? right_n : 1);
 	int left_y = content_y;
 	int right_y = content_y;
-	
+
 	w = w->next;
 	int i = 0;
 	Windows *last_left = NULL, *last_right = NULL;
@@ -1356,7 +1356,7 @@ static void FRedrawCenteredMaster()
 		i++;
 		w = w->next;
 	}
-	
+
 	if (stack_n % 2 == 0)
 	{
 		if (right_n < left_n && last_right)
@@ -1520,7 +1520,7 @@ static void FRedrawFullscreen()
 		if (w->fs)
 			goto found;
 return;
-	
+
 found:
 	XMoveResizeWindow(fluorite.dpy, w->w,
 			fluorite.mon[fluorite.cr_mon].mx, fluorite.mon[fluorite.cr_mon].my,
@@ -1571,7 +1571,7 @@ static void FRedrawWindows()
 		goto floating;
 
 	no_refocus = True;
-	
+
 	if ((fluorite.ws[fluorite.cr_ws].t_wins && !fluorite.ws[fluorite.cr_ws].t_wins->next) || fluorite.ws[fluorite.cr_ws].layout == STACKED)
 		FRedrawStackedLayout();
 	else if (fluorite.ws[fluorite.cr_ws].layout == DWM)
@@ -1718,14 +1718,14 @@ static int FCheckWindowIsFloating(Window w)
 
 	if (fluorite.conf.ff)
 		ret_val = True;
-	
+
 	XFree(p);
 	return ret_val;
 }
 
 static int FCheckWindowIsFixed(Window w)
 {
-	
+
 	long msize;
 	XSizeHints size;
 	XClassHint name;
@@ -2038,7 +2038,7 @@ static void FDestroyNotify(XEvent ev)
 	{
 		for (Windows *fx = fluorite.mon[i].fx_win; fx != NULL; fx = fx->next)
 		{
-			if (fx->w != ev.xdestroywindow.window) 
+			if (fx->w != ev.xdestroywindow.window)
 				continue;
 			fluorite.mon[i].fx_win = FDelWindow(fluorite.mon[i].fx_win, fx);
 			fx->next = NULL;
@@ -2268,7 +2268,7 @@ static void FFocusWindowUnderCursor()
 	Window target = FWindowUnderCursor();
 
 	no_warp = True;
-	
+
 	if (fluorite.hpads == -1)
 		goto next;
 
@@ -3139,6 +3139,7 @@ static void FTileWindow()
 static void FTileAllWindows()
 {
 	if (fluorite.orgz) return;
+	if (fluorite.ws[fluorite.cr_ws].f_wins == NULL) return;
 
 	Windows *w;
 	Windows *prev;
@@ -3202,7 +3203,7 @@ static void FToggleFullscreen()
 			goto next;
 
 	goto exit;
-	
+
 
 next:
 	if (fluorite.ws[fluorite.cr_ws].fs)
@@ -3229,8 +3230,8 @@ exit:
 static void FFloatingHideShow()
 {
 	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz)
-		return; 
-	
+		return;
+
 	no_unmap = True;
 	XGrabServer(fluorite.dpy);
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
@@ -3487,7 +3488,7 @@ static void FDelWindowFromScratchpad()
 static void FScratchpadHideShow()
 {
 	if (fluorite.orgz) return;
-	
+
 	XEvent ev;
 	KeySym key;
 	Scratchpads *p, *op;
@@ -3628,7 +3629,7 @@ static void FPolybarScratchpadsIPC()
 	Atom scratchpads_atom = XInternAtom(fluorite.dpy, "FLUORITE_SCRATCHPADS", False);
 
 	scratchpads_value = (char *) calloc(HASH_SIZE, sizeof(char));
-	for (int i = 0; i < HASH_SIZE; i++) 
+	for (int i = 0; i < HASH_SIZE; i++)
 	{
 		if (fluorite.pads[i] && fluorite.pads[i]->key)
 		{
