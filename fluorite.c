@@ -1815,9 +1815,9 @@ static void FConfigureRequest(XEvent ev)
 		for (Windows *w = fluorite.ws[i].t_wins; w != NULL; w = w->next)
 			if (ev.xconfigurerequest.window == w->w)
 				return;
-		for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
-			if (ev.xconfigurerequest.window == w->w)
-				return;
+		// for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
+		// 	if (ev.xconfigurerequest.window == w->w)
+		// 		return;
 	}
 
 	XWindowChanges wc;
