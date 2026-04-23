@@ -2277,6 +2277,7 @@ static void FFocusWindowUnderCursor()
 	{
 		if (w->w != target)
 			continue;
+		if (w->fc) goto end;
 		FResetFocus(p->s_wins);
 		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
 		w->fc = True;
@@ -2288,6 +2289,7 @@ next:
 	{
 		if (w->w != target)
 			continue;
+		if (w->fc) goto end;
 		FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
 		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
 		w->fc = True;
@@ -2297,6 +2299,7 @@ next:
 	{
 		if (w->w != target)
 			continue;
+		if (w->fc) goto end;
 		FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
 		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
 		w->fc = True;
