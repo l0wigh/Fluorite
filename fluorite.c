@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 2]"
+#define FLUORITE_VERSION "Fluorite [EVO 2] (Rev 1)"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -1804,6 +1804,11 @@ static void FChangeMonitor(int mon)
 
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
+	// TODO: Check if that helps or not.
+	// TODO: If it helps check with warp_cursor
+
+	FFocusWindowUnderCursor();
+	no_warp = True;
 	FApplyBorders();
 	no_warp = False;
 }
@@ -2277,7 +2282,6 @@ static void FFocusWindowUnderCursor()
 	{
 		if (w->w != target)
 			continue;
-		if (w->fc) goto end;
 		FResetFocus(p->s_wins);
 		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
 		w->fc = True;
@@ -2289,7 +2293,6 @@ next:
 	{
 		if (w->w != target)
 			continue;
-		if (w->fc) goto end;
 		FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
 		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
 		w->fc = True;
@@ -2299,7 +2302,6 @@ next:
 	{
 		if (w->w != target)
 			continue;
-		if (w->fc) goto end;
 		FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
 		XSetInputFocus(fluorite.dpy, (w->sw && w->sw == target) ? w->sw : w->w, RevertToPointerRoot, CurrentTime);
 		w->fc = True;
