@@ -1,5 +1,5 @@
 # TODO !
-- [X] Redraw every monitor when theme is changed !
+- [ ] Add swallowed windows to window list in EWMH, currently it's like the window doesn't exist
 - [ ] Issues with border colors when sending windows to another visible workspace
 - [ ] Find a way to fix the fullscreen float window bug
     - open a floating window during fullscreen and then deactivate fullscreen -> BREAK !
@@ -24,6 +24,7 @@
     - Seems to not work on some apps
 
 # DONE !
+- [X] Redraw every monitor when theme is changed !
 - [x] Fixing the multi closing issue
     - Fixed with XSync(fluorite.display, True) and X(Un)GrabServer
 - [x] Add and manage the config file
