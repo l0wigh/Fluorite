@@ -1155,6 +1155,22 @@ found:
 	return True;
 }
 
+static void FSetWindowState(Window w, long state)
+{
+	long data[] = { state, None };
+
+	XChangeProperty(
+		fluorite.dpy,
+		w,
+		XInternAtom(fluorite.dpy, "WM_STATE", False),
+		XInternAtom(fluorite.dpy, "WM_STATE", False),
+		32,
+		PropModeReplace,
+		(unsigned char *) data,
+		2
+	);
+}
+
 static void FMapRequest(XEvent ev)
 {
 	if (fluorite.orgz) FToggleOrganizer();
@@ -1228,6 +1244,7 @@ static void FMapRequest(XEvent ev)
 	else
 		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);;
 
+	FSetWindowState(nw->w, NormalState);
 	FRedrawWindows();
 	FWarpCursor(nw->w);
 	XSync(fluorite.dpy, True);
