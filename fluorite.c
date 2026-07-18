@@ -1,3 +1,4 @@
+#include <unistd.h>
 #define FLUORITE_VERSION "Fluorite [EVO 2] (Rev 2)"
 
 #include <X11/X.h>
@@ -41,7 +42,8 @@ enum LAYOUT
 	CASCADE,
 	DWM,
 	CENTERED,
-	STACKED
+	STACKED,
+	SCROLLING
 };
 
 
@@ -158,6 +160,8 @@ typedef struct
 	int		fl_hdn;
 	int		mo;
 	int		ct_win;
+    int        scroll_x;
+    int        scroll_y;
 } Workspaces;
 
 typedef struct Scratchpads
@@ -267,6 +271,12 @@ static void 	FToggleFixedStrut();
 static void 	FCycleLayouts();
 static void		FToggleOrganizer();
 static void		FRedrawOrganizer();
+static void		FRedrawScrolling();
+static Windows *FAddWindowScrolling(Windows *head, Windows *nw);
+static void		FScrollingFocusLeft();
+static void		FScrollingFocusRight();
+static void		FScrollingMoveLeft();
+static void		FScrollingMoveRight();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -314,6 +324,10 @@ static UserFunc user_functions_list[] = {
 	{"send_window_to_workspace",	INT, 	NULL, FSendWindowToWorkspace, NULL},
 	{"change_layout",				INT, 	NULL, FChangeLayout, NULL},
 	{"exec",						CHAR,	NULL, NULL, FExecute},
+	{"scrolling_focus_left",		VOID,	FScrollingFocusLeft, NULL, NULL},
+	{"scrolling_focus_right",		VOID,	FScrollingFocusRight, NULL, NULL},
+	{"scrolling_move_left",			VOID,	FScrollingMoveLeft, NULL, NULL},
+	{"scrolling_move_right",		VOID,	FScrollingMoveRight, NULL, NULL},
 };
 
 int main(void)
@@ -850,6 +864,8 @@ static void FReloadConfig()
 		fluorite.conf.sl = CENTERED;
 	else if (strcasecmp(sl, "Stacked") == 0)
 		fluorite.conf.sl = STACKED;
+	else if (strcasecmp(sl, "Scrolling") == 0)
+		fluorite.conf.sl = SCROLLING;
 	free(sl);
 
 	for (int i = 0; i < (int) cfg_size(cfg, "workspaces_names"); i++)
@@ -1242,7 +1258,12 @@ static void FMapRequest(XEvent ev)
 	if (is_floating || fluorite.conf.ff)
 		FManageFloatingWindow(nw);
 	else
-		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);;
+	{
+		if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+			fluorite.ws[fluorite.cr_ws].t_wins = FAddWindowScrolling(fluorite.ws[fluorite.cr_ws].t_wins, nw);
+		else 
+			fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, nw);
+	}
 
 	FSetWindowState(nw->w, NormalState);
 	FRedrawWindows();
@@ -1595,6 +1616,8 @@ static void FRedrawWindows()
 		FRedrawDWMLayout();
 	else if (fluorite.ws[fluorite.cr_ws].layout == CENTERED && fluorite.ws[fluorite.cr_ws].t_wins->next->next)
 		FRedrawCenteredMaster();
+	else if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+		FRedrawScrolling();
 	else
 		FRedrawCascadeLayout();
 
@@ -2784,7 +2807,7 @@ static void FPrevWorkspace()
 
 static void FRotateStackWindows(int mode)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz)
+	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
 		return;
 
     Windows *first;
@@ -2863,7 +2886,7 @@ redraw:
 
 static void FRotateWindows(int mode)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs)
+	if (fluorite.ws[fluorite.cr_ws].fs || fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
 		return;
 
 	Windows *first, *last;
@@ -3052,6 +3075,8 @@ found:
 
 static void FFocusNext()
 {
+	if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING) return;
+
 	if (!fluorite.ws[fluorite.cr_ws].t_wins ||
 			!fluorite.ws[fluorite.cr_ws].t_wins->next ||
 			fluorite.ws[fluorite.cr_ws].fs ||
@@ -3085,10 +3110,16 @@ static void FFocusNext()
 		}
 	}
 	FApplyBorders();
+	if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+	{
+		FRedrawWindows();
+		XSync(fluorite.dpy, True);
+	}
 }
 
 static void FFocusPrev()
 {
+	if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING) return;
 	Windows *last;
 
 	if (!fluorite.ws[fluorite.cr_ws].t_wins ||
@@ -3126,6 +3157,11 @@ static void FFocusPrev()
 		}
 	}
 	FApplyBorders();
+	if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+	{
+		FRedrawWindows();
+		XSync(fluorite.dpy, True);
+	}
 }
 
 static void FTileWindow()
@@ -3885,6 +3921,9 @@ static void FCycleLayouts()
 			FChangeLayout(STACKED);
 			break;
 		case STACKED:
+			FChangeLayout(SCROLLING);
+			break;
+		case SCROLLING:
 			FChangeLayout(CASCADE);
 			break;
 	}
@@ -3958,5 +3997,242 @@ static void FRedrawOrganizer()
 		XResizeWindow(fluorite.dpy, w->w, ww, wh);
 		XMoveWindow(fluorite.dpy, w->w, wx, wy);
 		i++;
+	}
+}
+
+static void FRedrawScrolling()
+{
+	Workspaces *ws = &fluorite.ws[fluorite.cr_ws];
+	Monitors *m = &fluorite.mon[fluorite.cr_mon];
+	
+	if (!ws->t_wins) return;
+
+	int gp = fluorite.conf.gp;
+	int bw = fluorite.conf.bw;
+
+	int cell_w = (m->mw / 2) - (gp * 3) - (bw * 2) - ((m->sl + m->sr) / 2);
+	int cell_h = m->mh - (gp * 4) - (bw * 2) - m->st - m->sb;
+	int col_w = cell_w + (bw * 2) + (gp * 2);
+
+	Windows *focus_win = NULL;
+	int n_wins = 0;
+	for (Windows *w = ws->t_wins; w; w = w->next)
+	{
+		if (w->fc) focus_win = w;
+		n_wins++;
+	}
+	if (!focus_win) focus_win = ws->t_wins;
+
+	int min_x = m->mx + (gp * 2) + m->sl;
+	int max_x = m->mx + m->mw - m->sr - (gp * 2) - cell_w - (bw * 2);
+
+	int target_x = focus_win->wx;
+
+	if (n_wins == 1)
+	{
+		target_x = m->mx + (m->mw - cell_w - (bw * 2)) / 2;
+	}
+	else
+	{
+		if (target_x < min_x) {
+			target_x = min_x;
+		} else if (target_x > max_x) {
+			target_x = max_x;
+		}
+	}
+
+	focus_win->wx = target_x;
+	focus_win->wy = m->my + (gp * 2) + m->st;
+	focus_win->ww = cell_w;
+	focus_win->wh = cell_h;
+
+	Windows *w = focus_win->prev;
+	int current_x = focus_win->wx;
+	while (w)
+	{
+		current_x -= col_w;
+		w->wx = current_x;
+		w->wy = m->my + (gp * 2) + m->st;
+		w->ww = cell_w;
+		w->wh = cell_h;
+		w = w->prev;
+	}
+
+	w = focus_win->next;
+	current_x = focus_win->wx;
+	while (w)
+	{
+		current_x += col_w;
+		w->wx = current_x;
+		w->wy = m->my + (gp * 2) + m->st;
+		w->ww = cell_w;
+		w->wh = cell_h;
+		w = w->next;
+	}
+
+	Windows *first_w = ws->t_wins;
+	Windows *last_w = ws->t_wins;
+	while (last_w->next) last_w = last_w->next;
+
+	if (n_wins > 1)
+	{
+		if (first_w->wx > min_x)
+		{
+			int shift = first_w->wx - min_x;
+			for (w = ws->t_wins; w; w = w->next) w->wx -= shift;
+		} 
+		else if (last_w->wx < max_x && first_w->wx < min_x)
+		{
+			int shift = max_x - last_w->wx;
+			if (first_w->wx + shift > min_x) shift = min_x - first_w->wx;
+			for (w = ws->t_wins; w; w = w->next) w->wx += shift;
+		}
+	}
+
+	for (w = ws->t_wins; w; w = w->next)
+	{
+		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+	}
+}
+
+static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
+{
+	Windows *target = NULL;
+
+	for (Windows *w = head; w != NULL; w = w->next)
+	{
+		if (w->fc) target = w;
+		w->fc = False;
+	}
+
+	if (!head)
+	{
+		nw->next = NULL;
+		nw->prev = NULL;
+		return nw;
+	}
+
+	if (!target)
+	{
+		nw->next = head;
+		nw->prev = NULL;
+		head->prev = nw;
+		return nw;
+	}
+
+	nw->prev = target;
+	nw->next = target->next;
+	if (target->next)
+		target->next->prev = nw;
+	target->next = nw;
+
+	return head;
+}
+
+static void FScrollingFocusLeft()
+{
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			if (w->prev)
+			{
+				w->fc = False;
+				w->prev->fc = True;
+				XSetInputFocus(fluorite.dpy, w->prev->w, RevertToPointerRoot, CurrentTime);
+				FWarpCursor(w->prev->w);
+				FApplyBorders();
+				FRedrawWindows();
+				XSync(fluorite.dpy, True);
+			}
+			return;
+		}
+	}
+}
+
+static void FScrollingFocusRight()
+{
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			if (w->next)
+			{
+				w->fc = False;
+				w->next->fc = True;
+				XSetInputFocus(fluorite.dpy, w->next->w, RevertToPointerRoot, CurrentTime);
+				FWarpCursor(w->next->w);
+				FApplyBorders();
+				FRedrawWindows();
+				XSync(fluorite.dpy, True);
+			}
+			return;
+		}
+	}
+}
+
+static void FScrollingMoveLeft()
+{
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			Windows *prev_win = w->prev;
+			if (!prev_win) return;
+
+			Windows *prev_prev = prev_win->prev;
+			Windows *next_win = w->next;
+
+			if (prev_prev) prev_prev->next = w;
+			else fluorite.ws[fluorite.cr_ws].t_wins = w;
+			w->prev = prev_prev;
+
+			prev_win->next = next_win;
+			if (next_win) next_win->prev = prev_win;
+
+			w->next = prev_win;
+			prev_win->prev = w;
+
+			FRedrawWindows();
+			XSync(fluorite.dpy, True);
+			return;
+		}
+	}
+}
+
+static void FScrollingMoveRight()
+{
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			Windows *next_win = w->next;
+			if (!next_win) return;
+
+			Windows *prev_win = w->prev;
+			Windows *next_next = next_win->next;
+
+			if (prev_win) prev_win->next = next_win;
+			else fluorite.ws[fluorite.cr_ws].t_wins = next_win;
+			next_win->prev = prev_win;
+
+			w->next = next_next;
+			if (next_next) next_next->prev = w;
+
+			next_win->next = w;
+			w->prev = next_win;
+
+			FRedrawWindows();
+			XSync(fluorite.dpy, True);
+			return;
+		}
 	}
 }
