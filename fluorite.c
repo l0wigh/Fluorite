@@ -104,6 +104,8 @@ typedef struct Windows
 	int fs;
 	int can_sw;
 	Window sw;
+	int swp;
+	int stk_blw;
 	struct Windows *next;
 	struct Windows *prev;
 } Windows;
@@ -277,6 +279,8 @@ static void		FScrollingFocusLeft();
 static void		FScrollingFocusRight();
 static void		FScrollingMoveLeft();
 static void		FScrollingMoveRight();
+static void		FScrollingResizeIncrease();
+static void		FScrollingResizeDecrease();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -328,6 +332,8 @@ static UserFunc user_functions_list[] = {
 	{"scrolling_focus_right",		VOID,	FScrollingFocusRight, NULL, NULL},
 	{"scrolling_move_left",			VOID,	FScrollingMoveLeft, NULL, NULL},
 	{"scrolling_move_right",		VOID,	FScrollingMoveRight, NULL, NULL},
+	{"scrolling_resize_inc",		VOID,	FScrollingResizeIncrease, NULL, NULL},
+	{"scrolling_resize_dec",		VOID,	FScrollingResizeDecrease, NULL, NULL},
 };
 
 int main(void)
@@ -740,68 +746,104 @@ static void FParseModsAndKeys(cfg_t *user_bind, NeoBindings *b)
 	free(bind_dup);
 }
 
+static int FAssignBindAction(NeoBindings *cur, unsigned int mod, KeySym key, const char *action, const char *arg)
+{
+	for (unsigned int j = 0; j < LENGTH(user_functions_list); j++)
+	{
+		if (strcasecmp(action, user_functions_list[j].name) != 0)
+			continue;
+
+		cur->mod  = mod;
+		cur->key  = key;
+		cur->type = user_functions_list[j].type;
+
+		if (strcasecmp(user_functions_list[j].name, "window_rotate") == 0 ||
+				strcasecmp(user_functions_list[j].name, "stack_rotate") == 0 ||
+				strcasecmp(user_functions_list[j].name, "change_master_offset") == 0)
+		{
+			cur->int_fun = user_functions_list[j].int_fun;
+			if (strcasecmp(arg, "up") == 0) cur->int_arg = UP;
+			else if (strcasecmp(arg, "down") == 0) cur->int_arg = DOWN;
+			else cur->int_arg = UP;
+		}
+		else if (strcasecmp(user_functions_list[j].name, "change_layout") == 0)
+		{
+			cur->int_fun = user_functions_list[j].int_fun;
+			if (strcasecmp(arg, "cascade") == 0) cur->int_arg = CASCADE;
+			else if (strcasecmp(arg, "dwm") == 0) cur->int_arg = DWM;
+			else if (strcasecmp(arg, "centered") == 0) cur->int_arg = CENTERED;
+			else if (strcasecmp(arg, "stacked") == 0) cur->int_arg = STACKED;
+			else cur->int_arg = CASCADE;
+		}
+		else
+		{
+			switch (user_functions_list[j].type)
+			{
+				case VOID:
+					cur->void_fun = user_functions_list[j].void_fun;
+					break;
+				case INT:
+					cur->int_fun = user_functions_list[j].int_fun;
+					cur->int_arg = atoi(arg) - 1;
+					if (cur->int_arg > 9) cur->int_arg = 9;
+					else if (cur->int_arg < 0) cur->int_arg = 0;
+					break;
+				case CHAR:
+					cur->char_fun = user_functions_list[j].char_fun;
+					cur->char_arg = strdup(arg);
+					break;
+			}
+		}
+		return True;
+	}
+	return False;
+}
+
 static void FParseBindings(cfg_t *cfg)
 {
-	int next_bind;
 	int old_binds = binds_count;
-	NeoBindings *b = (NeoBindings *) calloc(cfg_size(cfg, "bind") + 1, sizeof(NeoBindings));
+	int total = (int) cfg_size(cfg, "bind");
 
+	for (int i = 0; i < (int) cfg_size(cfg, "multi_bind"); i++)
+	{
+		cfg_t *mb = cfg_getnsec(cfg, "multi_bind", i);
+		total += (int) cfg_size(mb, "action");
+	}
+
+	NeoBindings *b = (NeoBindings *) calloc(total + 1, sizeof(NeoBindings));
 	binds_count = 0;
+
 	for (int i = 0; i < (int) cfg_size(cfg, "bind"); i++)
 	{
 		cfg_t *user_bind = cfg_getnsec(cfg, "bind", i);
 		char *action = cfg_getstr(user_bind, "action");
-		next_bind = False;
-		for (unsigned int j = 0; j < LENGTH(user_functions_list); j++)
+		char *arg = cfg_getstr(user_bind, "arg");
+		NeoBindings modkey = {0};
+
+		FParseModsAndKeys(user_bind, &modkey);
+		if (FAssignBindAction(&b[binds_count], modkey.mod, modkey.key, action, arg ? arg : ""))
+			binds_count++;
+	}
+
+	for (int i = 0; i < (int) cfg_size(cfg, "multi_bind"); i++)
+	{
+		cfg_t *user_bind = cfg_getnsec(cfg, "multi_bind", i);
+		unsigned int nb_actions = cfg_size(user_bind, "action");
+		unsigned int nb_args    = cfg_size(user_bind, "arg");
+		NeoBindings modkey = {0};
+
+		FParseModsAndKeys(user_bind, &modkey);
+
+		for (unsigned int a = 0; a < nb_actions; a++)
 		{
-			if (strcasecmp(action, user_functions_list[j].name) == 0)
-			{
-				FParseModsAndKeys(user_bind, &b[i]);
-				b[i].type = user_functions_list[j].type;
-				if (strcasecmp(user_functions_list[j].name, "window_rotate") == 0 ||
-					strcasecmp(user_functions_list[j].name, "stack_rotate") == 0 ||
-					strcasecmp(user_functions_list[j].name, "change_master_offset") == 0
-				)
-				{
-					b[i].int_fun = user_functions_list[j].int_fun;
-					if (strcasecmp(cfg_getstr(user_bind, "arg"), "up") == 0) b[i].int_arg = UP;
-					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "down") == 0) b[i].int_arg = DOWN;
-					else b[i].int_arg = UP;
-				}
-				else if (strcasecmp(user_functions_list[j].name, "change_layout") == 0)
-				{
-					b[i].int_fun = user_functions_list[j].int_fun;
-					if (strcasecmp(cfg_getstr(user_bind, "arg"), "cascade") == 0) b[i].int_arg = CASCADE;
-					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "dwm") == 0) b[i].int_arg = DWM;
-					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "centered") == 0) b[i].int_arg = CENTERED;
-					else if (strcasecmp(cfg_getstr(user_bind, "arg"), "stacked") == 0) b[i].int_arg = STACKED;
-					else b[i].int_arg = CASCADE;
-				}
-				else
-				{
-					switch (user_functions_list[j].type)
-					{
-						case VOID:
-							b[i].void_fun = user_functions_list[j].void_fun;
-							break;
-						case INT:
-							b[i].int_fun = user_functions_list[j].int_fun;
-							b[i].int_arg = atoi(cfg_getstr(user_bind, "arg")) - 1;
-							if (b[i].int_arg > 9) b[i].int_arg = 9;
-							else if (b[i].int_arg < 0) b[i].int_arg = 0;
-							break;
-						case CHAR:
-							b[i].char_fun = user_functions_list[j].char_fun;
-							b[i].char_arg = strdup(cfg_getstr(user_bind, "arg"));
-							break;
-					}
-				}
-				next_bind = True;
+			char *action = cfg_getnstr(user_bind, "action", a);
+			char *arg = (a < nb_args) ? cfg_getnstr(user_bind, "arg", a) : "";
+
+			if (FAssignBindAction(&b[binds_count], modkey.mod, modkey.key, action, arg))
 				binds_count++;
-			}
-			if (next_bind) break;
 		}
 	}
+
 	if (binds)
 	{
 		for (int i = 0; i < old_binds; i++)
@@ -810,7 +852,6 @@ static void FParseBindings(cfg_t *cfg)
 		free(binds);
 	}
 	binds = b;
-	b = NULL;
 }
 
 static void FReloadConfig()
@@ -832,6 +873,12 @@ static void FReloadConfig()
 		CFG_END()
 	};
 
+	cfg_opt_t mopts[] = {
+		CFG_STR_LIST("action", "{}", CFGF_NONE),
+		CFG_STR_LIST("arg", "{}", CFGF_NONE),
+		CFG_END()
+	};
+
 	cfg_opt_t opts[] = {
 		CFG_STR("meta_key", "Mod4", mt),
 		CFG_SIMPLE_BOOL("follow_windows", &fluorite.conf.fw),
@@ -844,6 +891,7 @@ static void FReloadConfig()
 		CFG_STR_LIST("fixed_windows", "", dfx),
 		CFG_STR_LIST("swallowing_windows", "", dsw),
 		CFG_SEC("bind", bopts, CFGF_MULTI | CFGF_TITLE),
+		CFG_SEC("multi_bind", mopts, CFGF_MULTI | CFGF_TITLE),
 		CFG_END()
 	};
 	cfg_t *cfg;
@@ -1226,6 +1274,7 @@ static void FMapRequest(XEvent ev)
 	nw->fs = False;
 	nw->can_sw = FCheckCanSwallow(nw->w);
 	nw->sw = 0;
+	nw->swp = 50;
 	XSelectInput(fluorite.dpy, nw->w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask | KeyPressMask);
 	XGrabButton(fluorite.dpy, Button1, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.dpy, Button3, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
@@ -3024,7 +3073,7 @@ redraw:
 
 static void FChangeMasterOffset(int mode)
 {
-	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2 || fluorite.orgz)
+	if (fluorite.ws[fluorite.cr_ws].fs || FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2 || fluorite.orgz || fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
 		return ;
 
 	// I know it's reversed, don't ask why
@@ -3120,6 +3169,7 @@ static void FFocusNext()
 static void FFocusPrev()
 {
 	if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING) return;
+
 	Windows *last;
 
 	if (!fluorite.ws[fluorite.cr_ws].t_wins ||
@@ -4010,9 +4060,11 @@ static void FRedrawScrolling()
 	int gp = fluorite.conf.gp;
 	int bw = fluorite.conf.bw;
 
-	int cell_w = (m->mw / 2) - (gp * 3) - (bw * 2) - ((m->sl + m->sr) / 2);
+	int avail_w = m->mw - m->sl - m->sr;
 	int cell_h = m->mh - (gp * 4) - (bw * 2) - m->st - m->sb;
-	int col_w = cell_w + (bw * 2) + (gp * 2);
+
+	#define GET_WW(w) (((avail_w * (w)->swp) / 100) - (gp * 3) - (bw * 2))
+	#define GET_COL_W(w) (GET_WW(w) + (bw * 2) + (gp * 2))
 
 	Windows *focus_win = NULL;
 	int n_wins = 0;
@@ -4023,50 +4075,48 @@ static void FRedrawScrolling()
 	}
 	if (!focus_win) focus_win = ws->t_wins;
 
+	int focus_ww = GET_WW(focus_win);
 	int min_x = m->mx + (gp * 2) + m->sl;
-	int max_x = m->mx + m->mw - m->sr - (gp * 2) - cell_w - (bw * 2);
+	int max_x = m->mx + m->mw - m->sr - (gp * 2) - focus_ww - (bw * 2);
 
 	int target_x = focus_win->wx;
 
-	if (n_wins == 1)
+	if (n_wins == 1 || focus_win->swp == 100)
 	{
-		target_x = m->mx + (m->mw - cell_w - (bw * 2)) / 2;
+		target_x = m->mx + (m->mw - focus_ww - (bw * 2)) / 2;
 	}
 	else
 	{
-		if (target_x < min_x) {
-			target_x = min_x;
-		} else if (target_x > max_x) {
-			target_x = max_x;
-		}
+		if (target_x < min_x) target_x = min_x;
+		else if (target_x > max_x) target_x = max_x;
 	}
 
 	focus_win->wx = target_x;
 	focus_win->wy = m->my + (gp * 2) + m->st;
-	focus_win->ww = cell_w;
+	focus_win->ww = focus_ww;
 	focus_win->wh = cell_h;
 
 	Windows *w = focus_win->prev;
 	int current_x = focus_win->wx;
 	while (w)
 	{
-		current_x -= col_w;
+		current_x -= GET_COL_W(w);
 		w->wx = current_x;
 		w->wy = m->my + (gp * 2) + m->st;
-		w->ww = cell_w;
+		w->ww = GET_WW(w);
 		w->wh = cell_h;
 		w = w->prev;
 	}
 
 	w = focus_win->next;
-	current_x = focus_win->wx;
+	current_x = focus_win->wx + GET_COL_W(focus_win);
 	while (w)
 	{
-		current_x += col_w;
 		w->wx = current_x;
 		w->wy = m->my + (gp * 2) + m->st;
-		w->ww = cell_w;
+		w->ww = GET_WW(w);
 		w->wh = cell_h;
+		current_x += GET_COL_W(w);
 		w = w->next;
 	}
 
@@ -4081,18 +4131,20 @@ static void FRedrawScrolling()
 			int shift = first_w->wx - min_x;
 			for (w = ws->t_wins; w; w = w->next) w->wx -= shift;
 		} 
-		else if (last_w->wx < max_x && first_w->wx < min_x)
+		else 
 		{
-			int shift = max_x - last_w->wx;
-			if (first_w->wx + shift > min_x) shift = min_x - first_w->wx;
-			for (w = ws->t_wins; w; w = w->next) w->wx += shift;
+			int last_max_x = m->mx + m->mw - m->sr - (gp * 2) - last_w->ww - (bw * 2);
+			if (last_w->wx < last_max_x && first_w->wx < min_x)
+			{
+				int shift = last_max_x - last_w->wx;
+				if (first_w->wx + shift > min_x) shift = min_x - first_w->wx;
+				for (w = ws->t_wins; w; w = w->next) w->wx += shift;
+			}
 		}
 	}
 
 	for (w = ws->t_wins; w; w = w->next)
-	{
 		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
-	}
 }
 
 static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
@@ -4232,6 +4284,44 @@ static void FScrollingMoveRight()
 
 			FRedrawWindows();
 			XSync(fluorite.dpy, True);
+			return;
+		}
+	}
+}
+
+static void FScrollingResizeIncrease()
+{
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			if (w->swp < 100) w->swp += 50;
+			if (w->swp > 100) w->swp = 100;
+			
+			FRedrawWindows();
+			XSync(fluorite.dpy, True);
+			FWarpCursor(w->w);
+			return;
+		}
+	}
+}
+
+static void FScrollingResizeDecrease()
+{
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
+
+	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			if (w->swp > 50) w->swp -= 50;
+			if (w->swp < 50) w->swp = 50;
+
+			FRedrawWindows();
+			XSync(fluorite.dpy, True);
+			FWarpCursor(w->w);
 			return;
 		}
 	}
