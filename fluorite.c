@@ -1293,6 +1293,8 @@ static void FMapRequest(XEvent ev)
 	XSelectInput(fluorite.dpy, nw->w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask | KeyPressMask);
 	XGrabButton(fluorite.dpy, Button1, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.dpy, Button3, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(fluorite.dpy, Button4, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(fluorite.dpy, Button5, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XMapWindow(fluorite.dpy, nw->w);
 	XRaiseWindow(fluorite.dpy, nw->w);
 	XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
@@ -2441,13 +2443,36 @@ static Window FGetToplevel(Window w)
 static void FButtonPress(XEvent ev)
 {
 	if (fluorite.orgz) return;
+
 	unsigned b_w, d;
 	unsigned xdo_w, xdo_h;
 	Screen *scr;
 	Window target;
+	static Time lst = 0;
 
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		return ;
+
+	if (ev.xbutton.state & fluorite.conf.mt && fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+	{
+		if (ev.xbutton.button == Button4 || ev.xbutton.button == Button5)
+		{
+			if (ev.xbutton.time - lst > 125)
+			{
+				if (ev.xbutton.button == Button4)
+				{
+					FScrollingFocusLeft();
+					lst = ev.xbutton.time;
+				}
+				else if (ev.xbutton.button == Button5)
+				{
+					FScrollingFocusRight();
+					lst = ev.xbutton.time;
+				}
+			}
+			return;
+		}
+	}
 
 	target = FGetToplevel(ev.xbutton.window);
 	fluorite.mouse.spx = ev.xbutton.x_root;
@@ -4152,9 +4177,20 @@ static void FRedrawScrolling()
 	int has_left = (focus_col_start->prev != NULL);
 	int has_right = (focus_col_end->next != NULL);
 
+	int has_full_width = 0;
+	for (w = ws->t_wins; w; w = FGetColEnd(w)->next)
+	{
+		if (w->swp == 100)
+		{
+			has_full_width = 1;
+			break;
+		}
+	}
+
+	int apply_peek = (n_cols > 2) || (n_cols == 2 && has_full_width);
 	int peek_left = 0;
 	int peek_right = 0;
-	if (n_cols > 2)
+	if (apply_peek)
 	{
 		if (!has_left)
 		{
@@ -4172,7 +4208,7 @@ static void FRedrawScrolling()
 			peek_right = 40;
 		}
 	}
-	int eff_avail_w = (n_cols > 2) ? (avail_w - 80) : avail_w;
+	int eff_avail_w = apply_peek ? (avail_w - 80) : avail_w;
 
 	#define GET_WW(w) (((eff_avail_w * (w)->swp) / 100) - (gp * 3) - (bw * 2))
 	#define GET_COL_W(w) (GET_WW(w) + (bw * 2) + (gp * 2))
@@ -4315,7 +4351,6 @@ static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
 		col_end->next->prev = nw;
 	col_end->next = nw;
 
-	no_refocus = False;
 	return head;
 }
 
