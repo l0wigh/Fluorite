@@ -4149,6 +4149,7 @@ static void FRedrawScrolling()
 
 static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
 {
+	no_refocus = True;
 	Windows *target = NULL;
 
 	for (Windows *w = head; w != NULL; w = w->next)
@@ -4178,6 +4179,7 @@ static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
 		target->next->prev = nw;
 	target->next = nw;
 
+	no_refocus = False;
 	return head;
 }
 
@@ -4194,9 +4196,9 @@ static void FScrollingFocusLeft()
 				w->fc = False;
 				w->prev->fc = True;
 				XSetInputFocus(fluorite.dpy, w->prev->w, RevertToPointerRoot, CurrentTime);
-				FWarpCursor(w->prev->w);
 				FApplyBorders();
 				FRedrawWindows();
+				FWarpCursor(w->prev->w);
 				XSync(fluorite.dpy, True);
 			}
 			return;
@@ -4217,9 +4219,9 @@ static void FScrollingFocusRight()
 				w->fc = False;
 				w->next->fc = True;
 				XSetInputFocus(fluorite.dpy, w->next->w, RevertToPointerRoot, CurrentTime);
-				FWarpCursor(w->next->w);
 				FApplyBorders();
 				FRedrawWindows();
+				FWarpCursor(w->next->w);
 				XSync(fluorite.dpy, True);
 			}
 			return;
