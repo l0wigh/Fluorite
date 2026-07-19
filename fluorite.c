@@ -275,12 +275,21 @@ static void		FToggleOrganizer();
 static void		FRedrawOrganizer();
 static void		FRedrawScrolling();
 static Windows *FAddWindowScrolling(Windows *head, Windows *nw);
+static Windows *FGetColStart(Windows *w);
+static Windows *FGetColEnd(Windows *w);
+static int		FCountColWins(Windows *w);
 static void		FScrollingFocusLeft();
 static void		FScrollingFocusRight();
 static void		FScrollingMoveLeft();
 static void		FScrollingMoveRight();
 static void		FScrollingResizeIncrease();
 static void		FScrollingResizeDecrease();
+static void		FScrollingSwallowRight();
+static void		FScrollingPushNewColumn();
+static void		FScrollingFocusUp();
+static void		FScrollingFocusDown();
+static void		FScrollingMoveUp();
+static void		FScrollingMoveDown();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -334,6 +343,12 @@ static UserFunc user_functions_list[] = {
 	{"scrolling_move_right",		VOID,	FScrollingMoveRight, NULL, NULL},
 	{"scrolling_resize_inc",		VOID,	FScrollingResizeIncrease, NULL, NULL},
 	{"scrolling_resize_dec",		VOID,	FScrollingResizeDecrease, NULL, NULL},
+	{"scrolling_swallow_right",		VOID,	FScrollingSwallowRight, NULL, NULL},
+	{"scrolling_push_new_column",	VOID,	FScrollingPushNewColumn, NULL, NULL},
+	{"scrolling_focus_up",			VOID,	FScrollingFocusUp, NULL, NULL},
+	{"scrolling_focus_down",		VOID,	FScrollingFocusDown, NULL, NULL},
+	{"scrolling_move_up",			VOID,	FScrollingMoveUp, NULL, NULL},
+	{"scrolling_move_down",			VOID,	FScrollingMoveDown, NULL, NULL},
 };
 
 int main(void)
@@ -4050,94 +4065,176 @@ static void FRedrawOrganizer()
 	}
 }
 
+static Windows *FGetColStart(Windows *w)
+{
+	Windows *curr;
+
+	if (!w) return NULL;
+	curr = w;
+	while (curr->prev && curr->prev->stk_blw)
+		curr = curr->prev;
+	return curr;
+}
+
+static Windows *FGetColEnd(Windows *w)
+{
+	Windows *curr;
+
+	if (!w) return NULL;
+	curr = w;
+	while (curr->stk_blw && curr->next)
+		curr = curr->next;
+	return curr;
+}
+
+static int FCountColWins(Windows *w)
+{
+	int count = 0;
+	Windows *curr = FGetColStart(w);
+
+	while (curr)
+	{
+		count++;
+		if (!curr->stk_blw) break;
+		curr = curr->next;
+	}
+	return count;
+}
+
 static void FRedrawScrolling()
 {
 	Workspaces *ws = &fluorite.ws[fluorite.cr_ws];
 	Monitors *m = &fluorite.mon[fluorite.cr_mon];
-	
-	if (!ws->t_wins) return;
-
+	Windows *focus_win = NULL;
+	Windows *focus_col_start;
+	Windows *focus_col_end;
+	Windows *w;
+	Windows *win;
+	Windows *first_col_start;
+	Windows *last_w;
+	Windows *last_col_start;
 	int gp = fluorite.conf.gp;
 	int bw = fluorite.conf.bw;
-
 	int avail_w = m->mw - m->sl - m->sr;
-	int cell_h = m->mh - (gp * 4) - (bw * 2) - m->st - m->sb;
+	int usable_y = m->my + m->st;
+	int usable_height = m->mh - m->st - m->sb;
+	int gap = gp * 2;
+	int border = bw;
+	int focus_ww;
+	int min_x;
+	int max_x;
+	int target_x;
+	int only_one_col;
+	int current_x;
+	int n_cols = 0;
+	int N;
+	int col_usable_h;
+	int sh_each;
+	int i;
+
+	if (!ws->t_wins) return;
 
 	#define GET_WW(w) (((avail_w * (w)->swp) / 100) - (gp * 3) - (bw * 2))
 	#define GET_COL_W(w) (GET_WW(w) + (bw * 2) + (gp * 2))
 
-	Windows *focus_win = NULL;
-	int n_wins = 0;
-	for (Windows *w = ws->t_wins; w; w = w->next)
-	{
+	for (w = ws->t_wins; w; w = w->next)
 		if (w->fc) focus_win = w;
-		n_wins++;
-	}
 	if (!focus_win) focus_win = ws->t_wins;
 
-	int focus_ww = GET_WW(focus_win);
-	int min_x = m->mx + (gp * 2) + m->sl;
-	int max_x = m->mx + m->mw - m->sr - (gp * 2) - focus_ww - (bw * 2);
+	focus_col_start = FGetColStart(focus_win);
+	focus_ww = GET_WW(focus_col_start);
+	min_x = m->mx + (gp * 2) + m->sl;
+	max_x = m->mx + m->mw - m->sr - (gp * 2) - focus_ww - (bw * 2);
 
-	int target_x = focus_win->wx;
+	target_x = focus_col_start->wx;
+	only_one_col = (focus_col_start == ws->t_wins && !FGetColEnd(focus_col_start)->next);
 
-	if (n_wins == 1 || focus_win->swp == 100)
-	{
+	if (only_one_col || focus_col_start->swp == 100)
 		target_x = m->mx + (m->mw - focus_ww - (bw * 2)) / 2;
-	}
-	else
+	else if (target_x < min_x)
+		target_x = min_x;
+	else if (target_x > max_x)
+		target_x = max_x;
+
+	N = FCountColWins(focus_col_start);
+	col_usable_h = usable_height - 2 * gap;
+	sh_each = (N > 1) ? (col_usable_h - (N - 1) * gap) / N : col_usable_h;
+	i = 0;
+	for (w = focus_col_start; w; w = w->next)
 	{
-		if (target_x < min_x) target_x = min_x;
-		else if (target_x > max_x) target_x = max_x;
+		w->wx = target_x;
+		w->ww = focus_ww;
+		w->wh = sh_each - 2 * border;
+		w->wy = usable_y + gap + i * (sh_each + gap);
+		i++;
+		if (!w->stk_blw) break;
 	}
 
-	focus_win->wx = target_x;
-	focus_win->wy = m->my + (gp * 2) + m->st;
-	focus_win->ww = focus_ww;
-	focus_win->wh = cell_h;
-
-	Windows *w = focus_win->prev;
-	int current_x = focus_win->wx;
+	w = focus_col_start->prev;
+	current_x = focus_col_start->wx;
 	while (w)
 	{
-		current_x -= GET_COL_W(w);
-		w->wx = current_x;
-		w->wy = m->my + (gp * 2) + m->st;
-		w->ww = GET_WW(w);
-		w->wh = cell_h;
-		w = w->prev;
+		Windows *col_s = FGetColStart(w);
+		current_x -= GET_COL_W(col_s);
+		N = FCountColWins(col_s);
+		col_usable_h = usable_height - 2 * gap;
+		sh_each = (N > 1) ? (col_usable_h - (N - 1) * gap) / N : col_usable_h;
+		i = 0;
+		for (win = col_s; win; win = win->next)
+		{
+			win->wx = current_x;
+			win->ww = GET_WW(col_s);
+			win->wh = sh_each - 2 * border;
+			win->wy = usable_y + gap + i * (sh_each + gap);
+			i++;
+			if (!win->stk_blw) break;
+		}
+		w = col_s->prev;
 	}
 
-	w = focus_win->next;
-	current_x = focus_win->wx + GET_COL_W(focus_win);
+	focus_col_end = FGetColEnd(focus_win);
+	w = focus_col_end->next;
+	current_x = focus_col_start->wx + GET_COL_W(focus_col_start);
 	while (w)
 	{
-		w->wx = current_x;
-		w->wy = m->my + (gp * 2) + m->st;
-		w->ww = GET_WW(w);
-		w->wh = cell_h;
+		N = FCountColWins(w);
+		col_usable_h = usable_height - 2 * gap;
+		sh_each = (N > 1) ? (col_usable_h - (N - 1) * gap) / N : col_usable_h;
+		i = 0;
+		for (win = w; win; win = win->next)
+		{
+			win->wx = current_x;
+			win->ww = GET_WW(w);
+			win->wh = sh_each - 2 * border;
+			win->wy = usable_y + gap + i * (sh_each + gap);
+			i++;
+			if (!win->stk_blw) break;
+		}
 		current_x += GET_COL_W(w);
-		w = w->next;
+		w = FGetColEnd(w)->next;
 	}
 
-	Windows *first_w = ws->t_wins;
-	Windows *last_w = ws->t_wins;
-	while (last_w->next) last_w = last_w->next;
+	for (w = ws->t_wins; w; w = FGetColEnd(w)->next)
+		n_cols++;
 
-	if (n_wins > 1)
+	if (n_cols > 1)
 	{
-		if (first_w->wx > min_x)
+		first_col_start = ws->t_wins;
+		if (first_col_start->wx > min_x)
 		{
-			int shift = first_w->wx - min_x;
+			int shift = first_col_start->wx - min_x;
 			for (w = ws->t_wins; w; w = w->next) w->wx -= shift;
-		} 
-		else 
+		}
+		else
 		{
-			int last_max_x = m->mx + m->mw - m->sr - (gp * 2) - last_w->ww - (bw * 2);
-			if (last_w->wx < last_max_x && first_w->wx < min_x)
+			last_w = ws->t_wins;
+			while (last_w->next) last_w = last_w->next;
+			last_col_start = FGetColStart(last_w);
+			int last_max_x = m->mx + m->mw - m->sr - (gp * 2) - last_col_start->ww - (bw * 2);
+			if (last_col_start->wx < last_max_x && first_col_start->wx < min_x)
 			{
-				int shift = last_max_x - last_w->wx;
-				if (first_w->wx + shift > min_x) shift = min_x - first_w->wx;
+				int shift = last_max_x - last_col_start->wx;
+				if (first_col_start->wx + shift > min_x) shift = min_x - first_col_start->wx;
 				for (w = ws->t_wins; w; w = w->next) w->wx += shift;
 			}
 		}
@@ -4149,10 +4246,13 @@ static void FRedrawScrolling()
 
 static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
 {
-	no_refocus = True;
 	Windows *target = NULL;
+	Windows *col_end;
+	Windows *w;
 
-	for (Windows *w = head; w != NULL; w = w->next)
+	no_refocus = True;
+
+	for (w = head; w != NULL; w = w->next)
 	{
 		if (w->fc) target = w;
 		w->fc = False;
@@ -4173,11 +4273,12 @@ static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
 		return nw;
 	}
 
-	nw->prev = target;
-	nw->next = target->next;
-	if (target->next)
-		target->next->prev = nw;
-	target->next = nw;
+	col_end = FGetColEnd(target);
+	nw->prev = col_end;
+	nw->next = col_end->next;
+	if (col_end->next)
+		col_end->next->prev = nw;
+	col_end->next = nw;
 
 	no_refocus = False;
 	return head;
@@ -4185,13 +4286,73 @@ static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
 
 static void FScrollingFocusLeft()
 {
+	Windows *w;
+	Windows *col_start;
+	Windows *prev_col_start;
+
 	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
 		if (w->fc)
 		{
-			if (w->prev)
+			col_start = FGetColStart(w);
+			prev_col_start = FGetColStart(col_start->prev);
+			if (prev_col_start)
+			{
+				w->fc = False;
+				prev_col_start->fc = True;
+				XSetInputFocus(fluorite.dpy, prev_col_start->w, RevertToPointerRoot, CurrentTime);
+				FApplyBorders();
+				FRedrawWindows();
+				FWarpCursor(prev_col_start->w);
+				XSync(fluorite.dpy, True);
+			}
+			return;
+		}
+	}
+}
+
+static void FScrollingFocusRight()
+{
+	Windows *w;
+	Windows *col_end;
+	Windows *next_col_start;
+
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			col_end = FGetColEnd(w);
+			next_col_start = col_end->next;
+			if (next_col_start)
+			{
+				w->fc = False;
+				next_col_start->fc = True;
+				XSetInputFocus(fluorite.dpy, next_col_start->w, RevertToPointerRoot, CurrentTime);
+				FApplyBorders();
+				FRedrawWindows();
+				FWarpCursor(next_col_start->w);
+				XSync(fluorite.dpy, True);
+			}
+			return;
+		}
+	}
+}
+
+static void FScrollingFocusUp()
+{
+	Windows *w;
+
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			if (w->prev && w->prev->stk_blw)
 			{
 				w->fc = False;
 				w->prev->fc = True;
@@ -4206,15 +4367,17 @@ static void FScrollingFocusLeft()
 	}
 }
 
-static void FScrollingFocusRight()
+static void FScrollingFocusDown()
 {
+	Windows *w;
+
 	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
 		if (w->fc)
 		{
-			if (w->next)
+			if (w->stk_blw && w->next)
 			{
 				w->fc = False;
 				w->next->fc = True;
@@ -4291,16 +4454,102 @@ static void FScrollingMoveRight()
 	}
 }
 
-static void FScrollingResizeIncrease()
+static void FScrollingMoveUp()
 {
-	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
+	Windows *w;
+	Windows *prev_win;
+	Windows *prev_prev;
+	Windows *next_win;
+	int tmp_stk;
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
 		if (w->fc)
 		{
-			if (w->swp < 100) w->swp += 50;
-			if (w->swp > 100) w->swp = 100;
+			prev_win = w->prev;
+			if (!prev_win || !prev_win->stk_blw) return;
+
+			prev_prev = prev_win->prev;
+			next_win = w->next;
+
+			if (prev_prev) prev_prev->next = w;
+			else fluorite.ws[fluorite.cr_ws].t_wins = w;
+			w->prev = prev_prev;
+
+			prev_win->next = next_win;
+			if (next_win) next_win->prev = prev_win;
+
+			w->next = prev_win;
+			prev_win->prev = w;
+
+			tmp_stk = w->stk_blw;
+			w->stk_blw = prev_win->stk_blw;
+			prev_win->stk_blw = tmp_stk;
+
+			FRedrawWindows();
+			XSync(fluorite.dpy, True);
+			return;
+		}
+	}
+}
+
+static void FScrollingMoveDown()
+{
+	Windows *w;
+	Windows *next_win;
+	Windows *prev_win;
+	Windows *next_next;
+	int tmp_stk;
+
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz) return;
+
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			next_win = w->next;
+			if (!next_win || !w->stk_blw) return;
+
+			prev_win = w->prev;
+			next_next = next_win->next;
+
+			if (prev_win) prev_win->next = next_win;
+			else fluorite.ws[fluorite.cr_ws].t_wins = next_win;
+			next_win->prev = prev_win;
+
+			w->next = next_next;
+			if (next_next) next_next->prev = w;
+
+			next_win->next = w;
+			w->prev = next_win;
+
+			tmp_stk = w->stk_blw;
+			w->stk_blw = next_win->stk_blw;
+			next_win->stk_blw = tmp_stk;
+
+			FRedrawWindows();
+			XSync(fluorite.dpy, True);
+			return;
+		}
+	}
+}
+
+static void FScrollingResizeIncrease()
+{
+	Windows *w;
+	Windows *col_s;
+
+	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
+
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		if (w->fc)
+		{
+			col_s = FGetColStart(w);
+			if (col_s->swp < 100) col_s->swp += 50;
+			if (col_s->swp > 100) col_s->swp = 100;
 			
 			FRedrawWindows();
 			XSync(fluorite.dpy, True);
@@ -4312,14 +4561,18 @@ static void FScrollingResizeIncrease()
 
 static void FScrollingResizeDecrease()
 {
+	Windows *w;
+	Windows *col_s;
+
 	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 	{
 		if (w->fc)
 		{
-			if (w->swp > 50) w->swp -= 50;
-			if (w->swp < 50) w->swp = 50;
+			col_s = FGetColStart(w);
+			if (col_s->swp > 50) col_s->swp -= 50;
+			if (col_s->swp < 50) col_s->swp = 50;
 
 			FRedrawWindows();
 			XSync(fluorite.dpy, True);
@@ -4327,4 +4580,74 @@ static void FScrollingResizeDecrease()
 			return;
 		}
 	}
+}
+
+static void FScrollingSwallowRight()
+{
+	Workspaces *ws = &fluorite.ws[fluorite.cr_ws];
+	Windows *focus_win = NULL;
+	Windows *w;
+	Windows *col_end;
+	Windows *next_col_start;
+
+	if (ws->layout != SCROLLING || ws->fs || fluorite.orgz) return;
+
+	for (w = ws->t_wins; w; w = w->next)
+		if (w->fc) focus_win = w;
+
+	if (!focus_win) return;
+
+	col_end = FGetColEnd(focus_win);
+	next_col_start = col_end->next;
+
+	if (next_col_start)
+	{
+		col_end->stk_blw = 1;
+		FRedrawWindows();
+		XSync(fluorite.dpy, True);
+	}
+}
+
+static void FScrollingPushNewColumn()
+{
+	Workspaces *ws = &fluorite.ws[fluorite.cr_ws];
+	Windows *focus_win = NULL;
+	Windows *w;
+	Windows *insert_after;
+
+	if (ws->layout != SCROLLING || ws->fs || fluorite.orgz) return;
+
+	for (w = ws->t_wins; w; w = w->next)
+		if (w->fc) focus_win = w;
+
+	if (!focus_win || FCountColWins(focus_win) < 2) return;
+
+	insert_after = FGetColEnd(focus_win);
+	if (insert_after == focus_win) insert_after = focus_win->prev;
+
+	if (focus_win->prev)
+	{
+		if (focus_win->prev->stk_blw)
+			focus_win->prev->stk_blw = focus_win->stk_blw;
+		focus_win->prev->next = focus_win->next;
+	}
+	else
+		ws->t_wins = focus_win->next;
+
+	if (focus_win->next)
+		focus_win->next->prev = focus_win->prev;
+
+	focus_win->stk_blw = 0;
+
+	if (insert_after)
+	{
+		focus_win->next = insert_after->next;
+		focus_win->prev = insert_after;
+		if (insert_after->next)
+			insert_after->next->prev = focus_win;
+		insert_after->next = focus_win;
+	}
+
+	FRedrawWindows();
+	XSync(fluorite.dpy, True);
 }
