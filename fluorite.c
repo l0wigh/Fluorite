@@ -4488,6 +4488,7 @@ static void FScrollingMoveLeft()
 	}
 
 	FRedrawWindows();
+	FWarpCursor(focus_win->w);
 	XSync(fluorite.dpy, True);
 }
 
@@ -4553,6 +4554,7 @@ static void FScrollingMoveRight()
 	}
 
 	FRedrawWindows();
+	FWarpCursor(focus_win->w);
 	XSync(fluorite.dpy, True);
 }
 
@@ -4591,6 +4593,7 @@ static void FScrollingMoveUp()
 			prev_win->stk_blw = tmp_stk;
 
 			FRedrawWindows();
+			FWarpCursor(w->w);
 			XSync(fluorite.dpy, True);
 			return;
 		}
@@ -4632,6 +4635,7 @@ static void FScrollingMoveDown()
 			next_win->stk_blw = tmp_stk;
 
 			FRedrawWindows();
+			FWarpCursor(w->w);
 			XSync(fluorite.dpy, True);
 			return;
 		}
@@ -4722,6 +4726,7 @@ static void FScrollingMoveWindowToColumnLeft()
 		focus_win->stk_blw = 0;
 
 		FRedrawWindows();
+		FWarpCursor(focus_win->w);
 		XSync(fluorite.dpy, True);
 	}
 }
@@ -4762,6 +4767,7 @@ static void FScrollingMoveWindowToColumnRight()
 		focus_win->stk_blw = 1;
 
 		FRedrawWindows();
+		FWarpCursor(focus_win->w);
 		XSync(fluorite.dpy, True);
 	}
 }
