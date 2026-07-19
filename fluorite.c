@@ -4446,9 +4446,7 @@ static void FScrollingMoveLeft()
 		Windows *col_start = FGetColStart(focus_win);
 
 		if (focus_win == col_start)
-		{
 			focus_win->stk_blw = 0;
-		}
 		else
 		{
 			if (focus_win->prev && focus_win->prev->stk_blw)
@@ -4469,6 +4467,7 @@ static void FScrollingMoveLeft()
 
 			focus_win->stk_blw = 0;
 		}
+		focus_win->swp = 50;
 	}
 	else
 	{
@@ -4534,6 +4533,7 @@ static void FScrollingMoveRight()
 
 			focus_win->stk_blw = 0;
 		}
+		focus_win->swp = 50;
 	}
 	else
 	{
@@ -4646,7 +4646,9 @@ static void FScrollingResizeIncrease()
 {
 	Windows *w;
 	Windows *col_s;
-
+	Windows *col_e;
+	Windows *curr;
+	
 	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
 
 	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -4654,8 +4656,14 @@ static void FScrollingResizeIncrease()
 		if (w->fc)
 		{
 			col_s = FGetColStart(w);
-			if (col_s->swp < 100) col_s->swp += 50;
-			if (col_s->swp > 100) col_s->swp = 100;
+			col_e = FGetColEnd(w);
+
+			for (curr = col_s; curr != NULL; curr = curr->next)
+			{	
+				if (curr->swp < 100) curr->swp += 50;
+				if (curr->swp > 100) curr->swp = 100;
+				if (curr == col_e) break;
+			}
 			
 			FRedrawWindows();
 			XSync(fluorite.dpy, True);
@@ -4669,6 +4677,8 @@ static void FScrollingResizeDecrease()
 {
 	Windows *w;
 	Windows *col_s;
+	Windows *col_e;
+	Windows *curr;
 
 	if (fluorite.ws[fluorite.cr_ws].layout != SCROLLING || fluorite.ws[fluorite.cr_ws].fs || fluorite.orgz || !fluorite.ws[fluorite.cr_ws].t_wins->next) return;
 
@@ -4677,8 +4687,14 @@ static void FScrollingResizeDecrease()
 		if (w->fc)
 		{
 			col_s = FGetColStart(w);
-			if (col_s->swp > 50) col_s->swp -= 50;
-			if (col_s->swp < 50) col_s->swp = 50;
+			col_e = FGetColEnd(w);
+
+			for (curr = col_s; curr != NULL; curr = curr->next)
+			{	
+				if (curr->swp > 50) curr->swp -= 50;
+				if (curr->swp < 50) curr->swp = 50;
+				if (curr == col_e) break;
+			}
 
 			FRedrawWindows();
 			XSync(fluorite.dpy, True);
@@ -4724,6 +4740,8 @@ static void FScrollingMoveWindowToColumnLeft()
 
 		target_col_end->stk_blw = 1;
 		focus_win->stk_blw = 0;
+		focus_win->swp = 50;
+		focus_win->prev->swp = 50;
 
 		FRedrawWindows();
 		FWarpCursor(focus_win->w);
@@ -4765,6 +4783,8 @@ static void FScrollingMoveWindowToColumnRight()
 		next_col_start->prev = focus_win;
 
 		focus_win->stk_blw = 1;
+		focus_win->swp = 50;
+		focus_win->next->swp = 50;
 
 		FRedrawWindows();
 		FWarpCursor(focus_win->w);
