@@ -4153,7 +4153,7 @@ static void FRedrawScrolling()
 	Windows *first_col_start;
 	Windows *last_w;
 	Windows *last_col_start;
-	int gp = fluorite.conf.gp * 2;
+	int gp = fluorite.conf.gp;
 	int bw = fluorite.conf.bw;
 	int avail_w = m->mw - m->sl - m->sr;
 	int usable_y = m->my + m->st;
