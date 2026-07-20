@@ -3279,7 +3279,10 @@ static void FTileWindow()
 			w->next = NULL;
 			FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
 			w->fc = True;
-			fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+			if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+				fluorite.ws[fluorite.cr_ws].t_wins = FAddWindowScrolling(fluorite.ws[fluorite.cr_ws].t_wins, w);
+			else
+				fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 			XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 			FApplyActiveWindow(w->w);
 		}
@@ -3302,7 +3305,10 @@ static void FTileAllWindows()
 
 	for (w = fluorite.ws[fluorite.cr_ws].f_wins; w->next != NULL; w = w->next);
 	prev = w->prev;
-	fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+	if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindowScrolling(fluorite.ws[fluorite.cr_ws].t_wins, w);
+	else
+		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 	fluorite.ws[fluorite.cr_ws].t_wins->fc = False;
 	fluorite.ws[fluorite.cr_ws].t_wins->prev = prev;
 	fluorite.ws[fluorite.cr_ws].t_wins = fluorite.ws[fluorite.cr_ws].f_wins;
@@ -3620,7 +3626,10 @@ static void FDelWindowFromScratchpad()
 		p->s_wins = FDelWindow(p->s_wins, w);
 		w->next = NULL;
 		w->prev = NULL;
-		fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+		if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
+			fluorite.ws[fluorite.cr_ws].t_wins = FAddWindowScrolling(fluorite.ws[fluorite.cr_ws].t_wins, w);
+		else 
+			fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
 		if (!p->s_wins)
 		{
 			memset(fluorite.pads[fluorite.hpads], 0, sizeof(Scratchpads));
