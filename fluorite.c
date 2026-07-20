@@ -3277,12 +3277,14 @@ static void FTileWindow()
 			fluorite.ws[fluorite.cr_ws].f_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
 			w->prev = NULL;
 			w->next = NULL;
-			FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
-			w->fc = True;
 			if (fluorite.ws[fluorite.cr_ws].layout == SCROLLING)
 				fluorite.ws[fluorite.cr_ws].t_wins = FAddWindowScrolling(fluorite.ws[fluorite.cr_ws].t_wins, w);
 			else
+			{
+				FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
 				fluorite.ws[fluorite.cr_ws].t_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+			}
+			w->fc = True;
 			XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
 			FApplyActiveWindow(w->w);
 		}
