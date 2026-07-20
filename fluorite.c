@@ -1,5 +1,4 @@
-#include <unistd.h>
-#define FLUORITE_VERSION "Fluorite [EVO 2] (Rev 2)"
+#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 1)"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -4154,7 +4153,7 @@ static void FRedrawScrolling()
 	Windows *first_col_start;
 	Windows *last_w;
 	Windows *last_col_start;
-	int gp = fluorite.conf.gp;
+	int gp = fluorite.conf.gp * 2;
 	int bw = fluorite.conf.bw;
 	int avail_w = m->mw - m->sl - m->sr;
 	int usable_y = m->my + m->st;
