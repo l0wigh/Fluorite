@@ -161,8 +161,6 @@ typedef struct
 	int		fl_hdn;
 	int		mo;
 	int		ct_win;
-    int        scroll_x;
-    int        scroll_y;
 } Workspaces;
 
 typedef struct Scratchpads
