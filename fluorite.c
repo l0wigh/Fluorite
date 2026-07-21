@@ -4218,8 +4218,8 @@ static void FRedrawScrolling()
 	}
 	int eff_avail_w = apply_peek ? (avail_w - 80) : avail_w;
 
-	#define GET_WW(w) (((eff_avail_w * (w)->swp) / 100) - (gp * 3) - (bw * 2))
-	#define GET_COL_W(w) (GET_WW(w) + (bw * 2) + (gp * 2))
+	#define GET_WW(w) (((eff_avail_w - gp * 2) * (w)->swp) / 100 - gp * 2 - (bw * 2))
+	#define GET_COL_W(w) (((eff_avail_w - gp * 2) * (w)->swp) / 100)
 
 	focus_ww = GET_WW(focus_col_start);
 	min_x = m->mx + (gp * 2) + m->sl + peek_left;
