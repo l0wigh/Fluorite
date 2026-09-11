@@ -297,9 +297,12 @@ static void		FUpdateWorkarea();
 static void		FUpdateDesktopViewport();
 static void		*FIPCServerThread(void *ptr);
 static void		FScratchpadToggleByKeysym(char *arg);
+static Windows	*FFindTiledWindowAtPos(int x, int y);
+static void		FSwapTiledWindows(Windows *a, Windows *b);
 
 /* DEF: globals */
 static Fluorite fluorite;
+static Windows *drag_src_win = NULL;
 static int no_unmap = False;
 static int no_warp = False;
 static int no_refocus = False;
@@ -1046,6 +1049,26 @@ static void FRun()
 				FButtonPress(ev);
 				break;
 			case ButtonRelease:
+				if (drag_src_win)
+				{
+					XDefineCursor(fluorite.dpy, fluorite.root, cnorm);
+					Windows *dst = FFindTiledWindowAtPos(ev.xbutton.x_root, ev.xbutton.y_root);
+
+					if (dst && dst != drag_src_win)
+					{
+						FSwapTiledWindows(drag_src_win, dst);
+						FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+						dst->fc = True;
+						XSetInputFocus(fluorite.dpy, dst->w, RevertToPointerRoot, CurrentTime);
+					}
+
+					drag_src_win = NULL;
+					no_warp = True;
+					FRedrawWindows();
+					FApplyBorders();
+					no_warp = False;
+					XSync(fluorite.dpy, True);
+				}
 				for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 					XDefineCursor(fluorite.dpy, w->w, cnorm);
 				if (fluorite.hpads != -1)
@@ -1056,6 +1079,16 @@ static void FRun()
 				FKeyPress(ev);
 				break;
 			case MotionNotify:
+				if (drag_src_win)
+				{
+					int dx = ev.xmotion.x_root - fluorite.mouse.spx;
+					int dy = ev.xmotion.y_root - fluorite.mouse.spy;
+					XMoveWindow(fluorite.dpy, drag_src_win->w,
+							fluorite.mouse.swx + dx,
+							fluorite.mouse.swy + dy);
+					XSync(fluorite.dpy, False);
+					break;
+				}
 				FGetMonitorFromMouse();
 				// FFocusWindowUnderCursor();
 				FMotionNotify(ev);
@@ -1330,6 +1363,7 @@ static void FMapRequest(XEvent ev)
 	nw->swp = 50;
 	XSelectInput(fluorite.dpy, nw->w, EnterWindowMask | FocusChangeMask | PropertyChangeMask | StructureNotifyMask | KeyPressMask);
 	XGrabButton(fluorite.dpy, Button1, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
+	XGrabButton(fluorite.dpy, Button1, fluorite.conf.mt | Mod1Mask, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.dpy, Button3, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.dpy, Button4, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XGrabButton(fluorite.dpy, Button5, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
@@ -2721,6 +2755,21 @@ static void FButtonPress(XEvent ev)
 	fluorite.mouse.spx = ev.xbutton.x_root;
 	fluorite.mouse.spy = ev.xbutton.y_root;
 	XGetGeometry(fluorite.dpy, target, &fluorite.root, &fluorite.mouse.swx, &fluorite.mouse.swy, &fluorite.mouse.sww, &fluorite.mouse.swh, &b_w, &d);
+
+	if (ev.xbutton.button == Button1 && (ev.xbutton.state & Mod1Mask))
+    {
+        for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+        {
+            if (target == w->w)
+            {
+                drag_src_win = w;
+				XRaiseWindow(fluorite.dpy, w->w);
+                XDefineCursor(fluorite.dpy, fluorite.root, cmove);
+                return;
+            }
+        }
+        return;
+    }
 
 	if (fluorite.hpads == -1)
 		goto next;
@@ -5341,4 +5390,42 @@ static void FScratchpadToggleByKeysym(char *arg)
     XSync(fluorite.dpy, True);
     FApplyBorders();
     FPolybarScratchpadsIPC();
+}
+
+static Windows *FFindTiledWindowAtPos(int x, int y)
+{
+    for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+    {
+        if (x >= w->wx && x <= (w->wx + (int)w->ww + fluorite.conf.bw * 2) &&
+            y >= w->wy && y <= (w->wy + (int)w->wh + fluorite.conf.bw * 2))
+            return w;
+    }
+    return NULL;
+}
+
+static void FSwapTiledWindows(Windows *a, Windows *b)
+{
+    if (!a || !b || a == b)
+        return;
+
+    Window tmp_w   = a->w;
+    pid_t tmp_pid  = a->pid;
+    int tmp_fc     = a->fc;
+    int tmp_can_sw = a->can_sw;
+    Window tmp_sw  = a->sw;
+    int tmp_swp    = a->swp;
+
+    a->w      = b->w;
+    a->pid    = b->pid;
+    a->fc     = b->fc;
+    a->can_sw = b->can_sw;
+    a->sw     = b->sw;
+    a->swp    = b->swp;
+
+    b->w      = tmp_w;
+    b->pid    = tmp_pid;
+    b->fc     = tmp_fc;
+    b->can_sw = tmp_can_sw;
+    b->sw     = tmp_sw;
+    b->swp    = tmp_swp;
 }
