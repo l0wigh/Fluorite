@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 2)"
+#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 3)"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -18,6 +18,8 @@
 #include <sys/inotify.h>
 #include <errno.h>
 #include <confuse.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 /* DEF: constant */
 #define MAX_WS 10
@@ -26,6 +28,7 @@
 #define EVENT_SIZE		(sizeof(struct inotify_event))
 #define BUF_LEN			(1024 * (EVENT_SIZE + 16))
 #define HASH_SIZE		256
+#define SOCKET_PATH		"/tmp/fluorite.sock"
 
 static inline int MAX(int a, int b) { return a > b ? a : b; }
 
@@ -291,6 +294,8 @@ static void		FScrollingMoveUp();
 static void		FScrollingMoveDown();
 static void		FUpdateWorkarea();
 static void		FUpdateDesktopViewport();
+static void		*FIPCServerThread(void *ptr);
+static void		FScratchpadToggleByKeysym(char *arg);
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -350,14 +355,17 @@ static UserFunc user_functions_list[] = {
 	{"scrolling_focus_down",		VOID,	FScrollingFocusDown, NULL, NULL},
 	{"scrolling_move_up",			VOID,	FScrollingMoveUp, NULL, NULL},
 	{"scrolling_move_down",			VOID,	FScrollingMoveDown, NULL, NULL},
+	{"toggle_scratchpad_key", CHAR, NULL, NULL, FScratchpadToggleByKeysym},
 };
 
 int main(void)
 {
 	pthread_t t_inotify;
+	pthread_t t_ipc;
 
 	FInit();
 	pthread_create(&t_inotify, NULL, &FInotifyConfigAndXresources, NULL);
+	pthread_create(&t_ipc, NULL, &FIPCServerThread, NULL);
 	FRun();
 	FQuit();
 }
@@ -5131,4 +5139,157 @@ static void FUpdateDesktopViewport()
         (unsigned char *)viewports,
         2
     );
+}
+
+static void FHandleIPCCommand(char *cmd)
+{
+	cmd[strcspn(cmd, "\r\n")] = 0;
+
+	char action[64] = {0};
+	char arg[64] = {0};
+
+	sscanf(cmd, "%63s %63s", action, arg);
+
+	for (unsigned int j = 0; j < LENGTH(user_functions_list); j++)
+	{
+		if (strcasecmp(action, user_functions_list[j].name) == 0)
+		{
+			if (user_functions_list[j].type == VOID && user_functions_list[j].void_fun)
+				user_functions_list[j].void_fun();
+			else if (user_functions_list[j].type == INT && user_functions_list[j].int_fun)
+			{
+				if (strcasecmp(arg, "up") == 0) user_functions_list[j].int_fun(UP);
+				else if (strcasecmp(arg, "down") == 0) user_functions_list[j].int_fun(DOWN);
+				else user_functions_list[j].int_fun(atoi(arg));
+			}
+			else if (user_functions_list[j].type == CHAR && user_functions_list[j].char_fun)
+				user_functions_list[j].char_fun(arg);
+			break;
+		}
+	}
+	FRedrawWindows();
+	XSync(fluorite.dpy, True);
+	FApplyBorders();
+}
+
+static void *FIPCServerThread(void *unused)
+{
+	(void)unused;
+	int server_fd, client_fd;
+	struct sockaddr_un addr;
+	char buffer[256];
+
+	unlink(SOCKET_PATH);
+	if ((server_fd = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+		return NULL;
+
+	memset(&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
+
+	if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) == -1)
+	{
+		close(server_fd);
+		return NULL;
+	}
+
+	if (listen(server_fd, 5) == -1)
+	{
+		close(server_fd);
+		return NULL;
+	}
+
+	while (fluorite.run)
+	{
+		if ((client_fd = accept(server_fd, NULL, NULL)) == -1)
+			continue;
+
+		ssize_t bytes_read = read(client_fd, buffer, sizeof(buffer) - 1);
+		if (bytes_read > 0)
+		{
+			buffer[bytes_read] = '\0';
+			FHandleIPCCommand(buffer);
+			int res = write(client_fd, "OK\n", 3);
+			(void)res;
+		}
+		close(client_fd);
+	}
+	close(server_fd);
+	unlink(SOCKET_PATH);
+	return NULL;
+}
+
+static void FScratchpadToggleByKeysym(char *arg)
+{
+    if (fluorite.orgz || !arg || strlen(arg) == 0) return;
+
+    KeySym key = XStringToKeysym(arg);
+    if (key == NoSymbol)
+        return;
+
+    int hkey = FHashKey(key);
+    Scratchpads *p = fluorite.pads[hkey];
+    if (!p || p->key != key || !p->s_wins)
+        return;
+
+    Scratchpads *op = (fluorite.hpads != -1) ? fluorite.pads[fluorite.hpads] : NULL;
+
+    if (op && op != p)
+    {
+        no_unmap = True;
+        for (Windows *w = op->s_wins; w != NULL; w = w->next)
+            XUnmapWindow(fluorite.dpy, w->w);
+        XSync(fluorite.dpy, True);
+        no_unmap = False;
+    }
+
+    FRemoveActiveWindow();
+
+    if (fluorite.hpads != hkey || fluorite.hpads == -1)
+    {
+        int found = False;
+        for (Windows *w = p->s_wins; w != NULL; w = w->next)
+        {
+            XMapWindow(fluorite.dpy, w->w);
+            XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+            if (w->fc)
+            {
+                XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bf);
+                XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+                found = True;
+            }
+        }
+        if (!found)
+        {
+            p->s_wins->fc = True;
+            XSetWindowBorder(fluorite.dpy, p->s_wins->w, fluorite.conf.bf);
+            XSetInputFocus(fluorite.dpy, p->s_wins->w, RevertToPointerRoot, CurrentTime);
+        }
+        fluorite.hpads = hkey;
+    }
+    else
+    {
+        no_unmap = True;
+        for (Windows *w = p->s_wins; w != NULL; w = w->next)
+            XUnmapWindow(fluorite.dpy, w->w);
+        XSync(fluorite.dpy, True);
+        no_unmap = False;
+        fluorite.hpads = -1;
+
+        if (fluorite.ws[fluorite.cr_ws].t_wins)
+        {
+            Windows *w;
+            for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+                if (w->fc)
+                    XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+            for (w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+                if (w->fc)
+                    XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+        }
+    }
+
+    FRedrawWindows();
+    XSync(fluorite.dpy, True);
+    FApplyBorders();
+    FPolybarScratchpadsIPC();
 }
