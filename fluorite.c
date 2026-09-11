@@ -1,4 +1,4 @@
-#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 1)"
+#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 2)"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -211,6 +211,7 @@ static void 	FApplyActiveWindow(Window w);
 static void 	FApplyBorders();
 static int  	FCheckWindowIsFloating(Window w);
 static int  	FCheckWindowIsFixed(Window w);
+static int  	FCheckWindowIsTransientOrPopup(Window w);
 static void 	FChangeMonitor(int mon);
 static void 	FConfigureRequest(XEvent ev);
 static void 	FKeyPress(XEvent ev);
@@ -231,6 +232,7 @@ static void 	FSetWindowOpacity(Window w, double opacity);
 static void		FUpdateClientList();
 static void		FResetWindowOpacity(Window w);
 static void		FRemoveActiveWindow();
+static void		FSetWindowFullscreen(Window w, int fs);
 static void		FSearchAndDestoryGhostWindows();
 static void		FPolybarLayoutIPC(const int layout);
 static void		FPolybarScratchpadsIPC();
@@ -287,6 +289,8 @@ static void		FScrollingFocusUp();
 static void		FScrollingFocusDown();
 static void		FScrollingMoveUp();
 static void		FScrollingMoveDown();
+static void		FUpdateWorkarea();
+static void		FUpdateDesktopViewport();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -383,6 +387,8 @@ static void FInit()
 	FReloadConfig();
 	FInitMonitors();
 	FInitWorkspaces();
+	FUpdateWorkarea();
+	FUpdateDesktopViewport();
 }
 
 static int FErrorHandler(Display *dis, XErrorEvent *ev)
@@ -541,6 +547,8 @@ static void FInitMonitors()
 				primary = i;
 			fluorite.cr_ws = fluorite.mon[i].ws;
 			fluorite.cr_mon = i;
+			FResetMonitorStrut(i);
+			FRecalculateStrut(i);
 			for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
 				XMapWindow(fluorite.dpy, w->w);
 			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
@@ -558,6 +566,7 @@ static void FInitMonitors()
 		XSync(fluorite.dpy, True);
 		FApplyBorders();
 		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+		FUpdateWorkarea();
 		no_warp = False;
 	}
 }
@@ -592,13 +601,15 @@ static void FApplyProps()
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspaces_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
-	Atom supported[8] = {
+	Atom supported[11] = {
 		XInternAtom(fluorite.dpy, "_NET_WM_NAME", False),			XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False),
 		XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False),		XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False),
 		XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False),	XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False),
-		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False)
+		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),				XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
+		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False),
 	};
-	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 7);
+	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 11);
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
 	XSelectInput(fluorite.dpy, fluorite.root, attributes.event_mask);
 	cnorm = XcursorLibraryLoadCursor(fluorite.dpy, "arrow");
@@ -1030,6 +1041,8 @@ static void FRun()
 				FMotionNotify(ev);
 				break;
 			case EnterNotify:
+				if (ev.xcrossing.mode != NotifyNormal || ev.xcrossing.detail == NotifyInferior)
+					break;
 				FGetMonitorFromMouse();
 				FFocusWindowUnderCursor();
 				break;
@@ -1038,6 +1051,14 @@ static void FRun()
 				break;
 			case DestroyNotify:
 				FDestroyNotify(ev);
+				break;
+			case PropertyNotify:
+				if (ev.xproperty.atom == XInternAtom(fluorite.dpy, "_NET_WM_STRUT_PARTIAL", False))
+					for (int i = 0; i < fluorite.ct_mon; i++)
+					{
+						FResetMonitorStrut(i);
+						FRecalculateStrut(i);
+					}
 				break;
 		}
 	}
@@ -1271,7 +1292,7 @@ static void FMapRequest(XEvent ev)
 		goto freeing;
 	}
 
-	if (wa.override_redirect || wa.width <= 0 || wa.width <= 0)
+	if (wa.override_redirect || wa.height <= 0 || wa.width <= 0)
 	{
 		XMapWindow(fluorite.dpy, ev.xmaprequest.window);
 		goto freeing;
@@ -1305,6 +1326,7 @@ static void FMapRequest(XEvent ev)
 
 	if (is_fixed)
 	{
+		XSelectInput(fluorite.dpy, nw->w, PropertyChangeMask | StructureNotifyMask);
 		FGetFixedPartialStrut(nw->w, True);
 		goto freeing;
 	}
@@ -1347,14 +1369,95 @@ freeing:
 	free(nw);
 }
 
+static int FCheckWindowIsTransientOrPopup(Window w)
+{
+	Window tr;
+	if (XGetTransientForHint(fluorite.dpy, w, &tr))
+		return True;
+
+	Atom da, atom = None;
+	int di;
+	unsigned long nitems, bytes_after;
+	unsigned char *p = NULL;
+
+	if (XGetWindowProperty(fluorite.dpy, w, XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &nitems, &bytes_after, &p) == Success && p)
+	{
+		atom = *(Atom *) p;
+		XFree(p);
+		p = NULL;
+		if (atom == XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False) ||
+		    atom == XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE_UTILITY", False) ||
+		    atom == XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE_POPUP_MENU", False) ||
+		    atom == XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE_TOOLBAR", False) ||
+		    atom == XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE_SPLASH", False))
+			return True;
+	}
+
+	if (XGetWindowProperty(fluorite.dpy, w, XInternAtom(fluorite.dpy, "_NET_WM_STATE", False), 0L, 1024L, False, XA_ATOM, &da, &di, &nitems, &bytes_after, &p) == Success && p)
+	{
+		Atom *atoms = (Atom *) p;
+		Atom skip_taskbar = XInternAtom(fluorite.dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
+		for (unsigned long i = 0; i < nitems; i++)
+		{
+			if (atoms[i] == skip_taskbar)
+			{
+				XFree(p);
+				return True;
+			}
+		}
+		XFree(p);
+	}
+
+	return False;
+}
+
 static void FManageFloatingWindow(Windows *nw)
 {
 	unsigned int ww, wh;
 	Windows *cw = fluorite.ws[fluorite.cr_ws].f_wins;
+	XSizeHints hints;
+	long msize;
+	int custom_pos = False;
 
 	xdo_get_window_size(fluorite.xdo, nw->w, &ww, &wh);
-	nw->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.mon[fluorite.cr_mon].mw  - ww) / 2;
-	nw->wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.mon[fluorite.cr_mon].mh  - wh) / 2;
+
+	if (XGetWMNormalHints(fluorite.dpy, nw->w, &hints, &msize))
+	{
+		if (hints.flags & USPosition)
+		{
+			nw->wx = hints.x;
+			nw->wy = hints.y;
+			custom_pos = True;
+		}
+		else if ((hints.flags & PPosition) && FCheckWindowIsTransientOrPopup(nw->w))
+		{
+			nw->wx = hints.x;
+			nw->wy = hints.y;
+			custom_pos = True;
+		}
+	}
+
+	if (custom_pos)
+	{
+		int mon_x = fluorite.mon[fluorite.cr_mon].mx;
+		int mon_y = fluorite.mon[fluorite.cr_mon].my;
+		int mon_w = fluorite.mon[fluorite.cr_mon].mw;
+		int mon_h = fluorite.mon[fluorite.cr_mon].mh;
+
+		if (nw->wx + (int)ww > mon_x + mon_w)
+			nw->wx = mon_x + mon_w - ww;
+		if (nw->wx < mon_x)
+			nw->wx = mon_x;
+		if (nw->wy + (int)wh > mon_y + mon_h)
+			nw->wy = mon_y + mon_h - wh;
+		if (nw->wy < mon_y)
+			nw->wy = mon_y;
+	}
+	else
+	{
+		nw->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.mon[fluorite.cr_mon].mw  - ww) / 2;
+		nw->wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.mon[fluorite.cr_mon].mh  - wh) / 2;
+	}
 	nw->ww = ww;
 	nw->wh = wh;
 	nw->fs = False;
@@ -1654,6 +1757,43 @@ static void FMoveWindowBasedOnMonitor(Windows *w)
 
 }
 
+static void FRaiseAboveWindows(void)
+{
+	Window root_ret, parent_ret, *children = NULL;
+	unsigned int nchildren = 0;
+
+	if (!XQueryTree(fluorite.dpy, fluorite.root, &root_ret, &parent_ret, &children, &nchildren) || !children)
+		return;
+
+	Atom net_wm_state = XInternAtom(fluorite.dpy, "_NET_WM_STATE", False);
+	Atom net_wm_state_above = XInternAtom(fluorite.dpy, "_NET_WM_STATE_ABOVE", False);
+	Atom net_wm_state_stays_on_top = XInternAtom(fluorite.dpy, "_NET_WM_STATE_STAYS_ON_TOP", False);
+
+	for (unsigned int i = 0; i < nchildren; i++)
+	{
+		Atom actual_type;
+		int actual_format;
+		unsigned long nitems, bytes_after;
+		unsigned char *prop = NULL;
+
+		if (XGetWindowProperty(fluorite.dpy, children[i], net_wm_state, 0L, 1024L, False, XA_ATOM,
+				&actual_type, &actual_format, &nitems, &bytes_after, &prop) == Success && prop)
+		{
+			Atom *atoms = (Atom *) prop;
+			for (unsigned long j = 0; j < nitems; j++)
+			{
+				if (atoms[j] == net_wm_state_above || atoms[j] == net_wm_state_stays_on_top)
+				{
+					XRaiseWindow(fluorite.dpy, children[i]);
+					break;
+				}
+			}
+			XFree(prop);
+		}
+	}
+	XFree(children);
+}
+
 static void FRedrawWindows()
 {
 	if (no_redraw) return;
@@ -1707,6 +1847,8 @@ floating:
 	}
 
 fullscreen:
+	FRaiseAboveWindows();
+
 	if (fluorite.ws[fluorite.cr_ws].fs)
 		FRedrawFullscreen();
 
@@ -1800,6 +1942,34 @@ static int FCheckWindowIsFloating(Window w)
 		XFree(name.res_class);
 	}
 
+	XTextProperty text_prop;
+	if (XGetTextProperty(fluorite.dpy, w, &text_prop, XInternAtom(fluorite.dpy, "_NET_WM_NAME", False)) && text_prop.value)
+	{
+		for (long unsigned int i = 0; floating_windows[i]; i++)
+		{
+			if (strcmp(floating_windows[i], (char *) text_prop.value) == 0)
+			{
+				XFree(text_prop.value);
+				return True;
+			}
+		}
+		XFree(text_prop.value);
+	}
+
+	char *win_name = NULL;
+	if (XFetchName(fluorite.dpy, w, &win_name) && win_name)
+	{
+		for (long unsigned int i = 0; floating_windows[i]; i++)
+		{
+			if (strcmp(floating_windows[i], win_name) == 0)
+			{
+				XFree(win_name);
+				return True;
+			}
+		}
+		XFree(win_name);
+	}
+
 	if (XGetWindowProperty(fluorite.dpy, w, XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE", False), 0L, sizeof(atom), False, XA_ATOM, &da, &di, &dl, &dl, &p) == Success && p)
 	{
 		atom = *(Atom *) p;
@@ -1858,6 +2028,9 @@ static int FCheckWindowIsFixed(Window w)
 			XFree(p);
 			return True;
 		}
+		// TODO: Check if this doesn't break anything, it's a discord updated fix
+		// Seems like it causes some issues with authentification dialog where you type your password, it opens on 0 0
+		// After check, removing this helps with Discord, but breaks games
 		if (atom == XInternAtom(fluorite.dpy, "_NET_WM_WINDOW_TYPE_NORMAL", False))
 		{
 			XFree(p);
@@ -1922,9 +2095,21 @@ static void FConfigureRequest(XEvent ev)
 		for (Windows *w = fluorite.ws[i].t_wins; w != NULL; w = w->next)
 			if (ev.xconfigurerequest.window == w->w)
 				return;
-		// for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
-		// 	if (ev.xconfigurerequest.window == w->w)
-		// 		return;
+		for (Windows *w = fluorite.ws[i].f_wins; w != NULL; w = w->next)
+		{
+			if (ev.xconfigurerequest.window == w->w)
+			{
+				if (ev.xconfigurerequest.value_mask & CWX)
+					w->wx = ev.xconfigurerequest.x;
+				if (ev.xconfigurerequest.value_mask & CWY)
+					w->wy = ev.xconfigurerequest.y;
+				if (ev.xconfigurerequest.value_mask & CWWidth)
+					w->ww = ev.xconfigurerequest.width;
+				if (ev.xconfigurerequest.value_mask & CWHeight)
+					w->wh = ev.xconfigurerequest.height;
+				break;
+			}
+		}
 	}
 
 	XWindowChanges wc;
@@ -2050,7 +2235,10 @@ next:
 			}
 force_unmap:
 			if (fluorite.ws[ws].fs && w->fs)
+			{
 				fluorite.ws[ws].fs = False;
+				FSetWindowFullscreen(w->w, 0);
+			}
 			FResetFocus(fluorite.ws[ws].t_wins);
 			fluorite.ws[ws].t_wins = FDelWindow(fluorite.ws[ws].t_wins, w);
 			free(w);
@@ -2076,7 +2264,10 @@ force_unmap:
 				goto redraw;
 			}
 			if (fluorite.ws[ws].fs && w->fs)
+			{
 				fluorite.ws[ws].fs = False;
+				FSetWindowFullscreen(w->w, 0);
+			}
 			FResetFocus(fluorite.ws[ws].f_wins);
 			fluorite.ws[ws].f_wins = FDelWindow(fluorite.ws[ws].f_wins, w);
 			free(w);
@@ -2195,7 +2386,10 @@ static void FDestroyNotify(XEvent ev)
 			}
 force_destroy:
 			if (fluorite.ws[ws].fs && w->fs)
+			{
 				fluorite.ws[ws].fs = False;
+				FSetWindowFullscreen(w->w, 0);
+			}
 			FResetFocus(fluorite.ws[ws].t_wins);
 			fluorite.ws[ws].t_wins = FDelWindow(fluorite.ws[ws].t_wins, w);
 			free(w);
@@ -2220,7 +2414,10 @@ force_destroy:
 				goto update;
 			}
 			if (fluorite.ws[ws].fs && w->fs)
+			{
 				fluorite.ws[ws].fs = False;
+				FSetWindowFullscreen(w->w, 0);
+			}
 			FResetFocus(fluorite.ws[ws].f_wins);
 			fluorite.ws[ws].f_wins = FDelWindow(fluorite.ws[ws].f_wins, w);
 			free(w);
@@ -2326,19 +2523,24 @@ static void FQuit()
 
 static void FCloseWindow()
 {
-	if (fluorite.orgz) return;
+    if (fluorite.orgz) return;
+
     Window focused;
     int revert;
     XGetInputFocus(fluorite.dpy, &focused, &revert);
-    if (focused == fluorite.root)
+    if (focused == fluorite.root || focused == None)
         return;
-;
+
+    Window target = FGetToplevel(focused);
+    if (target == None || target == fluorite.root)
+        target = focused;
+
     Atom wm_protocols = XInternAtom(fluorite.dpy, "WM_PROTOCOLS", False);
     Atom wm_delete = XInternAtom(fluorite.dpy, "WM_DELETE_WINDOW", False);
-;
+
     Atom *protocols;
     int n;
-    if (XGetWMProtocols(fluorite.dpy, focused, &protocols, &n))
+    if (XGetWMProtocols(fluorite.dpy, target, &protocols, &n))
     {
         for (int i = 0; i < n; i++)
         {
@@ -2347,12 +2549,12 @@ static void FCloseWindow()
                 XEvent ev;
                 memset(&ev, 0, sizeof(ev));
                 ev.xclient.type = ClientMessage;
-                ev.xclient.window = focused;
+                ev.xclient.window = target;
                 ev.xclient.message_type = wm_protocols;
                 ev.xclient.format = 32;
                 ev.xclient.data.l[0] = wm_delete;
                 ev.xclient.data.l[1] = CurrentTime;
-                XSendEvent(fluorite.dpy, focused, False, NoEventMask, &ev);
+                XSendEvent(fluorite.dpy, target, False, NoEventMask, &ev);
                 XFree(protocols);
                 return;
             }
@@ -2360,7 +2562,7 @@ static void FCloseWindow()
         XFree(protocols);
     }
 
-    XKillClient(fluorite.dpy, focused);
+    XWithdrawWindow(fluorite.dpy, target, fluorite.scr);
 }
 
 Window FWindowUnderCursor()
@@ -2440,6 +2642,10 @@ static Window FGetToplevel(Window w)
 static void FButtonPress(XEvent ev)
 {
 	if (fluorite.orgz) return;
+
+	XWindowAttributes wa;
+	if (XGetWindowAttributes(fluorite.dpy, ev.xbutton.window, &wa) && wa.override_redirect)
+        return;
 
 	unsigned b_w, d;
 	unsigned xdo_w, xdo_h;
@@ -2569,6 +2775,31 @@ static void FClientMessage(XEvent ev)
 		FRedrawWindows();
 		FApplyBorders();
 	}
+	else if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_WM_STATE", False))
+	{
+		Atom net_wm_state_fullscreen = XInternAtom(fluorite.dpy, "_NET_WM_STATE_FULLSCREEN", False);
+		if ((Atom)ev.xclient.data.l[1] == net_wm_state_fullscreen || (Atom)ev.xclient.data.l[2] == net_wm_state_fullscreen)
+		{
+			// action: 0 = _NET_WM_STATE_REMOVE, 1 = _NET_WM_STATE_ADD, 2 = _NET_WM_STATE_TOGGLE
+			int action = ev.xclient.data.l[0];
+			Windows *target = NULL;
+			for (target = fluorite.ws[fluorite.cr_ws].t_wins; target != NULL; target = target->next)
+				if (target->w == ev.xclient.window) break;
+			if (!target)
+			{
+				for (target = fluorite.ws[fluorite.cr_ws].f_wins; target != NULL; target = target->next)
+					if (target->w == ev.xclient.window) break;
+			}
+			if (target)
+			{
+				if ((action == 1 && !target->fs) || (action == 0 && target->fs) || (action == 2))
+				{
+					XSetInputFocus(fluorite.dpy, target->w, RevertToPointerRoot, CurrentTime);
+					FToggleFullscreen();
+				}
+			}
+		}
+	}
 	no_warp = False;
 	no_refocus = False;
 }
@@ -2694,6 +2925,19 @@ static void FRemoveActiveWindow()
 	XDeleteProperty(fluorite.dpy, fluorite.root, atom);
 }
 
+static void FSetWindowFullscreen(Window w, int fs)
+{
+	Atom net_wm_state = XInternAtom(fluorite.dpy, "_NET_WM_STATE", False);
+	if (fs)
+	{
+		Atom net_wm_state_fullscreen = XInternAtom(fluorite.dpy, "_NET_WM_STATE_FULLSCREEN", False);
+		XChangeProperty(fluorite.dpy, w, net_wm_state, XA_ATOM, 32,
+				PropModeReplace, (unsigned char *)&net_wm_state_fullscreen, 1);
+	}
+	else
+		XDeleteProperty(fluorite.dpy, w, net_wm_state);
+}
+
 static void FSwapMonitorWorkspace(int ws, int mon)
 {
 	int swap_mon = fluorite.cr_mon;
@@ -2802,9 +3046,9 @@ static void FSendWindowToWorkspace(int ws)
 	{
 		fluorite.ws[ws].fs = False;
 		for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
-		{ FResetWindowOpacity(w->w); XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw); w->fs = False; }
+		{ FResetWindowOpacity(w->w); XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw); FSetWindowFullscreen(w->w, 0); w->fs = False; }
 		for (Windows *w = fluorite.ws[ws].f_wins; w != NULL; w = w->next)
-		{ FResetWindowOpacity(w->w); XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw); w->fs = False; }
+		{ FResetWindowOpacity(w->w); XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw); FSetWindowFullscreen(w->w, 0); w->fs = False; }
 	}
 
 	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -2838,6 +3082,7 @@ next:
 	{
 		w->fs = False;
 		fluorite.ws[fluorite.cr_ws].fs = False;
+		FSetWindowFullscreen(w->w, 0);
 		XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 		XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
 		FResetWindowOpacity(w->w);
@@ -3376,6 +3621,7 @@ next:
 	}
 	w->fs = !w->fs;
 	fluorite.ws[fluorite.cr_ws].fs = !fluorite.ws[fluorite.cr_ws].fs;
+	FSetWindowFullscreen(w->w, w->fs);
 	FRedrawWindows();
 	XSync(fluorite.dpy, True);
 	FApplyBorders();
@@ -3578,6 +3824,7 @@ next:
 	{
 		fluorite.ws[fluorite.cr_ws].fs = False;
 		w->fs = False;
+		FSetWindowFullscreen(w->w, 0);
 		FResetWindowOpacity(w->w);
 		XSetWindowBorderWidth(fluorite.dpy, w->w, fluorite.conf.bw);
 	}
@@ -3970,6 +4217,7 @@ static void FRecalculateStrut(int mon)
 		XFree(prop);
 		prop = NULL;
 	}
+	FUpdateWorkarea();
 }
 
 static void FResetMonitorStrut(int mon)
@@ -4006,6 +4254,7 @@ static void FToggleFixedStrut()
 		XSync(fluorite.dpy, True);
 		FApplyBorders();
 	}
+	FUpdateWorkarea();
 }
 
 static void FCycleLayouts()
@@ -4833,4 +5082,53 @@ static void FScrollingMoveWindowToColumnRight()
 		FWarpCursor(focus_win->w);
 		XSync(fluorite.dpy, True);
 	}
+}
+
+static void FUpdateWorkarea()
+{
+    unsigned long workarea[MAX_WS * 4];
+    int mon = fluorite.cr_mon;
+
+    int wx = fluorite.mon[mon].mx + fluorite.mon[mon].sl;
+    int wy = fluorite.mon[mon].my + fluorite.mon[mon].st;
+    int ww = fluorite.mon[mon].mw - fluorite.mon[mon].sl - fluorite.mon[mon].sr;
+    int wh = fluorite.mon[mon].mh - fluorite.mon[mon].st - fluorite.mon[mon].sb;
+
+    if (ww < 0) ww = 0;
+    if (wh < 0) wh = 0;
+
+    for (int i = 0; i < MAX_WS; i++)
+    {
+        workarea[i * 4 + 0] = wx;
+        workarea[i * 4 + 1] = wy;
+        workarea[i * 4 + 2] = ww;
+        workarea[i * 4 + 3] = wh;
+    }
+
+    XChangeProperty(
+        fluorite.dpy,
+        fluorite.root,
+        XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
+        XA_CARDINAL,
+        32,
+        PropModeReplace,
+        (unsigned char *)workarea,
+        MAX_WS * 4
+    );
+}
+
+static void FUpdateDesktopViewport()
+{
+    unsigned long viewports[2] = {0, 0};
+
+    XChangeProperty(
+        fluorite.dpy,
+        fluorite.root,
+        XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False),
+        XA_CARDINAL,
+        32,
+        PropModeReplace,
+        (unsigned char *)viewports,
+        2
+    );
 }
