@@ -117,7 +117,8 @@ typedef struct
 	int			bf;
 	int  		bu;
 	int  		bw;
-	int  		gp;
+	int  		igp;
+	int  		ogp;
 	int  		so;
 	int  		mo;
 	cfg_bool_t	fw;
@@ -430,7 +431,17 @@ static void FLoadXresources()
 	if (XrmGetResource(xdb, "fluorite.border_width", "*", &type, &xval))
 		if (xval.addr) fluorite.conf.bw = strtoul(xval.addr, NULL, 10);
 	if (XrmGetResource(xdb, "fluorite.gaps", "*", &type, &xval))
-		if (xval.addr) fluorite.conf.gp = strtoul(xval.addr, NULL, 10);
+	{
+		if (xval.addr)
+		{
+			fluorite.conf.igp = strtoul(xval.addr, NULL, 10);
+			fluorite.conf.ogp = strtoul(xval.addr, NULL, 10);
+		}
+	}
+	if (XrmGetResource(xdb, "fluorite.inner_gaps", "*", &type, &xval))
+		if (xval.addr) fluorite.conf.igp = strtoul(xval.addr, NULL, 10);
+	if (XrmGetResource(xdb, "fluorite.outer_gaps", "*", &type, &xval))
+		if (xval.addr) fluorite.conf.ogp = strtoul(xval.addr, NULL, 10);
 	if (XrmGetResource(xdb, "fluorite.stack_offset", "*", &type, &xval))
 		if (xval.addr) fluorite.conf.so = strtoul(xval.addr, NULL, 10);
 	if (XrmGetResource(xdb, "fluorite.default_master_offset", "*", &type, &xval))
@@ -466,7 +477,8 @@ static void FLoadDefaultTheme()
 	fluorite.conf.bw = 2;
 	fluorite.conf.bf = 0xeb6f92;
 	fluorite.conf.bu = 0x524f67;
-	fluorite.conf.gp = 5;
+	fluorite.conf.igp = 10;
+	fluorite.conf.ogp = 20;
 	fluorite.conf.so = 5;
 	fluorite.conf.mo = 0;
 }
@@ -1481,242 +1493,262 @@ static void FManageFloatingWindow(Windows *nw)
 
 static void FRedrawCenteredMaster()
 {
-	Windows *w;
-	int n = 0;
-	for (w = fluorite.ws[fluorite.cr_ws].t_wins; w; w = w->next, n++);
-	int mo = fluorite.ws[fluorite.cr_ws].mo;
-	int gap = fluorite.conf.gp;
-	int bw = fluorite.conf.bw;
-	int mon_x = fluorite.mon[fluorite.cr_mon].mx;
-	int mon_y = fluorite.mon[fluorite.cr_mon].my;
-	int mon_w = fluorite.mon[fluorite.cr_mon].mw;
-	int mon_h = fluorite.mon[fluorite.cr_mon].mh;
+    Windows *w;
+    int n = 0;
+    for (w = fluorite.ws[fluorite.cr_ws].t_wins; w; w = w->next, n++);
 
-	int content_x = mon_x + fluorite.mon[fluorite.cr_mon].sl;
-	int content_y = mon_y + 2 * gap + fluorite.mon[fluorite.cr_mon].st;
-	int content_w = mon_w - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr);
-	int content_h = mon_h - 4 * gap - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
+    if (n == 0)
+        return;
 
-	int base_mw = content_w / 2;
-	int mw = base_mw + mo;
-	if (mw > content_w - 2 * gap)
-		mw = content_w - 2 * gap;
-	int mx = content_x + (content_w - mw) / 2;
-	int sw = (content_w - mw) / 2;
+    int mo = fluorite.ws[fluorite.cr_ws].mo;
+    int igp = fluorite.conf.igp;
+    int ogp = fluorite.conf.ogp;
+    int bw = fluorite.conf.bw;
+    int mon_x = fluorite.mon[fluorite.cr_mon].mx;
+    int mon_y = fluorite.mon[fluorite.cr_mon].my;
+    int mon_w = fluorite.mon[fluorite.cr_mon].mw;
+    int mon_h = fluorite.mon[fluorite.cr_mon].mh;
 
-	w = fluorite.ws[fluorite.cr_ws].t_wins;
-	XMoveResizeWindow(
-		fluorite.dpy, w->w,
-		mx + gap * 2,
-		content_y,
-		mw - 2 * bw - 4 * gap,
-		content_h - 2 * bw
-	);
-	w->wx = mx + gap;
-	w->wy = content_y;
-	w->ww = mw - 2 * bw - 2 * gap;
-	w->wh = content_h - 2 * bw;
+    int content_x = mon_x + fluorite.mon[fluorite.cr_mon].sl + ogp;
+    int content_y = mon_y + fluorite.mon[fluorite.cr_mon].st + ogp;
+    int content_w = mon_w - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr) - 2 * ogp;
+    int content_h = mon_h - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb) - 2 * ogp;
 
-	int stack_n = n - 1;
-	int left_n = (stack_n + 1) / 2;
-	int right_n = stack_n / 2;
-	int total_gap_left = (left_n - 1) * gap;
-	int total_gap_right = (right_n - 1) * gap;
-	int left_h = (content_h - total_gap_left) / (left_n > 0 ? left_n : 1);
-	int right_h = (content_h - total_gap_right) / (right_n > 0 ? right_n : 1);
-	int left_y = content_y;
-	int right_y = content_y;
+    w = fluorite.ws[fluorite.cr_ws].t_wins;
 
-	w = w->next;
-	int i = 0;
-	Windows *last_left = NULL, *last_right = NULL;
-	while (w)
-	{
-		if (i % 2 == 0)
-		{
-			XMoveResizeWindow(
-				fluorite.dpy, w->w,
-				content_x + gap * 2,
-				left_y,
-				sw - 2 * bw - 2 * gap,
-				left_h - 2 * bw
-			);
-			w->wx = content_x + gap;
-			w->wy = left_y;
-			w->ww = sw - 2 * bw - 2 * gap;
-			w->wh = left_h - 2 * bw;
-			last_left = w;
-			left_y += left_h + gap;
-		}
-		else
-		{
-			XMoveResizeWindow(
-				fluorite.dpy, w->w,
-				mx + mw - (gap / 4),
-				right_y,
-				sw - 2 * bw - 2 * gap,
-				right_h - 2 * bw
-			);
-			w->wx = mx + mw + gap;
-			w->wy = right_y;
-			w->ww = sw - 2 * bw - 2 * gap;
-			w->wh = right_h - 2 * bw;
-			last_right = w;
-			right_y += right_h + gap;
-		}
-		i++;
-		w = w->next;
-	}
+    if (n == 1)
+    {
+        w->wx = content_x;
+        w->wy = content_y;
+        w->ww = content_w - 2 * bw;
+        w->wh = content_h - 2 * bw;
+        XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+        return;
+    }
 
-	if (stack_n % 2 == 0)
-	{
-		if (right_n < left_n && last_right)
-		{
-			int extra = (content_y + content_h) - (last_right->wy + last_right->wh + 2 * bw);
-			last_right->wh += extra;
-			XResizeWindow(fluorite.dpy, last_right->w, last_right->ww, last_right->wh);
-		}
-		else if (left_n < right_n && last_left)
-		{
-			int extra = (content_y + content_h) - (last_left->wy + last_left->wh + 2 * bw);
-			last_left->wh += extra;
-			XResizeWindow(fluorite.dpy, last_left->w, last_left->ww, last_left->wh);
-		}
-	}
+    int stack_n = n - 1;
+    int left_n = (stack_n + 1) / 2;
+    int right_n = stack_n / 2;
+
+    int base_mw = content_w / 2;
+    int mw = base_mw + mo;
+    if (mw > content_w - 2 * igp)
+        mw = content_w - 2 * igp;
+    if (mw < 100)
+        mw = 100;
+
+    int total_sw = content_w - mw - 2 * igp;
+    int sw = total_sw / 2;
+    int mx = content_x + sw + igp;
+
+    w->wx = mx;
+    w->wy = content_y;
+    w->ww = mw - 2 * bw;
+    w->wh = content_h - 2 * bw;
+    XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+
+    int total_gap_left = (left_n - 1) * igp;
+    int total_gap_right = (right_n - 1) * igp;
+    int left_h = (left_n > 0) ? (content_h - total_gap_left) / left_n : content_h;
+    int right_h = (right_n > 0) ? (content_h - total_gap_right) / right_n : content_h;
+    int left_y = content_y;
+    int right_y = content_y;
+
+    w = w->next;
+    int i = 0;
+    Windows *last_left = NULL, *last_right = NULL;
+
+    while (w)
+    {
+        if (i % 2 == 0)
+        {
+            w->wx = content_x;
+            w->wy = left_y;
+            w->ww = sw - 2 * bw;
+            w->wh = left_h - 2 * bw;
+            XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+            last_left = w;
+            left_y += left_h + igp;
+        }
+        else
+        {
+            w->wx = mx + mw + igp;
+            w->wy = right_y;
+            w->ww = sw - 2 * bw;
+            w->wh = right_h - 2 * bw;
+            XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+            last_right = w;
+            right_y += right_h + igp;
+        }
+        i++;
+        w = w->next;
+    }
+
+    if (last_left)
+    {
+        int extra = (content_y + content_h) - (last_left->wy + last_left->wh + 2 * bw);
+        if (extra != 0)
+        {
+            last_left->wh += extra;
+            XResizeWindow(fluorite.dpy, last_left->w, last_left->ww, last_left->wh);
+        }
+    }
+
+    if (last_right)
+    {
+        int extra = (content_y + content_h) - (last_right->wy + last_right->wh + 2 * bw);
+        if (extra != 0)
+        {
+            last_right->wh += extra;
+            XResizeWindow(fluorite.dpy, last_right->w, last_right->ww, last_right->wh);
+        }
+    }
 }
 
 static void FRedrawStackedLayout()
 {
-	Windows *raise;
+    Windows *raise = NULL;
+    int ogp = fluorite.conf.ogp;
+    int bw = fluorite.conf.bw;
+    Monitors *m = &fluorite.mon[fluorite.cr_mon];
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
-	{
-		w->wx = fluorite.mon[fluorite.cr_mon].mx + (fluorite.conf.gp * 2);
-		w->wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.conf.gp * 2);
-		w->ww = fluorite.mon[fluorite.cr_mon].mw - (fluorite.conf.bw * 2) - (fluorite.conf.gp * 4);
-		w->wh = fluorite.mon[fluorite.cr_mon].mh - (fluorite.conf.bw * 2) - (fluorite.conf.gp * 4);
-		w->wy += fluorite.mon[fluorite.cr_mon].st;
-		w->wh -= fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb;
-		w->wx += fluorite.mon[fluorite.cr_mon].sl;
-		w->ww -= (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr);
-		XMoveResizeWindow(
-			fluorite.dpy, w->w,
-			w->wx, w->wy,
-			w->ww, w->wh
-		);
-		raise = w;
-	}
-	for (; raise != NULL; raise = raise->prev)
-		XRaiseWindow(fluorite.dpy, raise->w);
+    int usable_x = m->mx + m->sl + ogp;
+    int usable_y = m->my + m->st + ogp;
+    int usable_w = m->mw - (m->sl + m->sr) - 2 * ogp - 2 * bw;
+    int usable_h = m->mh - (m->st + m->sb) - 2 * ogp - 2 * bw;
+
+    for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+    {
+        w->wx = usable_x;
+        w->wy = usable_y;
+        w->ww = usable_w;
+        w->wh = usable_h;
+        XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+        raise = w;
+    }
+    for (; raise != NULL; raise = raise->prev)
+        XRaiseWindow(fluorite.dpy, raise->w);
 }
 
 static void FRedrawDWMLayout()
 {
-	Windows *win = fluorite.ws[fluorite.cr_ws].t_wins;
+    Windows *win = fluorite.ws[fluorite.cr_ws].t_wins;
 
-	int mon = fluorite.cr_mon;
-	int mo = fluorite.ws[fluorite.cr_ws].mo;
-	int mx = fluorite.mon[mon].mx;
-	int my = fluorite.mon[mon].my;
-	int mw = fluorite.mon[mon].mw;
-	int mh = fluorite.mon[mon].mh;
-	int gap = fluorite.conf.gp * 2;
-	int border = fluorite.conf.bw;
-	int usable_y = my + fluorite.mon[fluorite.cr_mon].st;
-	int usable_height = mh - fluorite.mon[fluorite.cr_mon].st - fluorite.mon[fluorite.cr_mon].sb;
+    int mon = fluorite.cr_mon;
+    int mo = fluorite.ws[fluorite.cr_ws].mo;
+    int mx = fluorite.mon[mon].mx;
+    int my = fluorite.mon[mon].my;
+    int mw = fluorite.mon[mon].mw;
+    int mh = fluorite.mon[mon].mh;
+    int igp = fluorite.conf.igp;
+    int ogp = fluorite.conf.ogp;
+    int border = fluorite.conf.bw;
 
-	int n = 0;
-	for (Windows *w = win; w; w = w->next)
-		n++;
+    int n = 0;
+    for (Windows *w = win; w; w = w->next)
+        n++;
 
-	if (n == 0)
-		return;
+    if (n == 0)
+        return;
 
-	int master_width = (n > 1) ? (mw * 0.5) : mw;
-	master_width += mo;
-	master_width += fluorite.conf.gp;
-	int stack_width = mw - master_width;
-	win->wx = mx + gap;
-	win->wy = usable_y + gap;
-	win->ww = master_width - 2 * gap - 2 * border;
-	win->wh = usable_height - 2 * gap - 2 * border;
-	win->wx += fluorite.mon[fluorite.cr_mon].sl;
-	win->ww -= (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr) / 2;
-	XMoveResizeWindow(fluorite.dpy, win->w, win->wx, win->wy, win->ww, win->wh);
-	win = win->next;
+    int usable_x = mx + fluorite.mon[mon].sl + ogp;
+    int usable_y = my + fluorite.mon[mon].st + ogp;
+    int usable_w = mw - (fluorite.mon[mon].sl + fluorite.mon[mon].sr) - 2 * ogp;
+    int usable_h = mh - (fluorite.mon[mon].st + fluorite.mon[mon].sb) - 2 * ogp;
 
-	if (n > 1)
-	{
-		int sn = n - 1;
-		int total_gap = gap * (sn - 1);
-		int total_window_height = usable_height - 2 * gap - total_gap;
-		int sh_each = total_window_height / sn;
-		for (int i = 0; win; win = win->next, i++)
-		{
-			win->wx = mx + master_width;
-			win->ww = stack_width - 2 * gap - 2 * border + gap;
-			win->wh = sh_each - 2 * border;
-			win->wy = usable_y + gap + i * (sh_each + gap);
-			win->wx += (fluorite.mon[fluorite.cr_mon].sl / 2);
-			win->wx -= (fluorite.mon[fluorite.cr_mon].sr / 2);
-			win->ww -= (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr) / 2;
-			XMoveResizeWindow(fluorite.dpy, win->w, win->wx, win->wy, win->ww, win->wh);
-		}
-	}
+    if (n == 1)
+    {
+        win->wx = usable_x;
+        win->wy = usable_y;
+        win->ww = usable_w - 2 * border;
+        win->wh = usable_h - 2 * border;
+        XMoveResizeWindow(fluorite.dpy, win->w, win->wx, win->wy, win->ww, win->wh);
+        return;
+    }
+
+    int master_width = (usable_w - igp) / 2 + mo;
+    int stack_width  = usable_w - igp - master_width;
+
+    win->wx = usable_x;
+    win->wy = usable_y;
+    win->ww = master_width - 2 * border;
+    win->wh = usable_h - 2 * border;
+    XMoveResizeWindow(fluorite.dpy, win->w, win->wx, win->wy, win->ww, win->wh);
+    win = win->next;
+
+    int sn = n - 1;
+    int total_stack_igp = (sn - 1) * igp;
+    int sh_each = (usable_h - total_stack_igp) / sn;
+
+    for (int i = 0; win; win = win->next, i++)
+    {
+        win->wx = usable_x + master_width + igp;
+        win->wy = usable_y + i * (sh_each + igp);
+        win->ww = stack_width - 2 * border;
+        win->wh = sh_each - 2 * border;
+        XMoveResizeWindow(fluorite.dpy, win->w, win->wx, win->wy, win->ww, win->wh);
+    }
 }
 
 static void FRedrawCascadeLayout()
 {
-	int position_offset = 0;
-	int stack_count = 0;
-	int size_offset;
-	Windows *last = NULL;
-	int mx = fluorite.mon[fluorite.cr_mon].mx;
-	int my = fluorite.mon[fluorite.cr_mon].my;
-	int mw = fluorite.mon[fluorite.cr_mon].mw;
-	int mh = fluorite.mon[fluorite.cr_mon].mh;
-	int gp = fluorite.conf.gp;
-	int bw = fluorite.conf.bw;
-	int mo = fluorite.ws[fluorite.cr_ws].mo;
+    int position_offset = 0;
+    int stack_count = 0;
+    int size_offset;
+    Windows *last = NULL;
+    int mx = fluorite.mon[fluorite.cr_mon].mx;
+    int my = fluorite.mon[fluorite.cr_mon].my;
+    int mw = fluorite.mon[fluorite.cr_mon].mw;
+    int mh = fluorite.mon[fluorite.cr_mon].mh;
+    int igp = fluorite.conf.igp;
+    int ogp = fluorite.conf.ogp;
+    int bw = fluorite.conf.bw;
+    int mo = fluorite.ws[fluorite.cr_ws].mo;
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins->next; w != NULL; w = w->next, stack_count++)
-		last = w;
+    for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins->next; w != NULL; w = w->next, stack_count++)
+        last = w;
 
-	size_offset = stack_count - 1;
-	size_offset *= fluorite.conf.so;
-	size_offset *= 10;
-	for (int i = stack_count - 1; i >= 0; i--, last = last->prev)
-	{
-		last->wx = mx + (mw / 2) + gp + (position_offset / stack_count) + mo;
-		last->wy = my + (gp * 2) + (position_offset / stack_count);
-		last->ww = (mw / 2) - (bw * 2) - (gp * 3) - (size_offset / stack_count) - mo;
-		last->wh = mh - (bw * 2) - (gp * 4) - (size_offset / stack_count);
-		last->wy += fluorite.mon[fluorite.cr_mon].st;
-		last->wh -= (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
-		last->wx += (fluorite.mon[fluorite.cr_mon].sl / 2);
-		last->wx -= (fluorite.mon[fluorite.cr_mon].sr / 2);
-		last->ww -= (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr) / 2;
-		XRaiseWindow(fluorite.dpy, last->w);
-		XMoveResizeWindow(fluorite.dpy, last->w,
-			last->wx, last->wy,
-			last->ww, last->wh
-		);
-		position_offset += fluorite.conf.so * 10;
-	}
+    int usable_y = my + fluorite.mon[fluorite.cr_mon].st + ogp;
+    int usable_h = mh - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb) - 2 * ogp;
+    int usable_w = mw - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr) - 2 * ogp;
 
-	fluorite.ws[fluorite.cr_ws].t_wins->wx = mx + (gp * 2);
-	fluorite.ws[fluorite.cr_ws].t_wins->wy = my + (gp * 2);
-	fluorite.ws[fluorite.cr_ws].t_wins->ww = (mw / 2) - (gp * 3) - (bw * 2) + mo;
-	fluorite.ws[fluorite.cr_ws].t_wins->wh = mh - (bw * 2) - (gp * 4);
-	fluorite.ws[fluorite.cr_ws].t_wins->wy += fluorite.mon[fluorite.cr_mon].st;
-	fluorite.ws[fluorite.cr_ws].t_wins->wh -= (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
-	fluorite.ws[fluorite.cr_ws].t_wins->wx += fluorite.mon[fluorite.cr_mon].sl;
-	fluorite.ws[fluorite.cr_ws].t_wins->ww -= (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr) / 2;
-	XRaiseWindow(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w);
-	XMoveResizeWindow(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w,
-		fluorite.ws[fluorite.cr_ws].t_wins->wx, fluorite.ws[fluorite.cr_ws].t_wins->wy,
-		fluorite.ws[fluorite.cr_ws].t_wins->ww, fluorite.ws[fluorite.cr_ws].t_wins->wh
-	);
+    int master_w = (usable_w - igp) / 2 + mo;
+    int stack_w  = usable_w - igp - master_w;
+
+    if (stack_count > 0)
+    {
+        size_offset = (stack_count - 1) * fluorite.conf.so * 10;
+
+        for (int i = stack_count - 1; i >= 0; i--, last = last->prev)
+        {
+            int p_off = position_offset / stack_count;
+            int s_off = size_offset / stack_count;
+
+            last->wx = mx + ogp + fluorite.mon[fluorite.cr_mon].sl + master_w + igp + p_off;
+            last->wy = usable_y + p_off;
+            last->ww = stack_w - (bw * 2) - s_off;
+            last->wh = usable_h - (bw * 2) - s_off;
+
+            XRaiseWindow(fluorite.dpy, last->w);
+            XMoveResizeWindow(fluorite.dpy, last->w,
+                last->wx, last->wy,
+                last->ww, last->wh
+            );
+            position_offset += fluorite.conf.so * 10;
+        }
+    }
+
+    Windows *master = fluorite.ws[fluorite.cr_ws].t_wins;
+    master->wx = mx + ogp + fluorite.mon[fluorite.cr_mon].sl;
+    master->wy = usable_y;
+    master->ww = (stack_count > 0 ? master_w : usable_w) - (bw * 2);
+    master->wh = usable_h - (bw * 2);
+
+    XRaiseWindow(fluorite.dpy, master->w);
+    XMoveResizeWindow(fluorite.dpy, master->w,
+        master->wx, master->wy,
+        master->ww, master->wh
+    );
 }
 
 
@@ -4339,25 +4371,40 @@ static void FToggleOrganizer()
 
 static void FRedrawOrganizer()
 {
-	if (FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) < 2)
-	{
-		FToggleOrganizer();
-		return ;
-	}
-	int s_off = (fluorite.mon[fluorite.cr_mon].mw - (fluorite.mon[fluorite.cr_mon].sl + fluorite.mon[fluorite.cr_mon].sr)) / FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins) - (fluorite.conf.gp * 4);
-	int i = 0;
-	int wy = fluorite.mon[fluorite.cr_mon].my + (fluorite.conf.gp * 2) + fluorite.mon[fluorite.cr_mon].st;
-	int wh = fluorite.mon[fluorite.cr_mon].mh - (fluorite.conf.bw * 2) - (fluorite.conf.gp * 4) - (fluorite.mon[fluorite.cr_mon].st + fluorite.mon[fluorite.cr_mon].sb);
+    int n = FCountWindows(fluorite.ws[fluorite.cr_ws].t_wins);
+    if (n < 2)
+    {
+        FToggleOrganizer();
+        return;
+    }
 
-	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
-	{
-		int wx = fluorite.mon[fluorite.cr_mon].mx + (i * s_off) + fluorite.conf.gp * 2 + fluorite.mon[fluorite.cr_mon].sl;
-		if (i > 0) wx += i * fluorite.conf.gp * 4;
-		int ww = s_off;
-		XResizeWindow(fluorite.dpy, w->w, ww, wh);
-		XMoveWindow(fluorite.dpy, w->w, wx, wy);
-		i++;
-	}
+    Monitors *m = &fluorite.mon[fluorite.cr_mon];
+    int igp = fluorite.conf.igp;
+    int ogp = fluorite.conf.ogp;
+    int bw = fluorite.conf.bw;
+
+    int usable_x = m->mx + m->sl + ogp;
+    int usable_y = m->my + m->st + ogp;
+    int usable_w = m->mw - (m->sl + m->sr) - 2 * ogp;
+    int usable_h = m->mh - (m->st + m->sb) - 2 * ogp;
+
+    int total_igp = (n - 1) * igp;
+    int col_w = (usable_w - total_igp) / n;
+    int wh = usable_h - 2 * bw;
+    int ww = col_w - 2 * bw;
+
+    int i = 0;
+    for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+    {
+        int wx = usable_x + i * (col_w + igp);
+        w->wx = wx;
+        w->wy = usable_y;
+        w->ww = ww;
+        w->wh = wh;
+
+        XMoveResizeWindow(fluorite.dpy, w->w, wx, usable_y, ww, wh);
+        i++;
+    }
 }
 
 static Windows *FGetColStart(Windows *w)
@@ -4398,186 +4445,188 @@ static int FCountColWins(Windows *w)
 
 static void FRedrawScrolling()
 {
-	Workspaces *ws = &fluorite.ws[fluorite.cr_ws];
-	Monitors *m = &fluorite.mon[fluorite.cr_mon];
-	Windows *focus_win = NULL;
-	Windows *focus_col_start;
-	Windows *focus_col_end;
-	Windows *w;
-	Windows *win;
-	Windows *first_col_start;
-	Windows *last_w;
-	Windows *last_col_start;
-	int gp = fluorite.conf.gp;
-	int bw = fluorite.conf.bw;
-	int avail_w = m->mw - m->sl - m->sr;
-	int usable_y = m->my + m->st;
-	int usable_height = m->mh - m->st - m->sb;
-	int gap = gp * 2;
-	int border = bw;
-	int focus_ww;
-	int min_x;
-	int max_x;
-	int target_x;
-	int only_one_col;
-	int current_x;
-	int n_cols = 0;
-	int N;
-	int col_usable_h;
-	int sh_each;
-	int i;
+    Workspaces *ws = &fluorite.ws[fluorite.cr_ws];
+    Monitors *m = &fluorite.mon[fluorite.cr_mon];
+    Windows *focus_win = NULL;
+    Windows *focus_col_start;
+    Windows *focus_col_end;
+    Windows *w;
+    Windows *win;
+    Windows *first_col_start;
+    Windows *last_w;
+    Windows *last_col_start;
+    int igp = fluorite.conf.igp;
+    int ogp = fluorite.conf.ogp;
+    int bw = fluorite.conf.bw;
+    int avail_w = m->mw - m->sl - m->sr - 2 * ogp;
+    int usable_y = m->my + m->st + ogp;
+    int usable_height = m->mh - m->st - m->sb - 2 * ogp;
+    int focus_ww;
+    int min_x;
+    int max_x;
+    int target_x;
+    int only_one_col;
+    int current_x;
+    int n_cols = 0;
+    int N;
+    int col_usable_h;
+    int sh_each;
+    int i;
 
-	if (!ws->t_wins) return;
+    if (!ws->t_wins) return;
 
-	for (w = ws->t_wins; w; w = FGetColEnd(w)->next)
-		n_cols++;
+    for (w = ws->t_wins; w; w = FGetColEnd(w)->next)
+        n_cols++;
 
-	for (w = ws->t_wins; w; w = w->next)
-		if (w->fc) focus_win = w;
-	if (!focus_win) focus_win = ws->t_wins;
+    for (w = ws->t_wins; w; w = w->next)
+        if (w->fc) focus_win = w;
+    if (!focus_win) focus_win = ws->t_wins;
 
-	focus_col_start = FGetColStart(focus_win);
-	focus_col_end = FGetColEnd(focus_win);
+    focus_col_start = FGetColStart(focus_win);
+    focus_col_end = FGetColEnd(focus_win);
 
-	int has_left = (focus_col_start->prev != NULL);
-	int has_right = (focus_col_end->next != NULL);
+    int has_left = (focus_col_start->prev != NULL);
+    int has_right = (focus_col_end->next != NULL);
 
-	int has_full_width = 0;
-	for (w = ws->t_wins; w; w = FGetColEnd(w)->next)
-	{
-		if (w->swp == 100)
-		{
-			has_full_width = 1;
-			break;
-		}
-	}
+    int has_full_width = 0;
+    for (w = ws->t_wins; w; w = FGetColEnd(w)->next)
+    {
+        if (w->swp == 100)
+        {
+            has_full_width = 1;
+            break;
+        }
+    }
 
-	int apply_peek = (n_cols > 2) || (n_cols == 2 && has_full_width);
-	int peek_left = 0;
-	int peek_right = 0;
-	if (apply_peek)
-	{
-		if (!has_left)
-		{
-			peek_left = 0;
-			peek_right = 80;
-		}
-		else if (!has_right)
-		{
-			peek_left = 80;
-			peek_right = 0;
-		}
-		else
-		{
-			peek_left = 40;
-			peek_right = 40;
-		}
-	}
-	int eff_avail_w = apply_peek ? (avail_w - 80) : avail_w;
+    int apply_peek = (n_cols > 2) || (n_cols == 2 && has_full_width);
+    int peek_left = 0;
+    int peek_right = 0;
+    if (apply_peek)
+    {
+        if (!has_left)
+        {
+            peek_left = 0;
+            peek_right = 80;
+        }
+        else if (!has_right)
+        {
+            peek_left = 80;
+            peek_right = 0;
+        }
+        else
+        {
+            peek_left = 40;
+            peek_right = 40;
+        }
+    }
+    int eff_avail_w = apply_peek ? (avail_w - 80) : avail_w;
 
-	#define GET_WW(w) (((eff_avail_w - gp * 2) * (w)->swp) / 100 - gp * 2 - (bw * 2))
-	#define GET_COL_W(w) (((eff_avail_w - gp * 2) * (w)->swp) / 100)
+    #define GET_WW(w) (((eff_avail_w - igp) * (w)->swp) / 100 - (bw * 2))
+    #define GET_COL_W(w) (((eff_avail_w - igp) * (w)->swp) / 100 + igp)
 
-	focus_ww = GET_WW(focus_col_start);
-	min_x = m->mx + (gp * 2) + m->sl + peek_left;
-	max_x = m->mx + m->mw - m->sr - (gp * 2) - focus_ww - (bw * 2) - peek_right;
+    focus_ww = GET_WW(focus_col_start);
+    min_x = m->mx + ogp + m->sl + peek_left;
+    max_x = m->mx + m->mw - m->sr - ogp - focus_ww - (bw * 2) - peek_right;
 
-	target_x = focus_col_start->wx;
-	only_one_col = (focus_col_start == ws->t_wins && !focus_col_end->next);
+    target_x = focus_col_start->wx;
+    only_one_col = (focus_col_start == ws->t_wins && !focus_col_end->next);
 
-	if (only_one_col || focus_col_start->swp == 100)
-		target_x = m->mx + m->sl + peek_left + (eff_avail_w - focus_ww - (bw * 2)) / 2;
-	else if (target_x < min_x)
-		target_x = min_x;
-	else if (target_x > max_x)
-		target_x = max_x;
+    if (only_one_col || focus_col_start->swp == 100)
+        target_x = m->mx + m->sl + ogp + peek_left + (eff_avail_w - focus_ww - (bw * 2)) / 2;
+    else if (target_x < min_x)
+        target_x = min_x;
+    else if (target_x > max_x)
+        target_x = max_x;
 
-	N = FCountColWins(focus_col_start);
-	col_usable_h = usable_height - 2 * gap;
-	sh_each = (N > 1) ? (col_usable_h - (N - 1) * gap) / N : col_usable_h;
-	i = 0;
-	for (w = focus_col_start; w; w = w->next)
-	{
-		w->wx = target_x;
-		w->ww = focus_ww;
-		w->wh = sh_each - 2 * border;
-		w->wy = usable_y + gap + i * (sh_each + gap);
-		i++;
-		if (!w->stk_blw) break;
-	}
+    N = FCountColWins(focus_col_start);
+    col_usable_h = usable_height;
+    sh_each = (N > 1) ? (col_usable_h - (N - 1) * igp) / N : col_usable_h;
+    i = 0;
+    for (w = focus_col_start; w; w = w->next)
+    {
+        w->wx = target_x;
+        w->ww = focus_ww;
+        w->wh = sh_each - 2 * bw;
+        w->wy = usable_y + i * (sh_each + igp);
+        i++;
+        if (!w->stk_blw) break;
+    }
 
-	w = focus_col_start->prev;
-	current_x = focus_col_start->wx;
-	while (w)
-	{
-		Windows *col_s = FGetColStart(w);
-		current_x -= GET_COL_W(col_s);
-		N = FCountColWins(col_s);
-		col_usable_h = usable_height - 2 * gap;
-		sh_each = (N > 1) ? (col_usable_h - (N - 1) * gap) / N : col_usable_h;
-		i = 0;
-		for (win = col_s; win; win = win->next)
-		{
-			win->wx = current_x;
-			win->ww = GET_WW(col_s);
-			win->wh = sh_each - 2 * border;
-			win->wy = usable_y + gap + i * (sh_each + gap);
-			i++;
-			if (!win->stk_blw) break;
-		}
-		w = col_s->prev;
-	}
+    w = focus_col_start->prev;
+    current_x = focus_col_start->wx;
+    while (w)
+    {
+        Windows *col_s = FGetColStart(w);
+        current_x -= GET_COL_W(col_s);
+        N = FCountColWins(col_s);
+        col_usable_h = usable_height;
+        sh_each = (N > 1) ? (col_usable_h - (N - 1) * igp) / N : col_usable_h;
+        i = 0;
+        for (win = col_s; win; win = win->next)
+        {
+            win->wx = current_x;
+            win->ww = GET_WW(col_s);
+            win->wh = sh_each - 2 * bw;
+            win->wy = usable_y + i * (sh_each + igp);
+            i++;
+            if (!win->stk_blw) break;
+        }
+        w = col_s->prev;
+    }
 
-	w = focus_col_end->next;
-	current_x = focus_col_start->wx + GET_COL_W(focus_col_start);
-	while (w)
-	{
-		N = FCountColWins(w);
-		col_usable_h = usable_height - 2 * gap;
-		sh_each = (N > 1) ? (col_usable_h - (N - 1) * gap) / N : col_usable_h;
-		i = 0;
-		for (win = w; win; win = win->next)
-		{
-			win->wx = current_x;
-			win->ww = GET_WW(w);
-			win->wh = sh_each - 2 * border;
-			win->wy = usable_y + gap + i * (sh_each + gap);
-			i++;
-			if (!win->stk_blw) break;
-		}
-		current_x += GET_COL_W(w);
-		w = FGetColEnd(w)->next;
-	}
+    w = focus_col_end->next;
+    current_x = focus_col_start->wx + GET_COL_W(focus_col_start);
+    while (w)
+    {
+        N = FCountColWins(w);
+        col_usable_h = usable_height;
+        sh_each = (N > 1) ? (col_usable_h - (N - 1) * igp) / N : col_usable_h;
+        i = 0;
+        for (win = w; win; win = win->next)
+        {
+            win->wx = current_x;
+            win->ww = GET_WW(w);
+            win->wh = sh_each - 2 * bw;
+            win->wy = usable_y + i * (sh_each + igp);
+            i++;
+            if (!win->stk_blw) break;
+        }
+        current_x += GET_COL_W(w);
+        w = FGetColEnd(w)->next;
+    }
 
-	if (n_cols > 1)
-	{
-		first_col_start = ws->t_wins;
-		int abs_min_x = m->mx + (gp * 2) + m->sl;
-		if (first_col_start->wx > abs_min_x)
-		{
-			int shift = first_col_start->wx - abs_min_x;
-			for (w = ws->t_wins; w; w = w->next) w->wx -= shift;
-		}
-		else
-		{
-			last_w = ws->t_wins;
-			while (last_w->next) last_w = last_w->next;
-			last_col_start = FGetColStart(last_w);
-			int abs_max_x = m->mx + m->mw - m->sr - (gp * 2) - last_col_start->ww - (bw * 2);
-			if (last_col_start->wx < abs_max_x && first_col_start->wx < abs_min_x)
-			{
-				int shift = abs_max_x - last_col_start->wx;
-				if (first_col_start->wx + shift > abs_min_x) shift = abs_min_x - first_col_start->wx;
-				for (w = ws->t_wins; w; w = w->next) w->wx += shift;
-			}
-		}
-	}
+    if (n_cols > 1)
+    {
+        first_col_start = ws->t_wins;
+        int abs_min_x = m->mx + ogp + m->sl;
+        if (first_col_start->wx > abs_min_x)
+        {
+            int shift = first_col_start->wx - abs_min_x;
+            for (w = ws->t_wins; w; w = w->next) w->wx -= shift;
+        }
+        else
+        {
+            last_w = ws->t_wins;
+            while (last_w->next) last_w = last_w->next;
+            last_col_start = FGetColStart(last_w);
+            int abs_max_x = m->mx + m->mw - m->sr - ogp - last_col_start->ww - (bw * 2);
+            if (last_col_start->wx < abs_max_x && first_col_start->wx < abs_min_x)
+            {
+                int shift = abs_max_x - last_col_start->wx;
+                if (first_col_start->wx + shift > abs_min_x) shift = abs_min_x - first_col_start->wx;
+                for (w = ws->t_wins; w; w = w->next) w->wx += shift;
+            }
+        }
+    }
 
-	for (w = ws->t_wins; w; w = w->next)
-		XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
+    for (w = ws->t_wins; w; w = w->next)
+        XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
 
-	if (focus_win)
-		XRaiseWindow(fluorite.dpy, focus_win->w);
+    if (focus_win)
+        XRaiseWindow(fluorite.dpy, focus_win->w);
+
+    #undef GET_WW
+    #undef GET_COL_W
 }
 
 static Windows *FAddWindowScrolling(Windows *head, Windows *nw)
