@@ -1,3 +1,4 @@
+#include <X11/extensions/randr.h>
 #define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 3)"
 
 #include <X11/X.h>
@@ -211,6 +212,7 @@ static void 	FMapRequest(XEvent ev);
 static void 	FManageFloatingWindow(Windows *nw);
 static void		FRedrawCascadeLayout();
 static void 	FRedrawWindows();
+static void 	FRedrawAllMonitors();
 static void 	FApplyActiveWindow(Window w);
 static void 	FApplyBorders();
 static int  	FCheckWindowIsFloating(Window w);
@@ -299,6 +301,8 @@ static void		*FIPCServerThread(void *ptr);
 static void		FScratchpadToggleByKeysym(char *arg);
 static Windows	*FFindTiledWindowAtPos(int x, int y);
 static void		FSwapTiledWindows(Windows *a, Windows *b);
+static void		FSendConfigureNotify(Window w, int x, int y, int width, int height);
+static void		FUpdateDesktopGeometry();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -401,15 +405,19 @@ static void FInit()
 	FInitWorkspaces();
 	FUpdateWorkarea();
 	FUpdateDesktopViewport();
+	FUpdateDesktopGeometry();
 }
 
 static int FErrorHandler(Display *dis, XErrorEvent *ev)
 {
 	int fd = open("/tmp/fluorite.log", O_WRONLY | O_CREAT | O_APPEND, 0666);
-	char error[1024];
-
-	XGetErrorText(dis, ev->error_code, error, sizeof(error));
-	dprintf(fd, "(%d) %d: %s\n", ev->error_code, ev->request_code, error);
+	if (fd >= 0)
+	{
+		char error[1024];
+		XGetErrorText(dis, ev->error_code, error, sizeof(error));
+		dprintf(fd, "(%d) %d: %s\n", ev->error_code, ev->request_code, error);
+		close(fd);
+	}
 	return ev->error_code;
 }
 
@@ -511,14 +519,39 @@ static void FInitMonitors()
 	int prev_ct = fluorite.ct_mon;
 	XRRMonitorInfo *infos = XRRGetMonitors(fluorite.dpy, fluorite.root, 0, &fluorite.ct_mon);
 	Monitors *prev_mon = (fluorite.mon != NULL) ? (Monitors *) calloc(prev_ct, sizeof(Monitors)) : NULL;
+	Windows *saved_fx = NULL;
 
 	if (fluorite.mon != NULL)
 	{
-		if (prev_ct == fluorite.ct_mon)
+		for (int i = 0; i < prev_ct; i++)
 		{
-			int n = (prev_ct < fluorite.ct_mon) ? prev_ct : fluorite.ct_mon;
-			for (int i = 0; i < n; i++)
-				prev_mon[i] = fluorite.mon[i];
+			prev_mon[i] = fluorite.mon[i];
+			for (Windows *fx = fluorite.mon[i].fx_win; fx != NULL; fx = fx->next)
+			{
+				int already = False;
+				for (Windows *s = saved_fx; s != NULL; s = s->next)
+				{
+					if (s->w == fx->w)
+					{
+						already = True;
+						break;
+					}
+				}
+				if (!already)
+				{
+					Windows *copy = (Windows *) calloc(1, sizeof(Windows));
+					copy->w = fx->w;
+					saved_fx = FAddWindow(saved_fx, copy);
+				}
+			}
+			Windows *cur = fluorite.mon[i].fx_win;
+			while (cur != NULL)
+			{
+				Windows *next = cur->next;
+				free(cur);
+				cur = next;
+			}
+			fluorite.mon[i].fx_win = NULL;
 		}
 		free(fluorite.mon);
 		no_unmap = True;
@@ -537,13 +570,14 @@ static void FInitMonitors()
 	}
 
 	fluorite.mon = (Monitors *) calloc(fluorite.ct_mon, sizeof(Monitors));
+	int primary = 0;
 	for (int i = 0; i < fluorite.ct_mon; i++)
 	{
 		fluorite.mon[i].mx = infos[i].x;
 		fluorite.mon[i].my = infos[i].y;
 		fluorite.mon[i].mw = infos[i].width;
 		fluorite.mon[i].mh = infos[i].height;
-		fluorite.mon[i].ws = i;
+		fluorite.mon[i].ws = -1;
 		FResetMonitorStrut(i);
 		fluorite.mon[i].primary = False;
 		fluorite.mon[i].fx_win = NULL;
@@ -551,6 +585,7 @@ static void FInitMonitors()
 		if (infos[i].primary)
 		{
 			fluorite.mon[i].primary = True;
+			primary = i;
 			fluorite.cr_mon = i;
 			if (!hot_plug)
 				xdo_move_mouse(fluorite.xdo, fluorite.mon[i].mx + (fluorite.mon[i].mw / 2), fluorite.mon[i].my + (fluorite.mon[i].mh / 2), fluorite.scr);
@@ -558,38 +593,90 @@ static void FInitMonitors()
 	}
 	XFree(infos);
 
+	int used_ws[MAX_WS] = {0};
+	if (hot_plug && fluorite.cr_ws >= 0 && fluorite.cr_ws < MAX_WS)
+		fluorite.mon[primary].ws = fluorite.cr_ws;
+	else
+		fluorite.mon[primary].ws = (primary < MAX_WS) ? primary : 0;
+	used_ws[fluorite.mon[primary].ws] = 1;
+
+	for (int i = 0; i < fluorite.ct_mon; i++)
+	{
+		if (i == primary)
+			continue;
+
+		int assigned = -1;
+		if (hot_plug && i < prev_ct && prev_mon)
+		{
+			int prev_w = prev_mon[i].ws;
+			if (prev_w >= 0 && prev_w < MAX_WS && !used_ws[prev_w])
+				assigned = prev_w;
+		}
+
+		if (assigned < 0)
+		{
+			for (int w = 0; w < MAX_WS; w++)
+			{
+				if (!used_ws[w])
+				{
+					assigned = w;
+					break;
+				}
+			}
+		}
+
+		if (assigned < 0)
+			assigned = i % MAX_WS;
+
+		fluorite.mon[i].ws = assigned;
+		used_ws[assigned] = 1;
+	}
+
+	if (hot_plug)
+	{
+		for (Windows *fx = saved_fx; fx != NULL; fx = fx->next)
+		{
+			if (FWindowExists(fluorite.dpy, fx->w))
+				FGetFixedPartialStrut(fx->w, True);
+		}
+		Windows *cur = saved_fx;
+		while (cur != NULL)
+		{
+			Windows *next = cur->next;
+			free(cur);
+			cur = next;
+		}
+	}
+
 	if (hot_plug)
 	{
 		no_warp = True;
-		int primary = 0;
+		fluorite.cr_mon = (primary < fluorite.ct_mon) ? primary : 0;
 		for (int i = 0; i < fluorite.ct_mon; i++)
 		{
-			if (prev_ct == fluorite.ct_mon)
-				fluorite.mon[i] = prev_mon[i];
-			if (fluorite.mon[i].primary)
-				primary = i;
-			fluorite.cr_ws = fluorite.mon[i].ws;
-			fluorite.cr_mon = i;
+			int ws = fluorite.mon[i].ws;
 			FResetMonitorStrut(i);
 			FRecalculateStrut(i);
-			for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+			for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
 				XMapWindow(fluorite.dpy, w->w);
-			for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+			for (Windows *w = fluorite.ws[ws].f_wins; w != NULL; w = w->next)
 				XMapWindow(fluorite.dpy, w->w);
-			FRedrawWindows();
-			XSync(fluorite.dpy, True);
-			FApplyBorders();
 		}
-		free(prev_mon);
-		fluorite.cr_mon = primary;
+		if (prev_mon)
+			free(prev_mon);
 		fluorite.cr_ws = fluorite.mon[fluorite.cr_mon].ws;
-		if (fluorite.ws[fluorite.cr_mon].t_wins)
+		if (fluorite.ws[fluorite.cr_ws].t_wins)
 			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].t_wins->w, RevertToPointerRoot, CurrentTime);
-		FRedrawWindows();
-		XSync(fluorite.dpy, True);
+		else if (fluorite.ws[fluorite.cr_ws].f_wins)
+			XSetInputFocus(fluorite.dpy, fluorite.ws[fluorite.cr_ws].f_wins->w, RevertToPointerRoot, CurrentTime);
+		else
+			XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
+		FRedrawAllMonitors();
+		XSync(fluorite.dpy, False);
 		FApplyBorders();
-		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 		FUpdateWorkarea();
+		FUpdateDesktopGeometry();
 		no_warp = False;
 	}
 }
@@ -624,15 +711,15 @@ static void FApplyProps()
 	Xutf8TextListToTextProperty(fluorite.dpy, (char **)workspaces_names, MAX_WS, XUTF8StringStyle, &text);
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
-	Atom supported[11] = {
+	Atom supported[] = {
 		XInternAtom(fluorite.dpy, "_NET_WM_NAME", False),			XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False),
 		XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False),		XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False),
 		XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False),	XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False),
 		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False),
-		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),				XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
-		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),			XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
+		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False), XInternAtom(fluorite.dpy, "_NET_DESKTOP_GEOMETRY", False),
 	};
-	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, 11);
+	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, sizeof(supported) / sizeof(Atom));
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
 	XSelectInput(fluorite.dpy, fluorite.root, attributes.event_mask);
 	cnorm = XcursorLibraryLoadCursor(fluorite.dpy, "arrow");
@@ -1106,12 +1193,17 @@ static void FRun()
 				FDestroyNotify(ev);
 				break;
 			case PropertyNotify:
-				if (ev.xproperty.atom == XInternAtom(fluorite.dpy, "_NET_WM_STRUT_PARTIAL", False))
+				if (ev.xproperty.atom == XInternAtom(fluorite.dpy, "_NET_WM_STRUT_PARTIAL", False) ||
+				    ev.xproperty.atom == XInternAtom(fluorite.dpy, "_NET_WM_STRUT", False))
+				{
+					FGetFixedPartialStrut(ev.xproperty.window, True);
 					for (int i = 0; i < fluorite.ct_mon; i++)
 					{
 						FResetMonitorStrut(i);
 						FRecalculateStrut(i);
 					}
+					FRedrawAllMonitors();
+				}
 				break;
 		}
 	}
@@ -1369,7 +1461,8 @@ static void FMapRequest(XEvent ev)
 	XGrabButton(fluorite.dpy, Button5, fluorite.conf.mt, nw->w, False, ButtonPressMask | ButtonReleaseMask | ButtonMotionMask, GrabModeAsync, GrabModeAsync, None, None);
 	XMapWindow(fluorite.dpy, nw->w);
 	XRaiseWindow(fluorite.dpy, nw->w);
-	XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
+	if (!is_fixed)
+		XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 
 	if (!is_fixed && !is_floating)
 		if (FCheckWindowNeedsSwallowing(nw))
@@ -1929,6 +2022,20 @@ fullscreen:
 	no_refocus = False;
 }
 
+static void FRedrawAllMonitors()
+{
+	int keep_ws = fluorite.cr_ws;
+	int keep_mon = fluorite.cr_mon;
+	for (int i = 0; i < fluorite.ct_mon; i++)
+	{
+		fluorite.cr_mon = i;
+		fluorite.cr_ws = fluorite.mon[i].ws;
+		FRedrawWindows();
+	}
+	fluorite.cr_ws = keep_ws;
+	fluorite.cr_mon = keep_mon;
+}
+
 static void FApplyActiveWindow(Window w)
 {
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
@@ -2195,6 +2302,10 @@ static void FConfigureRequest(XEvent ev)
 	wc.sibling = ev.xconfigurerequest.above;
 	wc.stack_mode = ev.xconfigurerequest.detail;
 	XConfigureWindow(fluorite.dpy, ev.xconfigurerequest.window, ev.xconfigurerequest.value_mask, &wc);
+
+	XWindowAttributes wa;
+	if (XGetWindowAttributes(fluorite.dpy, ev.xconfigurerequest.window, &wa))
+		FSendConfigureNotify(ev.xconfigurerequest.window, wa.x, wa.y, wa.width, wa.height);
 }
 
 static void FKeyPress(XEvent ev)
@@ -2582,10 +2693,13 @@ static Windows *FDelWindow(Windows *cw, Windows *w)
 static void FExecute(char *argument)
 {
 	if (fluorite.orgz) return;
-	char *prepared_cmd = strdup(argument);
+	char *prepared_cmd = malloc(strlen(argument) + 3);
+	if (!prepared_cmd) return;
+	strcpy(prepared_cmd, argument);
 	strcat(prepared_cmd, " &");
 	if (system(prepared_cmd) == -1)
 		printf("Failed to execute program\n");
+	free(prepared_cmd);
 }
 
 static void FQuit()
@@ -4157,6 +4271,121 @@ static void FPolybarScratchpadsIPC()
 	FExecute(command);
 }
 
+static int FGetMonitorForWindow(Window w)
+{
+	Window root_return;
+	int win_x = 0, win_y = 0;
+	unsigned int win_w = 0, win_h = 0, border_w = 0, depth = 0;
+
+	if (XGetGeometry(fluorite.dpy, w, &root_return, &win_x, &win_y, &win_w, &win_h, &border_w, &depth))
+	{
+		if (root_return != fluorite.root)
+		{
+			int dest_x, dest_y;
+			Window child;
+			if (XTranslateCoordinates(fluorite.dpy, w, fluorite.root, 0, 0, &dest_x, &dest_y, &child))
+			{
+				win_x = dest_x;
+				win_y = dest_y;
+			}
+		}
+		int mid_x = win_x + (int)win_w / 2;
+		int mid_y = win_y + (int)win_h / 2;
+		for (int i = 0; i < fluorite.ct_mon; i++)
+		{
+			Monitors m = fluorite.mon[i];
+			if (mid_x >= m.mx && mid_x < m.mx + m.mw &&
+			    mid_y >= m.my && mid_y < m.my + m.mh)
+				return i;
+		}
+	}
+	return -1;
+}
+
+static int FCheckAndSetStrut(int i, unsigned char *prop)
+{
+	int redraw = False;
+	Monitors mon = fluorite.mon[i];
+	long *strut = (long *) prop;
+
+	int sh = DisplayHeight(fluorite.dpy, fluorite.scr);
+	int sw = DisplayWidth(fluorite.dpy, fluorite.scr);
+
+	// LEFT
+	if (strut[LEFT] > 0 &&
+	    ((strut[LEFT_EY] > mon.my && strut[LEFT_SY] < (mon.my + mon.mh)) || (strut[LEFT_EY] == 0 && strut[LEFT_SY] == 0)))
+	{
+		int sl = 0;
+		if (strut[LEFT] > mon.mx && strut[LEFT] < (mon.mx + mon.mw))
+			sl = strut[LEFT] - mon.mx;
+		else if (strut[LEFT] < mon.mw)
+			sl = strut[LEFT];
+
+		if (sl > 0)
+		{
+			if (mon.sl < 0) fluorite.mon[i].sl += sl;
+			else fluorite.mon[i].sl = MAX(sl, fluorite.mon[i].sl);
+			redraw = True;
+		}
+	}
+
+	// RIGHT
+	if (strut[RIGHT] > 0 &&
+	    ((strut[RIGHT_EY] > mon.my && strut[RIGHT_SY] < (mon.my + mon.mh)) || (strut[RIGHT_EY] == 0 && strut[RIGHT_SY] == 0)))
+	{
+		int sr = 0;
+		if ((sw - strut[RIGHT]) > mon.mx && (sw - strut[RIGHT]) < (mon.mx + mon.mw))
+			sr = (mon.mx + mon.mw) - sw + strut[RIGHT];
+		else if (strut[RIGHT] < mon.mw)
+			sr = strut[RIGHT];
+
+		if (sr > 0)
+		{
+			if (mon.sr < 0) fluorite.mon[i].sr += sr;
+			else fluorite.mon[i].sr = MAX(sr, fluorite.mon[i].sr);
+			redraw = True;
+		}
+	}
+
+	// TOP
+	if (strut[TOP] > 0 &&
+	    ((strut[TOP_EX] > mon.mx && strut[TOP_SX] < (mon.mx + mon.mw)) || (strut[TOP_EX] == 0 && strut[TOP_SX] == 0)))
+	{
+		int st = 0;
+		if (strut[TOP] > mon.my && strut[TOP] < (mon.my + mon.mh))
+			st = strut[TOP] - mon.my;
+		else if (strut[TOP] < mon.mh)
+			st = strut[TOP];
+
+		if (st > 0)
+		{
+			if (mon.st < 0) fluorite.mon[i].st += st;
+			else fluorite.mon[i].st = MAX(st, fluorite.mon[i].st);
+			redraw = True;
+		}
+	}
+
+	// BOTTOM
+	if (strut[BOTTOM] > 0 &&
+	    ((strut[BOTTOM_EX] > mon.mx && strut[BOTTOM_SX] < (mon.mx + mon.mw)) || (strut[BOTTOM_EX] == 0 && strut[BOTTOM_SX] == 0)))
+	{
+		int sb = 0;
+		if ((sh - strut[BOTTOM]) > mon.my && (sh - strut[BOTTOM]) < (mon.my + mon.mh))
+			sb = (mon.my + mon.mh) - sh + strut[BOTTOM];
+		else if (strut[BOTTOM] < mon.mh)
+			sb = strut[BOTTOM];
+
+		if (sb > 0)
+		{
+			if (mon.sb < 0) fluorite.mon[i].sb += sb;
+			else fluorite.mon[i].sb = MAX(sb, fluorite.mon[i].sb);
+			redraw = True;
+		}
+	}
+
+	return redraw;
+}
+
 static void FGetFixedPartialStrut(Window w, int new_win)
 {
 	Atom strut_atom = XInternAtom(fluorite.dpy, "_NET_WM_STRUT_PARTIAL", False);
@@ -4164,65 +4393,83 @@ static void FGetFixedPartialStrut(Window w, int new_win)
 	int actual_format;
 	unsigned long nitems, bytes_after;
 	unsigned char *prop = NULL;
-	long *strut;
 	int sh, sw;
-	int redraw = False;
 	Windows *fx;
-	int keep_mon = fluorite.cr_mon;
 	Window focused;
 	int revert;
 
-	if (XGetWindowProperty(fluorite.dpy, w, strut_atom, 0, 12, False, XA_CARDINAL, &actual_type, &actual_format, &nitems, &bytes_after, &prop) == !Success)
-		return;
-	if (!prop)
-		return;
+	if (XGetWindowProperty(fluorite.dpy, w, strut_atom, 0, 12, False, XA_CARDINAL, &actual_type, &actual_format, &nitems, &bytes_after, &prop) == !Success || !prop)
+	{
+		strut_atom = XInternAtom(fluorite.dpy, "_NET_WM_STRUT", False);
+		if (XGetWindowProperty(fluorite.dpy, w, strut_atom, 0, 4, False, XA_CARDINAL, &actual_type, &actual_format, &nitems, &bytes_after, &prop) == !Success || !prop)
+			return;
+	}
 	sh = DisplayHeight(fluorite.dpy, fluorite.scr);
 	sw = DisplayWidth(fluorite.dpy, fluorite.scr);
 	XGetInputFocus(fluorite.dpy, &focused, &revert);
 	if (actual_type == XA_CARDINAL && actual_format == 32 && nitems >= 4)
 	{
-		strut = (long *) prop;
-		for (int i = 0; i < fluorite.ct_mon; i++)
+		long strut_buf[12] = {0};
+		long *raw = (long *) prop;
+		strut_buf[0] = raw[0];
+		strut_buf[1] = raw[1];
+		strut_buf[2] = raw[2];
+		strut_buf[3] = raw[3];
+		if (nitems >= 12)
 		{
-			Monitors mon = fluorite.mon[i];
-			if (mon.mx < strut[LEFT] && strut[LEFT] < (mon.mx + mon.mw - 1) && strut[LEFT_EY] >= mon.my && strut[LEFT_SY] < (mon.my + mon.mh))
+			for (int k = 4; k < 12; k++)
+				strut_buf[k] = raw[k];
+		}
+		else
+		{
+			strut_buf[4] = 0;  strut_buf[5] = sh;
+			strut_buf[6] = 0;  strut_buf[7] = sh;
+			strut_buf[8] = 0;  strut_buf[9] = sw;
+			strut_buf[10] = 0; strut_buf[11] = sw;
+		}
+
+		int target_mon = FGetMonitorForWindow(w);
+
+		if (new_win)
+		{
+			int assign_mon = (target_mon != -1) ? target_mon : fluorite.cr_mon;
+			for (int m = 0; m < fluorite.ct_mon; m++)
 			{
-				if (mon.sl < 0) fluorite.mon[i].sl += strut[LEFT] - mon.mx;
-				else fluorite.mon[i].sl = MAX(strut[LEFT] - mon.mx, mon.sl);
-				redraw = True;
-			}
-			if ((mon.mx + mon.mw) > (sw - strut[RIGHT]) && (sw - strut[RIGHT]) > mon.mx && strut[RIGHT_EY] >= mon.my && strut[RIGHT_SY] < (mon.my + mon.mh))
-			{
-				if (mon.sr < 0) fluorite.mon[i].sr += (mon.mx + mon.mw) - sw + strut[RIGHT];
-				else fluorite.mon[i].sr = MAX((mon.mx + mon.mw) - sw + strut[RIGHT], mon.sr);
-				redraw = True;
-			}
-			if (mon.my < strut[TOP] && strut[TOP] < (mon.my + mon.mh - 1) && strut[TOP_EX] >= mon.mx && strut[TOP_SX] < (mon.mx + mon.mw))
-			{
-				if (mon.st < 0) fluorite.mon[i].st += strut[TOP] - mon.my;
-				else fluorite.mon[i].st = MAX(strut[TOP] - mon.my, mon.st);
-				redraw = True;
-			}
-			if ((mon.my + mon.mh) > (sh - strut[BOTTOM]) && (sh - strut[BOTTOM]) > mon.my && strut[BOTTOM_EX] >= mon.mx && strut[BOTTOM_SX] < (mon.mx + mon.mw))
-			{
-				if (mon.sb < 0) fluorite.mon[i].sb += (mon.my + mon.mh) - sh + strut[BOTTOM];
-				else fluorite.mon[i].sb = MAX((mon.my + mon.mh) - sh + strut[BOTTOM], mon.sb);
-				redraw = True;
-			}
-			if (redraw)
-			{
-				if (new_win)
+				if (m == assign_mon) continue;
+				for (Windows *chk = fluorite.mon[m].fx_win; chk != NULL; chk = chk->next)
 				{
-					fx = (Windows *) calloc(1, sizeof(Windows));
-					fx->w = w;
-					fluorite.mon[i].fx_win = FAddWindow(fluorite.mon[i].fx_win, fx);
+					if (chk->w == w)
+					{
+						fluorite.mon[m].fx_win = FDelWindow(fluorite.mon[m].fx_win, chk);
+						free(chk);
+						break;
+					}
 				}
-				FChangeMonitor(i);
-				redraw = False;
+			}
+			int already_in = False;
+			for (Windows *chk = fluorite.mon[assign_mon].fx_win; chk != NULL; chk = chk->next)
+			{
+				if (chk->w == w)
+				{
+					already_in = True;
+					break;
+				}
+			}
+			if (!already_in)
+			{
+				fx = (Windows *) calloc(1, sizeof(Windows));
+				fx->w = w;
+				fluorite.mon[assign_mon].fx_win = FAddWindow(fluorite.mon[assign_mon].fx_win, fx);
 			}
 		}
+
+		for (int i = 0; i < fluorite.ct_mon; i++)
+		{
+			if (target_mon != -1 && i != target_mon)
+				continue;
+			FCheckAndSetStrut(i, (unsigned char *)strut_buf);
+		}
 	}
-	FChangeMonitor(keep_mon);
 	if (focused != None)
 	{
 		for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -4241,53 +4488,17 @@ static void FGetFixedPartialStrut(Window w, int new_win)
 		XSetInputFocus(fluorite.dpy, focused, RevertToPointerRoot, CurrentTime);
 		FWarpCursor(focused);
 	};
-	FRedrawWindows();
-	XSync(fluorite.dpy, True);
+	FRedrawAllMonitors();
+	XSync(fluorite.dpy, False);
 	FApplyBorders();
 	XFree(prop);
-}
-
-static int FCheckAndSetStrut(int i, unsigned char *prop)
-{
-	int redraw = False;
-	Monitors mon = fluorite.mon[i];
-	long *strut;
-
-	int sh = DisplayHeight(fluorite.dpy, fluorite.scr);
-	int sw = DisplayWidth(fluorite.dpy, fluorite.scr);
-	strut = (long *) prop;
-	if (mon.mx < strut[LEFT] && strut[LEFT] < (mon.mx + mon.mw - 1) && strut[LEFT_EY] >= mon.my && strut[LEFT_SY] < (mon.my + mon.mh))
-	{
-		if (mon.sl < 0) fluorite.mon[i].sl += strut[LEFT] - mon.mx;
-		else fluorite.mon[i].sl = MAX(strut[LEFT] - mon.mx, mon.sl);
-		redraw = True;
-	}
-	if ((mon.mx + mon.mw) > (sw - strut[RIGHT]) && (sw - strut[RIGHT]) > mon.mx && strut[RIGHT_EY] >= mon.my && strut[RIGHT_SY] < (mon.my + mon.mh))
-	{
-		if (mon.sr < 0) fluorite.mon[i].sr += (mon.mx + mon.mw) - sw + strut[RIGHT];
-		else fluorite.mon[i].sr = MAX((mon.mx + mon.mw) - sw + strut[RIGHT], mon.sr);
-		redraw = True;
-	}
-	if (mon.my < strut[TOP] && strut[TOP] < (mon.my + mon.mh - 1) && strut[TOP_EX] >= mon.mx && strut[TOP_SX] < (mon.mx + mon.mw))
-	{
-		if (mon.st < 0) fluorite.mon[i].st += strut[TOP] - mon.my;
-		else fluorite.mon[i].st = MAX(strut[TOP] - mon.my, mon.st);
-		redraw = True;
-	}
-	if ((mon.my + mon.mh) > (sh - strut[BOTTOM]) && (sh - strut[BOTTOM]) > mon.my && strut[BOTTOM_EX] >= mon.mx && strut[BOTTOM_SX] < (mon.mx + mon.mw))
-	{
-		if (mon.sb < 0) fluorite.mon[i].sb += (mon.my + mon.mh) - sh + strut[BOTTOM];
-		else fluorite.mon[i].sb = MAX((mon.my + mon.mh) - sh + strut[BOTTOM], mon.sb);
-		redraw = True;
-	}
-
-	return redraw;
 }
 
 static void FRecalculateStrut(int mon)
 {
 	if (fluorite.mon[mon].fx_hdn)
 		return;
+	FResetMonitorStrut(mon);
 	Atom strut_atom = XInternAtom(fluorite.dpy, "_NET_WM_STRUT_PARTIAL", False);
 	Atom actual_type;
 	int actual_format;
@@ -4298,11 +4509,36 @@ static void FRecalculateStrut(int mon)
 		return ;
 	for (Windows *fx = fluorite.mon[mon].fx_win; fx != NULL; fx = fx->next)
 	{
-		if (XGetWindowProperty(fluorite.dpy, fx->w, strut_atom, 0, 12, False, XA_CARDINAL, &actual_type, &actual_format, &nitems, &bytes_after, &prop) == !Success)
-			continue;
-		if (!prop)
-			continue;
-		FCheckAndSetStrut(mon, prop);
+		if (XGetWindowProperty(fluorite.dpy, fx->w, strut_atom, 0, 12, False, XA_CARDINAL, &actual_type, &actual_format, &nitems, &bytes_after, &prop) == !Success || !prop)
+		{
+			Atom simple_strut = XInternAtom(fluorite.dpy, "_NET_WM_STRUT", False);
+			if (XGetWindowProperty(fluorite.dpy, fx->w, simple_strut, 0, 4, False, XA_CARDINAL, &actual_type, &actual_format, &nitems, &bytes_after, &prop) == !Success || !prop)
+				continue;
+		}
+		if (actual_type == XA_CARDINAL && actual_format == 32 && nitems >= 4)
+		{
+			long strut_buf[12] = {0};
+			long *raw = (long *) prop;
+			int sw = DisplayWidth(fluorite.dpy, fluorite.scr);
+			int sh = DisplayHeight(fluorite.dpy, fluorite.scr);
+			strut_buf[0] = raw[0];
+			strut_buf[1] = raw[1];
+			strut_buf[2] = raw[2];
+			strut_buf[3] = raw[3];
+			if (nitems >= 12)
+			{
+				for (int k = 4; k < 12; k++)
+					strut_buf[k] = raw[k];
+			}
+			else
+			{
+				strut_buf[4] = 0;  strut_buf[5] = sh;
+				strut_buf[6] = 0;  strut_buf[7] = sh;
+				strut_buf[8] = 0;  strut_buf[9] = sw;
+				strut_buf[10] = 0; strut_buf[11] = sw;
+			}
+			FCheckAndSetStrut(mon, (unsigned char *)strut_buf);
+		}
 		XFree(prop);
 		prop = NULL;
 	}
@@ -5192,40 +5428,51 @@ static void FScrollingMoveWindowToColumnRight()
 
 static void FUpdateWorkarea()
 {
-    unsigned long workarea[MAX_WS * 4];
-    int mon = fluorite.cr_mon;
+	unsigned long workarea[MAX_WS * 4];
 
-    int wx = fluorite.mon[mon].mx + fluorite.mon[mon].sl;
-    int wy = fluorite.mon[mon].my + fluorite.mon[mon].st;
-    int ww = fluorite.mon[mon].mw - fluorite.mon[mon].sl - fluorite.mon[mon].sr;
-    int wh = fluorite.mon[mon].mh - fluorite.mon[mon].st - fluorite.mon[mon].sb;
+	int min_x = 0, min_y = 0;
+	int max_r = 0, max_b = 0;
 
-    if (ww < 0) ww = 0;
-    if (wh < 0) wh = 0;
+	for (int i = 0; i < fluorite.ct_mon; i++)
+	{
+		int r = fluorite.mon[i].mx + fluorite.mon[i].mw;
+		int b = fluorite.mon[i].my + fluorite.mon[i].mh;
 
-    for (int i = 0; i < MAX_WS; i++)
-    {
-        workarea[i * 4 + 0] = wx;
-        workarea[i * 4 + 1] = wy;
-        workarea[i * 4 + 2] = ww;
-        workarea[i * 4 + 3] = wh;
-    }
+		if (r > max_r) max_r = r;
+		if (b > max_b) max_b = b;
+	}
 
-    XChangeProperty(
-        fluorite.dpy,
-        fluorite.root,
-        XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
-        XA_CARDINAL,
-        32,
-        PropModeReplace,
-        (unsigned char *)workarea,
-        MAX_WS * 4
-    );
+	int total_w = (max_r > 0) ? max_r : DisplayWidth(fluorite.dpy, fluorite.scr);
+	int total_h = (max_b > 0) ? max_b : DisplayHeight(fluorite.dpy, fluorite.scr);
+
+	for (int i = 0; i < MAX_WS; i++)
+	{
+		workarea[i * 4 + 0] = min_x;
+		workarea[i * 4 + 1] = min_y;
+		workarea[i * 4 + 2] = total_w;
+		workarea[i * 4 + 3] = total_h;
+	}
+
+	XChangeProperty(
+		fluorite.dpy,
+		fluorite.root,
+		XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
+		XA_CARDINAL,
+		32,
+		PropModeReplace,
+		(unsigned char *)workarea,
+		MAX_WS * 4
+	);
 }
 
 static void FUpdateDesktopViewport()
 {
-    unsigned long viewports[2] = {0, 0};
+	unsigned long viewports[MAX_WS * 2];
+	for (int i = 0; i < MAX_WS; i++)
+	{
+		viewports[i * 2 + 0] = 0;
+		viewports[i * 2 + 1] = 0;
+	}
 
     XChangeProperty(
         fluorite.dpy,
@@ -5235,7 +5482,7 @@ static void FUpdateDesktopViewport()
         32,
         PropModeReplace,
         (unsigned char *)viewports,
-        2
+        MAX_WS * 2
     );
 }
 
@@ -5428,4 +5675,51 @@ static void FSwapTiledWindows(Windows *a, Windows *b)
     b->can_sw = tmp_can_sw;
     b->sw     = tmp_sw;
     b->swp    = tmp_swp;
+}
+
+static void FSendConfigureNotify(Window w, int x, int y, int width, int height)
+{
+    XConfigureEvent ce;
+    ce.type = ConfigureNotify;
+    ce.display = fluorite.dpy;
+    ce.event = w;
+    ce.window = w;
+    ce.x = x;
+    ce.y = y;
+    ce.width = width;
+    ce.height = height;
+    ce.border_width = 0;
+    ce.above = None;
+    ce.override_redirect = False;
+
+    XSendEvent(fluorite.dpy, w, False, StructureNotifyMask, (XEvent *)&ce);
+}
+
+static void FUpdateDesktopGeometry()
+{
+	int max_r = 0, max_b = 0;
+
+	for (int i = 0; i < fluorite.ct_mon; i++)
+	{
+		int r = fluorite.mon[i].mx + fluorite.mon[i].mw;
+		int b = fluorite.mon[i].my + fluorite.mon[i].mh;
+		if (r > max_r) max_r = r;
+		if (b > max_b) max_b = b;
+	}
+
+	unsigned long geometry[2] = {
+		(max_r > 0) ? max_r : DisplayWidth(fluorite.dpy, fluorite.scr),
+		(max_b > 0) ? max_b : DisplayHeight(fluorite.dpy, fluorite.scr)
+	};
+
+	XChangeProperty(
+		fluorite.dpy,
+		fluorite.root,
+		XInternAtom(fluorite.dpy, "_NET_DESKTOP_GEOMETRY", False),
+		XA_CARDINAL,
+		32,
+		PropModeReplace,
+		(unsigned char *)geometry,
+		2
+	);
 }

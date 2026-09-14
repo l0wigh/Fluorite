@@ -23,6 +23,7 @@ Feel free to open issues to help me fix them !
 - Window swallowing. Get that useless terminal out of your way.
 - EWMH handling. Give you more features without more configuration required
 - Polybar IPC. Active Layout and Scratchpads should not be some kind of secrets
+- fluoritectl. Let you control Fluorite from your terminal
 
 ## Dependencies installation
 
