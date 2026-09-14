@@ -1,4 +1,4 @@
-# Fluorite [EVO 2] (Rev 2)
+# Fluorite [EVO 3] (Beta 4)
 
 Fluorite is a dynamic tiling window manager that aims to be light, functionnal, predictable, and beautiful.
 
@@ -8,8 +8,11 @@ _Rosé-pine Theme in Cascade layout_
 ![Fluorite Presentation](./screenshots/centered/fluorite_gruvbox.png)
 _Gruvbox Theme in Centered layout_
 
-The current state is pretty much stable. There is probably some other bugs hiding in dark corners. That's the reason it's a Release Candidate 1.
-Feel free to open issues to help me fix them !
+The EVO 3 mostly aim to add all the missing pieces to make a fully X11 compatible window manager to just works. Until now, some edge cases were a bit clunky with Fluorite, but adding new EWMH supports, and finally fully debugging some strange part will help with all this.
+
+Currently the EVO 3 tend to be more compatible with xrandr multi monitors stuff, multi-bar (polybar, quickshell...) setups, and with java apps like Ghidra.
+
+The EVO 3 also now have an ipc controler, it still needs some functionnalities that will help with communication with bars.
 
 ## Features
 

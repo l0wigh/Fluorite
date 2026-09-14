@@ -1,5 +1,4 @@
-#include <X11/extensions/randr.h>
-#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 3)"
+#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 4)"
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -8,6 +7,7 @@
 #include <X11/Xresource.h>
 #include <X11/Xcursor/Xcursor.h>
 #include <X11/extensions/Xrandr.h>
+#include <X11/extensions/randr.h>
 #include <xdo.h>
 #include <stdio.h>
 #include <sys/types.h>
