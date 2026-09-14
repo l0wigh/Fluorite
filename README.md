@@ -100,3 +100,64 @@ initial = 1 ; Will check on startup if there is already some Scratchpads
 Go to [Fluorite Website](https://fluorite.surge.sh) for more informations.
 
 You can also find some quick tips inside [CONFIG.md](./CONFIG.md).
+
+## Automated Multi-Monitor Hotplug (with autorandr)
+
+Fluorite seamlessly supports dynamic multi-monitor hotplugging and strut recalculation. To automate display layout switching upon plugging or unplugging monitors, using [`autorandr`](https://github.com/phillipberndt/autorandr) is highly recommended.
+
+### 1. Install autorandr
+
+- **Gentoo**: `sudo emerge -av x11-misc/autorandr`
+- **Arch Linux**: `sudo pacman -S autorandr`
+- **Void Linux**: `sudo xbps-install -S autorandr`
+- **Debian / Ubuntu**: `sudo apt install autorandr`
+
+### 2. Save your display profiles
+
+Configure your screens as desired using `xrandr` (or GUI tools like `arandr`), then save the corresponding profiles:
+
+- **Single / Mobile display (laptop alone)**:
+  ```sh
+  xrandr --output <EXTERNAL> --off --output <INTERNAL> --auto --primary
+  autorandr --save default
+  ```
+  *(Naming this profile `default` ensures autorandr falls back to it when no external screen is connected).*
+
+- **Multi-Monitor setup (e.g. external display above laptop)**:
+  ```sh
+  xrandr --output <EXTERNAL> --auto --above <INTERNAL>
+  autorandr --save dual-hdmi
+  ```
+
+### 3. Setup postswitch hook for wallpaper
+
+To automatically re-apply your wallpaper with `feh` upon profile switching, create `~/.config/autorandr/postswitch`:
+
+```sh
+#!/bin/sh
+$HOME/.fehbg
+```
+
+Make it executable:
+```sh
+chmod +x ~/.config/autorandr/postswitch
+```
+
+### 4. Integrate into `.xinitrc`
+
+Call `autorandr --change` synchronously before starting your bars and Fluorite:
+
+```sh
+# Apply matching display profile before starting window manager & bars
+autorandr --change --default default
+
+# Start compositor, bars, etc.
+~/.fehbg &
+picom &
+quickshell & # or polybar &
+
+# Start Fluorite
+exec Fluorite
+```
+
+When udev hotplug triggers (`/usr/lib/udev/rules.d/40-monitor-hotplug.rules`), `autorandr` will automatically detect the hardware change, apply the appropriate profile, run your `postswitch` script, and Fluorite will dynamically update all workspaces, windows, and struts!
