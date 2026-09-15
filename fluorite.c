@@ -719,6 +719,7 @@ static void FApplyProps()
 		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False),
 		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),			XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
 		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False), XInternAtom(fluorite.dpy, "_NET_DESKTOP_GEOMETRY", False),
+		XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False),
 	};
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, sizeof(supported) / sizeof(Atom));
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
@@ -3253,6 +3254,22 @@ static void FUpdateClientList()
 			list[list_idx] = w->w;
 	}
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False), XA_WINDOW, 32, PropModeReplace, (unsigned char *)list, list_idx);
+
+	Window root_ret, parent_ret, *children = NULL;
+	unsigned int nchildren = 0;
+
+	if (XQueryTree(fluorite.dpy, fluorite.root, &root_ret, &parent_ret, &children, &nchildren) && children)
+	{
+		Window stack[1024];
+		int stack_idx = 0;
+		
+		for (unsigned int i = 0; i < nchildren; i++)
+			if (FFindWorkspaceFromWindow(children[i]) != -1)
+				stack[stack_idx++] = children[i];
+
+		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False), XA_WINDOW, 32, PropModeReplace, (unsigned char *)stack, stack_idx);
+		XFree(children);
+	}
 }
 
 static void FResetWindowOpacity(Window w)
