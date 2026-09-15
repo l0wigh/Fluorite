@@ -236,6 +236,7 @@ static void 	FMotionNotify(XEvent ev);
 static void 	FWarpCursor(Window w);
 static void 	FSetWindowOpacity(Window w, double opacity);
 static void		FUpdateClientList();
+static void		FUpdateClientListStacking();
 static void		FResetWindowOpacity(Window w);
 static void		FRemoveActiveWindow();
 static void		FSetWindowFullscreen(Window w, int fs);
@@ -719,7 +720,7 @@ static void FApplyProps()
 		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False),
 		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),			XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
 		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False), XInternAtom(fluorite.dpy, "_NET_DESKTOP_GEOMETRY", False),
-		XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False),
+		XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False), XInternAtom(fluorite.dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", False),
 	};
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, sizeof(supported) / sizeof(Atom));
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
@@ -1130,9 +1131,11 @@ static void FRun()
 				break;
 			case MapRequest:
 				FMapRequest(ev);
+				FUpdateClientListStacking();
 				break;
 			case UnmapNotify:
 				FUnmapNotify(ev);
+				FUpdateClientListStacking();
 				break;
 			case ButtonPress:
 				FButtonPress(ev);
@@ -1192,6 +1195,7 @@ static void FRun()
 				FClientMessage(ev);
 				break;
 			case DestroyNotify:
+				FUpdateClientListStacking();
 				FDestroyNotify(ev);
 				break;
 			case PropertyNotify:
@@ -1892,6 +1896,15 @@ static void FRedrawCascadeLayout()
 
 static void FRedrawFullscreen()
 {
+	int mx = fluorite.mon[fluorite.cr_mon].mx;
+	int my = fluorite.mon[fluorite.cr_mon].my;
+	int mw = fluorite.mon[fluorite.cr_mon].mw;
+	int mh = fluorite.mon[fluorite.cr_mon].mh;
+	Window root_ret;
+	int win_x = 0, win_y = 0;
+	unsigned int win_w = 0, win_h = 0, b_w = 0, depth = 0;
+
+
 	Windows *w;
 	for (w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
 		if (w->fs)
@@ -1902,15 +1915,6 @@ static void FRedrawFullscreen()
 return;
 
 found:
-	int mx = fluorite.mon[fluorite.cr_mon].mx;
-	int my = fluorite.mon[fluorite.cr_mon].my;
-	int mw = fluorite.mon[fluorite.cr_mon].mw;
-	int mh = fluorite.mon[fluorite.cr_mon].mh;
-
-	Window root_ret;
-	int win_x = 0, win_y = 0;
-	unsigned int win_w = 0, win_h = 0, b_w = 0, depth = 0;
-
 	if (XGetGeometry(fluorite.dpy, w->w, &root_ret, &win_x, &win_y, &win_w, &win_h, &b_w, &depth))
 	{
 		if (root_ret != fluorite.root)
@@ -2072,11 +2076,13 @@ static void FRedrawAllMonitors()
 static void FApplyActiveWindow(Window w)
 {
 	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
+	XSetInputFocus(fluorite.dpy, w, RevertToPointerRoot, CurrentTime);
 	XChangeProperty(fluorite.dpy, fluorite.root,
 			net_active_window, XA_WINDOW, 32,
 			PropModeReplace, (unsigned char *)&w, 1);
 	XSetWindowBorder(fluorite.dpy, w, fluorite.conf.bf);
 	FWarpCursor(w);
+	FUpdateClientListStacking();
 }
 
 static void FApplyBorders()
@@ -3121,6 +3127,7 @@ static void FClientMessage(XEvent ev)
 	else if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_WM_STATE", False))
 	{
 		Atom net_wm_state_fullscreen = XInternAtom(fluorite.dpy, "_NET_WM_STATE_FULLSCREEN", False);
+		Atom net_wm_state_attention = XInternAtom(fluorite.dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", False);
 		if ((Atom)ev.xclient.data.l[1] == net_wm_state_fullscreen || (Atom)ev.xclient.data.l[2] == net_wm_state_fullscreen)
 		{
 			// action: 0 = _NET_WM_STATE_REMOVE, 1 = _NET_WM_STATE_ADD, 2 = _NET_WM_STATE_TOGGLE
@@ -3140,6 +3147,40 @@ static void FClientMessage(XEvent ev)
 					XSetInputFocus(fluorite.dpy, target->w, RevertToPointerRoot, CurrentTime);
 					FToggleFullscreen();
 				}
+			}
+		}
+		if ((Atom)ev.xclient.data.l[1] == net_wm_state_attention || (Atom)ev.xclient.data.l[2] == net_wm_state_attention)
+		{
+			int action = ev.xclient.data.l[0];
+			int ws = FFindWorkspaceFromWindow(ev.xclient.window);
+
+			if (ws != -1)
+			{
+				if (action == 1 || action == 2)
+				{
+					if (fluorite.conf.jtu)
+					{
+						if (ws != fluorite.cr_ws)
+							FShowWorkspace(ws);
+						XSetInputFocus(fluorite.dpy, ev.xclient.window, RevertToPointerRoot, CurrentTime);
+						FRedrawWindows();
+						FApplyBorders();
+					}
+					else
+					{
+						XChangeProperty(fluorite.dpy, ev.xclient.window,
+								XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),
+								XA_ATOM, 32, PropModeAppend,
+								(unsigned char *)&net_wm_state_attention, 1);
+						XWMHints *hints = XGetWMHints(fluorite.dpy, ev.xclient.window);
+						if (!hints) hints = XAllocWMHints();
+						hints->flags |= XUrgencyHint;
+						XSetWMHints(fluorite.dpy, ev.xclient.window, hints);
+						XFree(hints);
+					}
+				}
+				else if (action == 0)
+					XDeleteProperty(fluorite.dpy, ev.xclient.window, XInternAtom(fluorite.dpy, "_NET_WM_STATE", False));
 			}
 		}
 	}
@@ -3254,7 +3295,10 @@ static void FUpdateClientList()
 			list[list_idx] = w->w;
 	}
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False), XA_WINDOW, 32, PropModeReplace, (unsigned char *)list, list_idx);
+}
 
+static void FUpdateClientListStacking()
+{
 	Window root_ret, parent_ret, *children = NULL;
 	unsigned int nchildren = 0;
 
@@ -3270,6 +3314,7 @@ static void FUpdateClientList()
 		XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False), XA_WINDOW, 32, PropModeReplace, (unsigned char *)stack, stack_idx);
 		XFree(children);
 	}
+	XSync(fluorite.dpy, False);
 }
 
 static void FResetWindowOpacity(Window w)
@@ -3282,6 +3327,7 @@ static void FRemoveActiveWindow()
 {
 	Atom atom = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 	XDeleteProperty(fluorite.dpy, fluorite.root, atom);
+	XSetInputFocus(fluorite.dpy, fluorite.root, RevertToPointerRoot, CurrentTime);
 }
 
 static void FSetWindowFullscreen(Window w, int fs)
