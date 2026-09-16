@@ -20,8 +20,6 @@ New features might sneak in, but it's not the point of the EVO 3 anyways.
 - [ ] Discord not giving controls when reappearing on screen, a click is required
 - [ ] Missing EWMH
 - [ ] Missing Client message handling
-- [ ] Strange behavior from Firefox when setting the window fullscreen with binding
-    - It leave the fullscreen of Youtube videos for exemple
 - [ ] Create multiple files to have a cleaner project
 - [ ] Find and remove deadcode
 - [ ] (?) Rename functions that doesn't make sense
@@ -35,3 +33,5 @@ New features might sneak in, but it's not the point of the EVO 3 anyways.
     - [x] No strange process are required anymore to make the hot plug works
 - [x] Discord will give everything notifications if it's not on an active workspace
 - [x] Fullscreen is now set in EWMH
+- [x] Strange behavior from Firefox when setting the window fullscreen with binding
+    - It leave the fullscreen of Youtube videos for exemple
