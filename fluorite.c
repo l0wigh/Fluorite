@@ -305,6 +305,7 @@ static Windows	*FFindTiledWindowAtPos(int x, int y);
 static void		FSwapTiledWindows(Windows *a, Windows *b);
 static void		FSendConfigureNotify(Window w, int x, int y, int width, int height);
 static void		FUpdateDesktopGeometry();
+static void		FSetHiddenState(Window w, int hidden);
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -367,6 +368,9 @@ static UserFunc user_functions_list[] = {
 	{"scrolling_move_down",			VOID,	FScrollingMoveDown, NULL, NULL},
 	{"toggle_scratchpad_key", CHAR, NULL, NULL, FScratchpadToggleByKeysym},
 };
+static Atom NET_WM_STATE;
+static Atom NET_WM_STATE_HIDDEN;
+static Atom NET_ACTIVE_WINDOW;
 
 int main(void)
 {
@@ -402,6 +406,9 @@ static void FInit()
 	floating_windows = (char **) calloc(1, sizeof(char *));
 	fixed_windows = (char **) calloc(1, sizeof(char *));
 	swallowing_windows = (char **) calloc(1, sizeof(char *));
+	NET_WM_STATE = XInternAtom(fluorite.dpy, "_NET_WM_STATE", False);
+	NET_WM_STATE_HIDDEN = XInternAtom(fluorite.dpy, "_NET_WM_STATE_HIDDEN", False);
+	NET_ACTIVE_WINDOW = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 	FReloadConfig();
 	FInitMonitors();
 	FInitWorkspaces();
@@ -714,13 +721,21 @@ static void FApplyProps()
 	XSetTextProperty(fluorite.dpy, fluorite.root, &text, XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False));
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False), XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
 	Atom supported[] = {
-		XInternAtom(fluorite.dpy, "_NET_WM_NAME", False),			XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False),
-		XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False),		XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False),
-		XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False),	XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False),
-		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False),
-		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),			XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
-		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False), XInternAtom(fluorite.dpy, "_NET_DESKTOP_GEOMETRY", False),
-		XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False), XInternAtom(fluorite.dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_NAME", False),
+		XInternAtom(fluorite.dpy, "_NET_SUPPORTING_WM_CHECK", False),
+		XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False),
+		XInternAtom(fluorite.dpy, "_NET_DESKTOP_NAMES", False),
+		XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False),
+		XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),
+		XInternAtom(fluorite.dpy, "_NET_NUMBER_OF_DESKTOPS", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_STATE", False),
+		XInternAtom(fluorite.dpy, "_NET_WORKAREA", False),
+		XInternAtom(fluorite.dpy, "_NET_DESKTOP_VIEWPORT", False),
+		XInternAtom(fluorite.dpy, "_NET_DESKTOP_GEOMETRY", False),
+		XInternAtom(fluorite.dpy, "_NET_CLIENT_LIST_STACKING", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", False),
+		XInternAtom(fluorite.dpy, "_NET_WM_STATE_HIDDEN", False),
 	};
 	XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False), XA_ATOM, 32, PropModeReplace, (unsigned char *)supported, sizeof(supported) / sizeof(Atom));
 	attributes.event_mask = SubstructureNotifyMask | SubstructureRedirectMask | StructureNotifyMask | ButtonPressMask | KeyPressMask | PointerMotionMask | PropertyChangeMask;
@@ -2075,10 +2090,9 @@ static void FRedrawAllMonitors()
 
 static void FApplyActiveWindow(Window w)
 {
-	Atom net_active_window = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
 	XSetInputFocus(fluorite.dpy, w, RevertToPointerRoot, CurrentTime);
 	XChangeProperty(fluorite.dpy, fluorite.root,
-			net_active_window, XA_WINDOW, 32,
+			NET_ACTIVE_WINDOW, XA_WINDOW, 32,
 			PropModeReplace, (unsigned char *)&w, 1);
 	XSetWindowBorder(fluorite.dpy, w, fluorite.conf.bf);
 	FWarpCursor(w);
@@ -3391,9 +3405,15 @@ static void FShowWorkspace(int ws)
 	no_unmap = True;
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
 		XUnmapWindow(fluorite.dpy, w->w);
+		FSetHiddenState(w->w, True);
+	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+	{
 		XUnmapWindow(fluorite.dpy, w->w);
+		FSetHiddenState(w->w, True);
+	}
 
 	fluorite.cr_ws = ws;
 	fluorite.mon[fluorite.cr_mon].ws = ws;
@@ -3402,9 +3422,15 @@ static void FShowWorkspace(int ws)
 	XSync(fluorite.dpy, True);
 
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
+	{
+		FSetHiddenState(w->w, False);
 		XMapWindow(fluorite.dpy, w->w);
+	}
 	for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL && !fluorite.ws[fluorite.cr_ws].fl_hdn; w = w->next)
+	{
+		FSetHiddenState(w->w, False);
 		XMapWindow(fluorite.dpy, w->w);
+	}
 
 	if (fluorite.ws[fluorite.cr_ws].t_wins)
 	{
@@ -3430,7 +3456,7 @@ static void FShowWorkspace(int ws)
 	no_unmap = False;
 
 	FRedrawWindows();
-	XSync(fluorite.dpy, True);
+	XSync(fluorite.dpy, False);
 	FApplyBorders();
 }
 
@@ -5927,4 +5953,45 @@ static void FUpdateDesktopGeometry()
 		(unsigned char *)geometry,
 		2
 	);
+}
+
+static void FSetHiddenState(Window w, int hidden)
+{
+	Atom type, new_states[64];
+	int format, already_present = False;
+	unsigned long nitems, bytes_after, n = 0;
+	Atom *states = NULL;
+
+	XGetWindowProperty(
+		fluorite.dpy, 
+		w, NET_WM_STATE, 
+		0 , 64, 
+		False, XA_ATOM, 
+		&type, &format, 
+		&nitems,
+		&bytes_after, (unsigned char **)&states
+	);
+
+	for (unsigned long i = 0; i < nitems; i++)
+	{
+		if (states[i] == NET_WM_STATE_HIDDEN)
+		{
+			already_present = True;
+			if (!hidden) continue;
+		}
+		new_states[n++] = states[i];
+	}
+	if (states) XFree(states);
+
+	if (hidden && !already_present)
+		new_states[n++] = NET_WM_STATE_HIDDEN;
+
+	XChangeProperty(
+		fluorite.dpy, 
+		w, NET_WM_STATE, 
+		XA_ATOM, 32, 
+		PropModeReplace, (unsigned char *)new_states,
+		n
+	);
+	FApplyBorders();
 }
