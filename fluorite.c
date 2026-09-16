@@ -241,7 +241,7 @@ static void FUpdateClientListStacking();
 static void FResetWindowOpacity(Window w);
 static void FRemoveActiveWindow();
 static void FSetWindowFullscreen(Window w, int fs);
-static void FSearchAndDestoryGhostWindows();
+static void FSearchAndDestroyGhostWindows();
 static void FPolybarLayoutIPC(const int layout);
 static void FPolybarScratchpadsIPC();
 static void FGetFixedPartialStrut(Window w, int new_win);
@@ -2047,7 +2047,7 @@ static void FRedrawWindows()
         FRedrawOrganizer();
         return;
     }
-    FSearchAndDestoryGhostWindows();
+    FSearchAndDestroyGhostWindows();
     FPolybarLayoutIPC(fluorite.ws[fluorite.cr_ws].layout);
 
     if (!fluorite.ws[fluorite.cr_ws].t_wins) goto floating;
@@ -4442,7 +4442,7 @@ found:
     FWarpCursor(w->w);
 }
 
-static void FSearchAndDestoryGhostWindows()
+static void FSearchAndDestroyGhostWindows()
 {
     for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
         if (!FWindowExists(fluorite.dpy, w->w))
