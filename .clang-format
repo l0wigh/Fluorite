@@ -7,7 +7,7 @@ TabWidth: 4
 UseTab: Never
 AccessModifierOffset: 0
 
-ColumnLimit: 80
+ColumnLimit: 100
 
 PointerAlignment: Right
 
