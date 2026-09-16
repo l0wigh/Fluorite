@@ -252,6 +252,7 @@ static int FCheckCanSwallow(Window w);
 static void FReloadConfig();
 static void FExecute(char *argument);
 static void FQuit();
+static void FCloseTargetWindow(Window focused);
 static void FCloseWindow();
 static void FRotateWindows(int mode);
 static void FRotateStackWindows(int mode);
@@ -376,6 +377,9 @@ static Atom NET_WM_STATE_MAXIMIZED_HORZ;
 static Atom NET_WM_STATE_DEMANDS_ATTENTION;
 static Atom NET_WM_STATE_FOCUSED;
 static Atom NET_ACTIVE_WINDOW;
+static Atom NET_CLOSE_WINDOW;
+static Atom NET_WM_ALLOWED_ACTIONS;
+static Atom NET_WM_ACTION_CLOSE;
 static Window current_active_win = None;
 
 int main(void)
@@ -419,6 +423,9 @@ static void FInit()
         XInternAtom(fluorite.dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", False);
     NET_WM_STATE_FOCUSED = XInternAtom(fluorite.dpy, "_NET_WM_STATE_FOCUSED", False);
     NET_ACTIVE_WINDOW = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
+    NET_CLOSE_WINDOW = XInternAtom(fluorite.dpy, "_NET_CLOSE_WINDOW", False);
+    NET_WM_ALLOWED_ACTIONS = XInternAtom(fluorite.dpy, "_NET_WM_ALLOWED_ACTIONS", False);
+    NET_WM_ACTION_CLOSE = XInternAtom(fluorite.dpy, "_NET_WM_ACTION_CLOSE", False);
     FReloadConfig();
     FInitMonitors();
     FInitWorkspaces();
@@ -768,6 +775,8 @@ static void FApplyProps()
         XInternAtom(fluorite.dpy, "_NET_WM_STATE_MAXIMIZED_VERT", False),
         XInternAtom(fluorite.dpy, "_NET_WM_STATE_MAXIMIZED_HORZ", False),
         XInternAtom(fluorite.dpy, "_NET_WM_STATE_FOCUSED", False),
+        NET_WM_ALLOWED_ACTIONS,
+        NET_WM_ACTION_CLOSE,
     };
     XChangeProperty(fluorite.dpy, fluorite.root, XInternAtom(fluorite.dpy, "_NET_SUPPORTED", False),
                     XA_ATOM, 32, PropModeReplace, (unsigned char *)supported,
@@ -1498,6 +1507,11 @@ static void FMapRequest(XEvent ev)
     FSetState(nw->w, NET_WM_STATE_HIDDEN, False);
     XMapWindow(fluorite.dpy, nw->w);
     XRaiseWindow(fluorite.dpy, nw->w);
+
+    Atom allowed_actions[] = {NET_WM_ACTION_CLOSE};
+    XChangeProperty(fluorite.dpy, nw->w, NET_WM_ALLOWED_ACTIONS, XA_ATOM, 32, PropModeReplace,
+                    (unsigned char *)allowed_actions, 1);
+
     if (!is_fixed)
         XChangeProperty(fluorite.dpy, nw->w, XInternAtom(fluorite.dpy, "_NET_WM_DESKTOP", False),
                         XA_CARDINAL, 32, PropModeReplace, (unsigned char *)&fluorite.cr_ws, 1);
@@ -2874,13 +2888,10 @@ static void FQuit()
     XCloseDisplay(fluorite.dpy);
 }
 
-static void FCloseWindow()
+static void FCloseTargetWindow(Window focused)
 {
     if (fluorite.orgz) return;
 
-    Window focused;
-    int revert;
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
     if (focused == fluorite.root || focused == None) return;
 
     Window target = FGetToplevel(focused);
@@ -2914,6 +2925,14 @@ static void FCloseWindow()
     }
 
     XWithdrawWindow(fluorite.dpy, target, fluorite.scr);
+}
+
+static void FCloseWindow()
+{
+    Window focused;
+    int revert;
+    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    FCloseTargetWindow(focused);
 }
 
 Window FWindowUnderCursor()
@@ -3113,7 +3132,8 @@ static void FClientMessage(XEvent ev)
 {
     no_refocus = True;
     no_warp = True;
-    if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False))
+    if (ev.xclient.message_type == NET_CLOSE_WINDOW) FCloseTargetWindow(ev.xclient.window);
+    else if (ev.xclient.message_type == XInternAtom(fluorite.dpy, "_NET_CURRENT_DESKTOP", False))
     {
         int request_ws = ev.xclient.data.l[0];
         if (request_ws < 0 || request_ws > 9) return;
