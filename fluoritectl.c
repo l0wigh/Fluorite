@@ -8,20 +8,20 @@
 
 int main(int argc, char **argv)
 {
-	if (argc < 2)
-	{
-		fprintf(stderr, "Usage: fluoritectl <action> [arg]\n");
-		return 1;
-	}
+    if (argc < 2)
+    {
+        fprintf(stderr, "Usage: fluoritectl <action> [arg]\n");
+        return 1;
+    }
 
-	int sock = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (sock < 0)
-	{
-		perror("socket");
-		return 1;
-	}
+    int sock = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (sock < 0)
+    {
+        perror("socket");
+        return 1;
+    }
 
-	struct sockaddr_un addr;
+    struct sockaddr_un addr;
     memset(&addr, 0, sizeof(addr));
     addr.sun_family = AF_UNIX;
     strncpy(addr.sun_path, SOCKET_PATH, sizeof(addr.sun_path) - 1);
@@ -33,21 +33,21 @@ int main(int argc, char **argv)
         return 1;
     }
 
-	char command[256] = {0};
-	for (int i = 1; i < argc; i++)
-	{
-		strcat(command, argv[i]);
-		if (i < argc - 1) strcat(command, " ");
-	}
-	strcat(command, "\n");
+    char command[256] = {0};
+    for (int i = 1; i < argc; i++)
+    {
+        strcat(command, argv[i]);
+        if (i < argc - 1) strcat(command, " ");
+    }
+    strcat(command, "\n");
 
-	send(sock, command, strlen(command), 0);
+    send(sock, command, strlen(command), 0);
 
-	char res[32] = {0};
-	ssize_t val = read(sock, res, sizeof(res) - 1);
-	(void)val;
-	printf("%s", res);
+    char res[32] = {0};
+    ssize_t val = read(sock, res, sizeof(res) - 1);
+    (void)val;
+    printf("%s", res);
 
-	close(sock);
-	return 0;
+    close(sock);
+    return 0;
 }

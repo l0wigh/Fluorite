@@ -1,0 +1,22 @@
+---
+BasedOnStyle: Microsoft
+Language: C
+
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+AccessModifierOffset: 0
+
+ColumnLimit: 80
+
+PointerAlignment: Right
+
+AllowShortBlocksOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortLambdasOnASingleLine: All
+
+SortIncludes: CaseSensitive
+
+BreakBeforeBraces: Allman
+...
