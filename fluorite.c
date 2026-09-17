@@ -1,3 +1,4 @@
+#include <wchar.h>
 #define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 4)"
 
 #include <X11/X.h>
@@ -376,10 +377,13 @@ static Atom NET_WM_STATE_MAXIMIZED_VERT;
 static Atom NET_WM_STATE_MAXIMIZED_HORZ;
 static Atom NET_WM_STATE_DEMANDS_ATTENTION;
 static Atom NET_WM_STATE_FOCUSED;
+static Atom NET_WM_STATE_MODAL;
 static Atom NET_ACTIVE_WINDOW;
 static Atom NET_CLOSE_WINDOW;
 static Atom NET_WM_ALLOWED_ACTIONS;
 static Atom NET_WM_ACTION_CLOSE;
+static Atom NET_WM_ACTION_CLOSE;
+
 static Window current_active_win = None;
 
 int main(void)
@@ -422,6 +426,7 @@ static void FInit()
     NET_WM_STATE_DEMANDS_ATTENTION =
         XInternAtom(fluorite.dpy, "_NET_WM_STATE_DEMANDS_ATTENTION", False);
     NET_WM_STATE_FOCUSED = XInternAtom(fluorite.dpy, "_NET_WM_STATE_FOCUSED", False);
+    NET_WM_STATE_MODAL = XInternAtom(fluorite.dpy, "_NET_WM_STATE_MODAL", False);
     NET_ACTIVE_WINDOW = XInternAtom(fluorite.dpy, "_NET_ACTIVE_WINDOW", False);
     NET_CLOSE_WINDOW = XInternAtom(fluorite.dpy, "_NET_CLOSE_WINDOW", False);
     NET_WM_ALLOWED_ACTIONS = XInternAtom(fluorite.dpy, "_NET_WM_ALLOWED_ACTIONS", False);
@@ -2041,6 +2046,8 @@ static void FRaiseAboveWindows(void)
 
 static void FRedrawWindows()
 {
+    // Windows *fw;
+
     if (no_redraw) return;
     if (fluorite.orgz)
     {
@@ -2066,13 +2073,18 @@ static void FRedrawWindows()
     FRaiseAboveWindows();
 
 floating:
-    for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+    if (!fluorite.ws[fluorite.cr_ws].f_wins) goto scratch;
+    Windows *fw = fluorite.ws[fluorite.cr_ws].f_wins;
+    while (fw->next != NULL)
+        fw = fw->next;
+    for (Windows *w = fw; w != NULL; w = w->prev)
     {
         FMoveWindowBasedOnMonitor(w);
         XRaiseWindow(fluorite.dpy, w->w);
         if (!w->fs) XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
     }
 
+scratch:
     if (fluorite.hpads == -1) goto fullscreen;
 
     Scratchpads *p = fluorite.pads[fluorite.hpads];
@@ -2260,6 +2272,10 @@ static int FCheckWindowIsFixed(Window w)
     unsigned long dl;
     unsigned char *p = NULL;
     Atom da, atom = None;
+    Window tr;
+
+    // TODO: Test on the long run, might cause issues or solve some
+    if (XGetTransientForHint(fluorite.dpy, w, &tr)) return False;
 
     if (XGetClassHint(fluorite.dpy, w, &name))
     {
