@@ -1,5 +1,4 @@
-#include <wchar.h>
-#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 4)"
+#define FLUORITE_VERSION "Fluorite [EVO 3] (Beta 5)"
 
 #include <X11/X.h>
 #include <X11/Xatom.h>
@@ -309,6 +308,9 @@ static void FSwapTiledWindows(Windows *a, Windows *b);
 static void FSendConfigureNotify(Window w, int x, int y, int width, int height);
 static void FUpdateDesktopGeometry();
 static void FSetState(Window w, Atom atom, int enable);
+static void FSendWMTakeFocus(Window w);
+static int FWindowAcceptsInput(Window w);
+static Window FFindFocusedWindow();
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -1485,6 +1487,14 @@ static void FMapRequest(XEvent ev)
     is_floating = FCheckWindowIsFloating(ev.xmaprequest.window);
     is_fixed = FCheckWindowIsFixed(ev.xmaprequest.window);
 
+    if (is_floating && FCheckWindowIsTransientOrPopup(ev.xmaprequest.window) &&
+        !FWindowAcceptsInput(ev.xmaprequest.window))
+    {
+        XMapWindow(fluorite.dpy, ev.xmaprequest.window);
+        XRaiseWindow(fluorite.dpy, ev.xmaprequest.window);
+        goto freeing;
+    }
+
     nw->w = ev.xmaprequest.window;
     nw->pid = xdo_get_pid_window(fluorite.xdo, nw->w);
     nw->fc = True;
@@ -1537,7 +1547,13 @@ static void FMapRequest(XEvent ev)
     for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
     {
         // TODO: check if this is a fix that can really be done
-        // w->fc = False;
+        w->fc = False;
+        XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
+    }
+    for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
+    {
+        // TODO: check if this is a fix that can really be done
+        w->fc = False;
         XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
     }
     XSetInputFocus(fluorite.dpy, nw->w, RevertToPointerRoot, CurrentTime);
@@ -2121,7 +2137,8 @@ static void FRedrawAllMonitors()
 
 static void FApplyActiveWindow(Window w)
 {
-    XSetInputFocus(fluorite.dpy, w, RevertToPointerRoot, CurrentTime);
+    if (FWindowAcceptsInput(w)) XSetInputFocus(fluorite.dpy, w, RevertToPointerRoot, CurrentTime);
+    FSendWMTakeFocus(w);
     XChangeProperty(fluorite.dpy, fluorite.root, NET_ACTIVE_WINDOW, XA_WINDOW, 32, PropModeReplace,
                     (unsigned char *)&w, 1);
     if (current_active_win != w)
@@ -2141,8 +2158,13 @@ static void FApplyBorders()
     Window focused;
     int revert;
 
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
-    if (focused == fluorite.root || fluorite.ws[fluorite.cr_ws].fs) return;
+    focused = FFindFocusedWindow();
+    if (focused == (Window)-1)
+    {
+        XGetInputFocus(fluorite.dpy, &focused, &revert);
+        if (focused != fluorite.root && focused != None) focused = FGetToplevel(focused);
+    }
+    if (focused == fluorite.root || focused == (Window)-1 || fluorite.ws[fluorite.cr_ws].fs) return;
 
     if (fluorite.hpads == -1) goto next;
 
@@ -2846,6 +2868,7 @@ static Windows *FAddWindow(Windows *cw, Windows *w)
         w->next = cw;
         w->prev = NULL;
     }
+    w->fc = True;
     return w;
 }
 
@@ -2969,6 +2992,8 @@ Window FWindowUnderCursor()
 static void FFocusWindowUnderCursor()
 {
     Window target = FWindowUnderCursor();
+    if (target == None || !FWindowAcceptsInput(target)) return;
+    if (target == current_active_win && target == FFindFocusedWindow()) return;
 
     no_warp = True;
 
@@ -3103,6 +3128,7 @@ next:
     for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
     {
         if (target != w->w) continue;
+        FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
         fluorite.ws[fluorite.cr_ws].f_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
         fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
         XRaiseWindow(fluorite.dpy, w->w);
@@ -3117,6 +3143,7 @@ next:
         if (target != w->w) continue;
 
         fluorite.ws[fluorite.cr_ws].t_wins = FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+        FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
         w->next = NULL;
         w->prev = NULL;
         fluorite.ws[fluorite.cr_ws].f_wins = FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
@@ -3966,11 +3993,11 @@ static void FTileWindow()
     if (fluorite.orgz) return;
 
     Window focused;
-    int revert;
+    // int revert;
 
     if (fluorite.ws[fluorite.cr_ws].fs) return;
 
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    focused = FFindFocusedWindow();
     for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
     {
         if (focused == w->w)
@@ -4056,7 +4083,12 @@ static void FToggleFullscreen()
     int revert;
     Windows *w;
 
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    focused = FFindFocusedWindow();
+    if (focused == (Window)-1)
+    {
+        XGetInputFocus(fluorite.dpy, &focused, &revert);
+        focused = FGetToplevel(focused);
+    }
 
     for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
         if (focused == w->w) goto next;
@@ -5994,4 +6026,44 @@ static void FSetState(Window w, Atom atom, int enable)
     if (enable && !already_present) new_states[n++] = atom;
     XChangeProperty(fluorite.dpy, w, NET_WM_STATE, XA_ATOM, 32, PropModeReplace,
                     (unsigned char *)new_states, n);
+}
+
+static void FSendWMTakeFocus(Window w)
+{
+    Atom wm_protocols = XInternAtom(fluorite.dpy, "WM_PROTOCOLS", False);
+    Atom wm_take_focus = XInternAtom(fluorite.dpy, "WM_TAKE_FOCUS", False);
+    Atom *protos;
+    int n;
+
+    if (XGetWMProtocols(fluorite.dpy, w, &protos, &n))
+    {
+        for (int i = 0; i < n; i++)
+        {
+            if (protos[i] == wm_take_focus)
+            {
+                XEvent ev = {0};
+                ev.xclient.type = ClientMessage;
+                ev.xclient.window = w;
+                ev.xclient.message_type = wm_protocols;
+                ev.xclient.format = 32;
+                ev.xclient.data.l[0] = wm_take_focus;
+                ev.xclient.data.l[1] = CurrentTime;
+                XSendEvent(fluorite.dpy, w, False, NoEventMask, &ev);
+                break;
+            }
+        }
+        XFree(protos);
+    }
+}
+
+static int FWindowAcceptsInput(Window w)
+{
+    XWMHints *hints = XGetWMHints(fluorite.dpy, w);
+    int accepts = True;
+    if (hints)
+    {
+        if ((hints->flags & InputHint) && !hints->input) accepts = False;
+        XFree(hints);
+    }
+    return accepts;
 }

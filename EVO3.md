@@ -37,6 +37,7 @@ New features might sneak in, but it's not the point of the EVO 3 anyways.
     - It leave the fullscreen of Youtube videos for exemple
 - [x] Binary ninja issues came from the fact that the window was both floating and fixed, which make it fixed. The issue is that theses windows are by default behind tiled windows. So I fixed it by saying that if it's a transient window it's not a fixed which might create issues
 - [x] Fixed a long time issues with floating windows appearing behind other windows. They will be now raised normally
+- [x] Fixed the focus issue with jetbrains IDEs, no more focus lost
 
 ## Issues
 
