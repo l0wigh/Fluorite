@@ -2153,17 +2153,27 @@ static void FApplyActiveWindow(Window w)
     FUpdateClientListStacking();
 }
 
+static int FIsManagedWindow(Window w)
+{
+    if (fluorite.hpads != -1)
+        for (Windows *p = fluorite.pads[fluorite.hpads]->s_wins; p; p = p->next)
+            if (p->w == w) return True;
+    for (Windows *p = fluorite.ws[fluorite.cr_ws].f_wins; p; p = p->next)
+        if (p->w == w) return True;
+    for (Windows *p = fluorite.ws[fluorite.cr_ws].t_wins; p; p = p->next)
+        if (p->w == w) return True;
+    return False;
+}
+
 static void FApplyBorders()
 {
     Window focused;
     int revert;
 
-    focused = FFindFocusedWindow();
-    if (focused == (Window)-1)
-    {
-        XGetInputFocus(fluorite.dpy, &focused, &revert);
-        if (focused != fluorite.root && focused != None) focused = FGetToplevel(focused);
-    }
+    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    if (focused != fluorite.root && focused != None && focused != PointerRoot)
+        focused = FGetToplevel(focused);
+    if (!FIsManagedWindow(focused)) focused = FFindFocusedWindow();
     if (focused == fluorite.root || focused == (Window)-1 || fluorite.ws[fluorite.cr_ws].fs) return;
 
     if (fluorite.hpads == -1) goto next;
@@ -3494,21 +3504,24 @@ static void FShowWorkspace(int ws)
         XMapWindow(fluorite.dpy, w->w);
     }
 
+    // Synchronisation pour que Xorg applique le map et le retrait du hidden avant le focus
+    XSync(fluorite.dpy, False);
+
     if (fluorite.ws[fluorite.cr_ws].t_wins)
     {
         for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
-            if (w->fc) { XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime); }
+            if (w->fc) FApplyActiveWindow(w->w);
     }
     else if (fluorite.ws[fluorite.cr_ws].f_wins && !fluorite.ws[fluorite.cr_ws].fl_hdn)
     {
         for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
-            if (w->fc) { XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime); }
+            if (w->fc) FApplyActiveWindow(w->w);
     }
     else if (fluorite.hpads != -1)
     {
         Scratchpads *p = fluorite.pads[fluorite.hpads];
         for (Windows *w = p->s_wins; w != NULL; w = w->next)
-            if (w->fc) { XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime); }
+            if (w->fc) FApplyActiveWindow(w->w);
     }
 
     XChangeProperty(fluorite.dpy, fluorite.root,
