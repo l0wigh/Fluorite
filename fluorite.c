@@ -311,6 +311,7 @@ static void FSetState(Window w, Atom atom, int enable);
 static void FSendWMTakeFocus(Window w);
 static int FWindowAcceptsInput(Window w);
 static Window FFindFocusedWindow();
+static Window FGetFocusedManagedWindow(void);
 
 /* DEF: globals */
 static Fluorite fluorite;
@@ -402,6 +403,7 @@ int main(void)
 
 static void FInit()
 {
+    XInitThreads();
     fluorite.dpy = XOpenDisplay(NULL);
     if (!fluorite.dpy) errx(1, "Can't open display.");
 
@@ -1547,13 +1549,15 @@ static void FMapRequest(XEvent ev)
     for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
     {
         // TODO: check if this is a fix that can really be done
-        w->fc = False;
+		// CLARIFY: disabling this helps with scrolling layout
+        // w->fc = False;
         XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
     }
     for (Windows *w = fluorite.ws[fluorite.cr_ws].f_wins; w != NULL; w = w->next)
     {
         // TODO: check if this is a fix that can really be done
-        w->fc = False;
+		// CLARIFY: disabling this helps with scrolling layout
+        // w->fc = False;
         XSetWindowBorder(fluorite.dpy, w->w, fluorite.conf.bu);
     }
     XSetInputFocus(fluorite.dpy, nw->w, RevertToPointerRoot, CurrentTime);
@@ -2165,15 +2169,25 @@ static int FIsManagedWindow(Window w)
     return False;
 }
 
-static void FApplyBorders()
+static Window FGetFocusedManagedWindow(void)
 {
     Window focused;
     int revert;
 
     XGetInputFocus(fluorite.dpy, &focused, &revert);
-    if (focused != fluorite.root && focused != None && focused != PointerRoot)
+    if (focused != None && focused != PointerRoot && focused != fluorite.root)
+    {
         focused = FGetToplevel(focused);
-    if (!FIsManagedWindow(focused)) focused = FFindFocusedWindow();
+        if (FIsManagedWindow(focused)) return focused;
+    }
+    return FFindFocusedWindow();
+}
+
+static void FApplyBorders()
+{
+    Window focused;
+
+    focused = FGetFocusedManagedWindow();
     if (focused == fluorite.root || focused == (Window)-1 || fluorite.ws[fluorite.cr_ws].fs) return;
 
     if (fluorite.hpads == -1) goto next;
@@ -2980,8 +2994,8 @@ static void FCloseTargetWindow(Window focused)
 static void FCloseWindow()
 {
     Window focused;
-    int revert;
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    focused = FGetFocusedManagedWindow();
+    if (focused == (Window)-1) return;
     FCloseTargetWindow(focused);
 }
 
@@ -3537,7 +3551,6 @@ static void FShowWorkspace(int ws)
 static void FSendWindowToWorkspace(int ws)
 {
     Window focused;
-    int revert;
     Windows *w;
 
     if (ws == fluorite.cr_ws ||
@@ -3545,9 +3558,10 @@ static void FSendWindowToWorkspace(int ws)
         fluorite.orgz)
         return;
 
+    focused = FGetFocusedManagedWindow();
+    if (focused == (Window)-1 || focused == None) return;
     no_unmap = True;
     XGrabServer(fluorite.dpy);
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
 
     if (fluorite.ws[ws].fs)
     {
@@ -3592,6 +3606,7 @@ static void FSendWindowToWorkspace(int ws)
         }
     }
     XUngrabServer(fluorite.dpy);
+    no_unmap = False;
     return;
 
 next:
@@ -3888,12 +3903,12 @@ static void FSwapWithMaster()
     if (fluorite.orgz) return;
 
     Window focused;
-    int revert;
     XEvent ev;
     Windows *w;
 
     no_refocus = True;
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    focused = FGetFocusedManagedWindow();
+    if (focused == (Window)-1) return;
     if (focused == fluorite.root || !fluorite.ws[fluorite.cr_ws].t_wins ||
         focused == fluorite.ws[fluorite.cr_ws].t_wins->w)
         return;
@@ -4006,7 +4021,6 @@ static void FTileWindow()
     if (fluorite.orgz) return;
 
     Window focused;
-    // int revert;
 
     if (fluorite.ws[fluorite.cr_ws].fs) return;
 
@@ -4274,7 +4288,6 @@ static void FAddWindowToScratchpad()
 
     XEvent ev;
     Window focused;
-    int revert;
     KeySym key;
     int hkey;
     Windows *w;
@@ -4295,7 +4308,8 @@ static void FAddWindowToScratchpad()
     XUngrabKeyboard(fluorite.dpy, CurrentTime);
     XUngrabServer(fluorite.dpy);
 
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    focused = FGetFocusedManagedWindow();
+    if (focused == (Window)-1) return;
     for (w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
     {
         if (focused != w->w) continue;
@@ -4358,10 +4372,10 @@ static void FDelWindowFromScratchpad()
     if (fluorite.hpads == -1 || fluorite.orgz) return;
 
     Window focused;
-    int revert;
     Scratchpads *p = fluorite.pads[fluorite.hpads];
 
-    XGetInputFocus(fluorite.dpy, &focused, &revert);
+    focused = FGetFocusedManagedWindow();
+    if (focused == (Window)-1) return;
     for (Windows *w = p->s_wins; w != NULL; w = w->next)
     {
         if (focused != w->w) continue;
