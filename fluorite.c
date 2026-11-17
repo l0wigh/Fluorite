@@ -305,6 +305,11 @@ static void *FIPCServerThread(void *ptr);
 static void FScratchpadToggleByKeysym(char *arg);
 static Windows *FFindTiledWindowAtPos(int x, int y);
 static void FSwapTiledWindows(Windows *a, Windows *b);
+static void FDragMoveWindow(XEvent ev);
+static void FDragMoveEnd();
+static Windows *FFindTiledWindowOnVisibleWs(int x, int y, int *ws_out);
+static void FSwapAcrossWorkspaces(Windows *a, int ws_a, Windows *b, int ws_b);
+static void FFocusMovedTiled(Windows *w, int ws);
 static void FSendConfigureNotify(Window w, int x, int y, int width, int height);
 static void FUpdateDesktopGeometry();
 static void FSetState(Window w, Atom atom, int enable);
@@ -317,6 +322,11 @@ static Window FGetFocusedManagedWindow(void);
 /* DEF: globals */
 static Fluorite fluorite;
 static Windows *drag_src_win = NULL;
+static int drag_cross = False;
+static int drag_src_ws = 0;
+static Windows *drag_move_win = NULL;
+static int drag_move_ws = 0;
+static int drag_move_mon = 0;
 static int no_unmap = False;
 static int no_warp = False;
 static int no_refocus = False;
@@ -1197,12 +1207,28 @@ static void FRun()
             FButtonPress(ev);
             break;
         case ButtonRelease:
+            if (drag_move_win)
+            {
+                FDragMoveEnd();
+                break;
+            }
             if (drag_src_win)
             {
                 XDefineCursor(fluorite.dpy, fluorite.root, cnorm);
-                Windows *dst = FFindTiledWindowAtPos(ev.xbutton.x_root, ev.xbutton.y_root);
+                int dst_ws = fluorite.cr_ws;
+                Windows *dst = NULL;
+                if (drag_cross)
+                    dst = FFindTiledWindowOnVisibleWs(ev.xbutton.x_root, ev.xbutton.y_root,
+                                                      &dst_ws);
+                else
+                    dst = FFindTiledWindowAtPos(ev.xbutton.x_root, ev.xbutton.y_root);
 
-                if (dst && dst != drag_src_win)
+                if (dst && dst != drag_src_win && dst_ws != drag_src_ws)
+                {
+                    FSwapAcrossWorkspaces(drag_src_win, drag_src_ws, dst, dst_ws);
+                    FFocusMovedTiled(dst, dst_ws);
+                }
+                else if (dst && dst != drag_src_win)
                 {
                     FSwapTiledWindows(drag_src_win, dst);
                     FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
@@ -1227,6 +1253,11 @@ static void FRun()
             FKeyPress(ev);
             break;
         case MotionNotify:
+            if (drag_move_win)
+            {
+                FDragMoveWindow(ev);
+                break;
+            }
             if (drag_src_win)
             {
                 int dx = ev.xmotion.x_root - fluorite.mouse.spx;
@@ -3087,6 +3118,132 @@ static Window FGetToplevel(Window w)
     return w;
 }
 
+static int FMonitorShowingWs(int ws)
+{
+    for (int i = 0; i < fluorite.ct_mon; i++)
+        if (fluorite.mon[i].ws == ws) return i;
+    return -1;
+}
+
+static int FMonitorAtPoint(int x, int y)
+{
+    for (int i = 0; i < fluorite.ct_mon; i++)
+        if (x >= fluorite.mon[i].mx && x < fluorite.mon[i].mx + fluorite.mon[i].mw &&
+            y >= fluorite.mon[i].my && y < fluorite.mon[i].my + fluorite.mon[i].mh)
+            return i;
+    return -1;
+}
+
+static void FSyncWsVisibility(Window w, int ws)
+{
+    if (FMonitorShowingWs(ws) != -1)
+    {
+        FSetState(w, NET_WM_STATE_HIDDEN, False);
+        XMapWindow(fluorite.dpy, w);
+    }
+    else
+    {
+        XUnmapWindow(fluorite.dpy, w);
+        FSetState(w, NET_WM_STATE_HIDDEN, True);
+    }
+}
+
+static Windows *FFindTiledWindowOnVisibleWs(int x, int y, int *ws_out)
+{
+    for (int i = 0; i < fluorite.ct_mon; i++)
+    {
+        int ws = fluorite.mon[i].ws;
+        for (Windows *w = fluorite.ws[ws].t_wins; w != NULL; w = w->next)
+        {
+            if (x >= w->wx && x <= (w->wx + (int)w->ww + fluorite.conf.bw * 2) && y >= w->wy &&
+                y <= (w->wy + (int)w->wh + fluorite.conf.bw * 2))
+            {
+                *ws_out = ws;
+                return w;
+            }
+        }
+    }
+    return NULL;
+}
+
+static void FSwapAcrossWorkspaces(Windows *a, int ws_a, Windows *b, int ws_b)
+{
+    no_unmap = True;
+    FSwapTiledWindows(a, b);
+    FSyncWsVisibility(a->w, ws_a);
+    FSyncWsVisibility(b->w, ws_b);
+    no_unmap = False;
+    FResetFocus(fluorite.ws[ws_a].t_wins);
+    FResetFocus(fluorite.ws[ws_b].t_wins);
+    FRedrawAllMonitors();
+}
+
+static void FFocusMovedTiled(Windows *w, int ws)
+{
+    int mon = FMonitorShowingWs(ws);
+    if (mon == -1) return;
+    if (mon != fluorite.cr_mon) FChangeMonitor(mon);
+    FResetFocus(fluorite.ws[ws].t_wins);
+    w->fc = True;
+    XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+    FApplyBorders();
+}
+
+static void FDragMoveToMonitor(int mon, int x, int y)
+{
+    int ws = fluorite.mon[mon].ws;
+    Windows *w = drag_move_win;
+
+    if (ws == drag_move_ws || fluorite.ws[ws].fs) return;
+
+    fluorite.ws[drag_move_ws].f_wins = FDelWindow(fluorite.ws[drag_move_ws].f_wins, w);
+    w->next = NULL;
+    w->prev = NULL;
+    fluorite.ws[ws].f_wins = FAddWindow(fluorite.ws[ws].f_wins, w);
+
+    drag_move_ws = ws;
+    drag_move_mon = mon;
+    fluorite.mouse.spx = x;
+    fluorite.mouse.spy = y;
+    fluorite.mouse.swx = w->wx;
+    fluorite.mouse.swy = w->wy;
+
+    FRedrawAllMonitors();
+}
+
+static void FDragMoveWindow(XEvent ev)
+{
+    Windows *w = drag_move_win;
+    int nx = fluorite.mouse.swx + (ev.xmotion.x_root - fluorite.mouse.spx);
+    int ny = fluorite.mouse.swy + (ev.xmotion.y_root - fluorite.mouse.spy);
+
+    w->wx = nx;
+    w->wy = ny;
+    XMoveWindow(fluorite.dpy, w->w, nx, ny);
+
+    int mon = FMonitorAtPoint(ev.xmotion.x_root, ev.xmotion.y_root);
+    if (mon != -1 && mon != drag_move_mon)
+        FDragMoveToMonitor(mon, ev.xmotion.x_root, ev.xmotion.y_root);
+}
+
+static void FDragMoveEnd()
+{
+    Windows *w = drag_move_win;
+    drag_move_win = NULL;
+
+    XDefineCursor(fluorite.dpy, w->w, cnorm);
+    if (drag_move_mon != fluorite.cr_mon) FChangeMonitor(drag_move_mon);
+
+    FResetFocus(fluorite.ws[fluorite.cr_ws].t_wins);
+    FResetFocus(fluorite.ws[fluorite.cr_ws].f_wins);
+    w->fc = True;
+    XRaiseWindow(fluorite.dpy, w->w);
+    XSetInputFocus(fluorite.dpy, w->w, RevertToPointerRoot, CurrentTime);
+    no_warp = True;
+    FApplyBorders();
+    no_warp = False;
+}
+
 static void FButtonPress(XEvent ev)
 {
     if (fluorite.orgz) return;
@@ -3129,6 +3286,47 @@ static void FButtonPress(XEvent ev)
     XGetGeometry(fluorite.dpy, target, &fluorite.root, &fluorite.mouse.swx, &fluorite.mouse.swy,
                  &fluorite.mouse.sww, &fluorite.mouse.swh, &b_w, &d);
 
+    if (ev.xbutton.button == Button1 && (ev.xbutton.state & fluorite.conf.mt) &&
+        !(ev.xbutton.state & Mod1Mask))
+    {
+        Windows *w = NULL;
+        int tiled = False;
+        for (Windows *i = fluorite.ws[fluorite.cr_ws].t_wins; i != NULL; i = i->next)
+            if (target == i->w)
+            {
+                w = i;
+                tiled = True;
+                break;
+            }
+        if (!w)
+            for (Windows *i = fluorite.ws[fluorite.cr_ws].f_wins; i != NULL; i = i->next)
+                if (target == i->w)
+                {
+                    w = i;
+                    break;
+                }
+        if (w)
+        {
+            if (tiled)
+            {
+                fluorite.ws[fluorite.cr_ws].t_wins =
+                    FDelWindow(fluorite.ws[fluorite.cr_ws].t_wins, w);
+                w->next = NULL;
+                w->prev = NULL;
+                fluorite.ws[fluorite.cr_ws].f_wins =
+                    FAddWindow(fluorite.ws[fluorite.cr_ws].f_wins, w);
+                FRedrawWindows();
+            }
+            drag_move_win = w;
+            drag_move_ws = fluorite.cr_ws;
+            drag_move_mon = fluorite.cr_mon;
+            XRaiseWindow(fluorite.dpy, w->w);
+            XDefineCursor(fluorite.dpy, w->w, cmove);
+            no_warp = True;
+            return;
+        }
+    }
+
     if (ev.xbutton.button == Button1 && (ev.xbutton.state & Mod1Mask))
     {
         for (Windows *w = fluorite.ws[fluorite.cr_ws].t_wins; w != NULL; w = w->next)
@@ -3136,6 +3334,8 @@ static void FButtonPress(XEvent ev)
             if (target == w->w)
             {
                 drag_src_win = w;
+                drag_cross = (ev.xbutton.state & fluorite.conf.mt) != 0;
+                drag_src_ws = fluorite.cr_ws;
                 XRaiseWindow(fluorite.dpy, w->w);
                 XDefineCursor(fluorite.dpy, fluorite.root, cmove);
                 return;
@@ -4168,6 +4368,7 @@ next:
     fluorite.ws[fluorite.cr_ws].fs = !fluorite.ws[fluorite.cr_ws].fs;
     FSetWindowFullscreen(w->w, w->fs);
     FRedrawWindows();
+    if (!w->fs) XMoveResizeWindow(fluorite.dpy, w->w, w->wx, w->wy, w->ww, w->wh);
     XSync(fluorite.dpy, True);
     FApplyBorders();
     FWarpCursor(w->w);
